@@ -96,21 +96,7 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
 .ai a { color: var(--accent-blue); text-decoration: none; }
 .ai a:hover { text-decoration: underline; }
 
-/* === НОВЫЕ СТИЛИ ДЛЯ КАРТИНОК И КНОПКИ СКАЧАТЬ === */
-.img-wrapper { position: relative; display: inline-block; margin-top: 10px; max-width: 100%; }
-.img-wrapper img { max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; }
-.download-img-btn {
-    position: absolute; bottom: 12px; right: 12px;
-    background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(6px);
-    border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main);
-    padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
-    cursor: pointer; display: flex; align-items: center; gap: 6px;
-    opacity: 0.8; transition: all 0.2s ease;
-}
-.download-img-btn:hover { background: var(--accent-blue); border-color: var(--accent-blue); opacity: 1; transform: scale(1.05); }
-.download-img-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-/* === ПАНЕЛЬ ИНСТРУМЕНТОВ === */
+/* ПАНЕЛЬ ИНСТРУМЕНТОВ */
 .tools-bar { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
 .tools-bar::-webkit-scrollbar { display: none; } 
 .tool-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 12px; font-size: 13px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
@@ -190,7 +176,7 @@ input.chat-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status">Подключено</div>
+                <div class="status" id="app-status">Подключено к Облаку Groq</div>
 
                 <div class="chat" id="chat">
                     <div class="message ai">Система Daryn AI инициализирована. Выберите инструмент или задайте вопрос.</div>
@@ -223,49 +209,20 @@ input.chat-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px
 </div>
 
 <script>
-// --- ПЕРЕХВАТ РЕНДЕРА КАРТИНОК ДЛЯ КНОПКИ "СКАЧАТЬ" ---
-const customRenderer = new marked.Renderer();
-customRenderer.image = function(href, title, text) {
-    // Чистим ссылку от спецсимволов markdown
-    const cleanHref = href.replace(/&amp;/g, '&');
-    return `
-    <div class="img-wrapper">
-        <img src="${cleanHref}" alt="${text || 'Сгенерированное изображение'}">
-        <button class="download-img-btn" onclick="forceDownload('${cleanHref}')" title="Сохранить изображение">
-            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            Скачать
-        </button>
-    </div>`;
-};
+// =========================================================================
+// ⚠️ ВАЖНО: Вставь сюда свой реальный адрес сайта из Render
+// Пример: const BACKEND_URL = "https://daryn-ai-backend.onrender.com";
+// Убедись, что нет слэша (/) в самом конце!
+// =========================================================================
+const BACKEND_URL = "https://ТВОЙ-САЙТ.onrender.com";
 
-// Настройки Markdown
+
 marked.setOptions({
-    renderer: customRenderer,
     highlight: function(code, lang) {
         const language = hljs.getLanguage(lang) ? lang : 'plaintext';
         return hljs.highlight(code, { language }).value;
     }
 });
-
-// ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО СКАЧИВАНИЯ (Обход защиты браузеров)
-async function forceDownload(url) {
-    try {
-        const response = await fetch(url);
-        const blob = await response.blob();
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = blobUrl;
-        a.download = 'DarynAI_Art_' + Date.now() + '.jpg';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        window.URL.revokeObjectURL(blobUrl);
-    } catch (e) {
-        // Если жесткая блокировка CORS, просто откроем в новом окне
-        window.open(url, '_blank');
-    }
-}
 
 let currentUserEmail = "guest";
 let currentMode = "chat";
@@ -291,7 +248,11 @@ async function registerUser() {
     if (!name || !email || !pass) { errorBox.innerText = "Заполните все поля!"; errorBox.style.display = "block"; return; }
     
     try {
-        const response = await fetch("http://localhost:8000/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: name, email: email, password: pass }) });
+        const response = await fetch(`${BACKEND_URL}/register`, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ username: name, email: email, password: pass }) 
+        });
         const data = await response.json();
         if (data.status === "success") { currentUserEmail = email; setUserProfile(data.username); enterApp(); } 
         else { errorBox.innerText = data.message; errorBox.style.display = "block"; }
@@ -305,7 +266,11 @@ async function loginUser() {
     if (!email || !pass) { errorBox.innerText = "Заполните все поля!"; errorBox.style.display = "block"; return; }
     
     try {
-        const response = await fetch("http://localhost:8000/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: pass }) });
+        const response = await fetch(`${BACKEND_URL}/login`, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ email: email, password: pass }) 
+        });
         const data = await response.json();
         if (data.status === "success") { currentUserEmail = email; setUserProfile(data.username); enterApp(); } 
         else { errorBox.innerText = data.message; errorBox.style.display = "block"; }
@@ -344,7 +309,11 @@ async function loadHistory() {
     }
     
     try {
-        const response = await fetch("http://localhost:8000/history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUserEmail }) });
+        const response = await fetch(`${BACKEND_URL}/history`, { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ email: currentUserEmail }) 
+        });
         const data = await response.json();
         
         if (data.status === "success" && data.history.length > 0) {
@@ -359,7 +328,12 @@ async function loadHistory() {
                     if(msg.content.length > 25) shortTitle += "...";
                     sidebarHistory.innerHTML += `<div class="history-item">${shortTitle}</div>`;
                 } else {
-                    chatBox.innerHTML += `<div class="message ai">${marked.parse(msg.content)}</div>`;
+                    // Обработка HTML для картинок, markdown для текста
+                    if (msg.content.includes("<img")) {
+                        chatBox.innerHTML += `<div class="message ai">${msg.content}</div>`;
+                    } else {
+                        chatBox.innerHTML += `<div class="message ai">${marked.parse(msg.content)}</div>`;
+                    }
                 }
             });
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -440,15 +414,23 @@ async function sendMessage() {
     resetTools();
 
     try {
-        const response = await fetch("http://localhost:8000/chat", {
+        const response = await fetch(`${BACKEND_URL}/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ text: text, email: currentUserEmail, mode: modeToSend })
         });
         
+        const messageElement = document.getElementById(loadingId);
+        
+        if (modeToSend === 'image') {
+            const htmlContent = await response.text();
+            messageElement.innerHTML = htmlContent;
+            chat.scrollTop = chat.scrollHeight;
+            return; 
+        }
+
         const reader = response.body.getReader();
         const decoder = new TextDecoder("utf-8");
-        const messageElement = document.getElementById(loadingId);
         messageElement.innerHTML = ""; 
 
         let charQueue = [];
@@ -475,7 +457,7 @@ async function sendMessage() {
             if (!isAnimating) processQueue();
         }
     } catch (error) {
-        document.getElementById(loadingId).innerHTML = "<span style='color: #ef4444;'>Ошибка сервера. Убедитесь, что Python запущен.</span>";
+        document.getElementById(loadingId).innerHTML = "<span style='color: #ef4444;'>Ошибка сервера. Убедитесь, что сервер запущен.</span>";
     }
 }
 </script>
