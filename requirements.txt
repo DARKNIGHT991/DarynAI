@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+requests
+bcrypt
+duckduckgo_search
+groq
+python-dotenv
