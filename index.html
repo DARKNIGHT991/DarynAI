@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Daryn AI Interface</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+:root {
+    --bg-main: #09090b;
+    --bg-panel: #18181b;
+    --border: #27272a;
+    --text-main: #fafafa;
+    --text-muted: #a1a1aa;
+    --accent-blue: #3b82f6;
+    --user-bubble: #27272a;
+    --sidebar-width: 280px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', -apple-system, sans-serif; }
+
+body { background: var(--bg-main); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; }
+
+/* === ПРЕМИАЛЬНЫЙ СКРОЛЛБАР === */
+.chat::-webkit-scrollbar, .history-list::-webkit-scrollbar, .ai pre::-webkit-scrollbar { width: 10px; height: 10px; }
+.chat::-webkit-scrollbar-track, .history-list::-webkit-scrollbar-track, .ai pre::-webkit-scrollbar-track { background: transparent; }
+.chat::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb, .ai pre::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; border: 3px solid var(--bg-panel); transition: background-color 0.3s ease; }
+.chat::-webkit-scrollbar-thumb:hover, .history-list::-webkit-scrollbar-thumb:hover, .ai pre::-webkit-scrollbar-thumb:hover { background: var(--accent-blue); }
+
+/* === ЭКРАН АВТОРИЗАЦИИ === */
+#auth-screen { position: fixed; inset: 0; background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s ease; }
+.auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px; border-radius: 24px; width: 100%; max-width: 380px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center; }
+.auth-card h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; letter-spacing: 0.5px; }
+.auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
+.auth-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 14px; margin-bottom: 12px; outline: none; transition: all 0.2s; }
+.auth-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15); }
+.btn-primary { background: var(--text-main); color: var(--bg-main); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; transition: opacity 0.2s; margin-bottom: 12px; }
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; transition: background 0.2s; margin-bottom: 12px; }
+.btn-secondary:hover { background: var(--user-bubble); }
+.btn-text { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: color 0.2s; }
+.btn-text:hover { color: var(--text-main); text-decoration: underline; }
+.error-msg { color: #ef4444; font-size: 13px; margin-bottom: 12px; display: none; }
+#form-login, #form-register { display: none; flex-direction: column; }
+#form-main { display: flex; flex-direction: column; }
+
+/* === ОСНОВНОЙ КАРКАС === */
+#app-container { display: none; width: 100%; height: 100%; }
+
+/* САЙДБАР */
+#sidebar { width: var(--sidebar-width); background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1); margin-left: calc(-1 * var(--sidebar-width)); flex-shrink: 0; z-index: 20; }
+#sidebar.open { margin-left: 0; }
+.sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+.new-chat-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+.new-chat-btn:hover { background: var(--user-bubble); }
+.history-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; }
+.history-item { padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: all 0.2s; }
+.history-item:hover { background: var(--user-bubble); color: var(--text-main); }
+.sidebar-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
+.user-avatar { width: 32px; height: 32px; background: var(--accent-blue); color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+
+/* ГЛАВНЫЙ ЭКРАН */
+#main-content { flex: 1; display: flex; flex-direction: column; height: 100%; background: var(--bg-main); position: relative; transition: all 0.3s; min-width: 0; }
+.topbar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; border-bottom: 1px solid var(--border); background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 10; }
+.topbar-left { display: flex; align-items: center; gap: 16px; }
+.menu-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s, color 0.2s; display: flex; align-items: center; justify-content: center; }
+.menu-btn:hover { background: var(--user-bubble); color: var(--text-main); }
+.logo { font-size: 15px; font-weight: 600; letter-spacing: 1px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.logo::before { content: ''; display: inline-block; width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%; box-shadow: 0 0 10px var(--accent-blue); }
+.logout-btn { font-size: 13px; font-weight: 500; color: #ef4444; cursor: pointer; transition: opacity 0.2s; }
+.logout-btn:hover { opacity: 0.8; }
+
+.wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: hidden; }
+.panel { width: 100%; max-width: 840px; height: 100%; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 20px; display: flex; flex-direction: column; padding: 25px 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+.status { font-size: 12px; font-weight: 500; color: var(--text-muted); margin-bottom: 10px; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+
+/* ЧАТ И СООБЩЕНИЯ */
+.chat { flex: 1; overflow-y: auto; padding-right: 10px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; margin-bottom: 15px; }
+.message { max-width: 85%; padding: 14px 18px; font-size: 15px; line-height: 1.6; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.ai { align-self: flex-start; background: transparent; color: var(--text-main); border-left: 3px solid var(--accent-blue); padding-left: 16px; width: 100%; word-break: break-word; }
+.user { align-self: flex-end; background: var(--user-bubble); color: var(--text-main); border-radius: 18px 18px 4px 18px; }
+
+/* Markdown */
+.ai p { margin: 0 0 16px 0; }
+.ai p:last-child { margin: 0; }
+.ai pre { background-color: #000 !important; padding: 16px; border-radius: 12px; overflow-x: auto; margin: 16px 0; border: 1px solid var(--border); }
+.ai code { font-family: Consolas, "Courier New", monospace; font-size: 13px; background-color: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; }
+.ai pre code { background-color: transparent; padding: 0; }
+.ai a { color: var(--accent-blue); text-decoration: none; }
+.ai a:hover { text-decoration: underline; }
+
+/* === НОВЫЕ СТИЛИ ДЛЯ КАРТИНОК И КНОПКИ СКАЧАТЬ === */
+.img-wrapper { position: relative; display: inline-block; margin-top: 10px; max-width: 100%; }
+.img-wrapper img { max-width: 100%; border-radius: 12px; border: 1px solid var(--border); display: block; }
+.download-img-btn {
+    position: absolute; bottom: 12px; right: 12px;
+    background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main);
+    padding: 8px 14px; border-radius: 8px; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: flex; align-items: center; gap: 6px;
+    opacity: 0.8; transition: all 0.2s ease;
+}
+.download-img-btn:hover { background: var(--accent-blue); border-color: var(--accent-blue); opacity: 1; transform: scale(1.05); }
+.download-img-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* === ПАНЕЛЬ ИНСТРУМЕНТОВ === */
+.tools-bar { display: flex; gap: 10px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 4px; }
+.tools-bar::-webkit-scrollbar { display: none; } 
+.tool-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 14px; border-radius: 12px; font-size: 13px; cursor: pointer; white-space: nowrap; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+.tool-btn:hover { border-color: var(--accent-blue); color: var(--text-main); background: rgba(59, 130, 246, 0.05); }
+.tool-btn svg { width: 14px; height: 14px; stroke: currentColor; }
+
+/* ВВОД */
+.input-wrapper { position: relative; display: flex; align-items: center; }
+input.chat-input { width: 100%; padding: 16px 50px 16px 20px; border-radius: 16px; border: 1px solid var(--border); background: var(--bg-main); color: var(--text-main); font-size: 15px; outline: none; transition: all 0.2s ease; }
+input.chat-input::placeholder { color: var(--text-muted); }
+input.chat-input:focus { border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+.send-btn { position: absolute; right: 8px; width: 38px; height: 38px; border-radius: 12px; border: none; background: var(--text-main); color: var(--bg-main); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.send-btn:hover { transform: scale(1.05); }
+.send-btn svg { width: 18px; height: 18px; fill: currentColor; }
+
+.typing { display: inline-block; width: 6px; height: 6px; background-color: var(--text-muted); border-radius: 50%; margin: 0 2px; animation: bounce 1.4s infinite ease-in-out both; }
+.typing:nth-child(1) { animation-delay: -0.32s; }
+.typing:nth-child(2) { animation-delay: -0.16s; }
+@keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
+</style>
+</head>
+
+<body>
+
+<div id="auth-screen">
+    <div class="auth-card">
+        <h2>Daryn AI</h2>
+        <p>Ваш личный интеллектуальный ассистент</p>
+        <div id="form-main">
+            <button class="btn-primary" onclick="showForm('login')">Войти</button>
+            <button class="btn-secondary" onclick="showForm('register')">Создать аккаунт</button>
+            <button class="btn-text" onclick="loginAsGuest()">Продолжить как гость</button>
+        </div>
+        <div id="form-login">
+            <p id="login-error" class="error-msg"></p>
+            <input type="email" class="auth-input" placeholder="Email" id="login-email">
+            <input type="password" class="auth-input" placeholder="Пароль" id="login-pass">
+            <button class="btn-primary" onclick="loginUser()">Войти</button>
+            <button class="btn-text" onclick="showForm('main')">Вернуться назад</button>
+        </div>
+        <div id="form-register">
+            <p id="reg-error" class="error-msg"></p>
+            <input type="text" class="auth-input" placeholder="Имя пользователя" id="reg-name">
+            <input type="email" class="auth-input" placeholder="Email" id="reg-email">
+            <input type="password" class="auth-input" placeholder="Придумайте пароль" id="reg-pass">
+            <button class="btn-primary" onclick="registerUser()">Зарегистрироваться</button>
+            <button class="btn-text" onclick="showForm('main')">Вернуться назад</button>
+        </div>
+    </div>
+</div>
+
+<div id="app-container">
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Новая сессия
+            </button>
+        </div>
+        <div class="history-list" id="sidebar-history"></div>
+        <div class="sidebar-footer">
+            <div class="user-avatar" id="sidebar-avatar">Г</div>
+            <span id="sidebar-username">Гость</span>
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div class="topbar">
+            <div class="topbar-left">
+                <button class="menu-btn" onclick="toggleSidebar()" title="История чатов">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                </button>
+                <div class="logo">DARYN AI</div>
+            </div>
+            <div class="logout-btn" onclick="location.reload()">Выйти</div>
+        </div>
+
+        <div class="wrapper">
+            <div class="panel">
+                <div class="status" id="app-status">Подключено</div>
+
+                <div class="chat" id="chat">
+                    <div class="message ai">Система Daryn AI инициализирована. Выберите инструмент или задайте вопрос.</div>
+                </div>
+
+                <div class="tools-bar">
+                    <button class="tool-btn" onclick="useTool('code', event)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        Написать код
+                    </button>
+                    <button class="tool-btn" onclick="useTool('image', event)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                        Генерация фото
+                    </button>
+                    <button class="tool-btn" onclick="useTool('scan', event)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                        Скан портов
+                    </button>
+                </div>
+
+                <div class="input-wrapper">
+                    <input type="text" id="user-input" class="chat-input" placeholder="Введите сообщение..." onkeypress="handleKeyPress(event)" autocomplete="off">
+                    <button class="send-btn" onclick="sendMessage()" title="Отправить">
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// --- ПЕРЕХВАТ РЕНДЕРА КАРТИНОК ДЛЯ КНОПКИ "СКАЧАТЬ" ---
+const customRenderer = new marked.Renderer();
+customRenderer.image = function(href, title, text) {
+    // Чистим ссылку от спецсимволов markdown
+    const cleanHref = href.replace(/&amp;/g, '&');
+    return `
+    <div class="img-wrapper">
+        <img src="${cleanHref}" alt="${text || 'Сгенерированное изображение'}">
+        <button class="download-img-btn" onclick="forceDownload('${cleanHref}')" title="Сохранить изображение">
+            <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Скачать
+        </button>
+    </div>`;
+};
+
+// Настройки Markdown
+marked.setOptions({
+    renderer: customRenderer,
+    highlight: function(code, lang) {
+        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+        return hljs.highlight(code, { language }).value;
+    }
+});
+
+// ФУНКЦИЯ ПРИНУДИТЕЛЬНОГО СКАЧИВАНИЯ (Обход защиты браузеров)
+async function forceDownload(url) {
+    try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = 'DarynAI_Art_' + Date.now() + '.jpg';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(blobUrl);
+    } catch (e) {
+        // Если жесткая блокировка CORS, просто откроем в новом окне
+        window.open(url, '_blank');
+    }
+}
+
+let currentUserEmail = "guest";
+let currentMode = "chat";
+
+// --- ЛОГИКА АВТОРИЗАЦИИ ---
+function showForm(formName) {
+    document.getElementById('form-main').style.display = 'none';
+    document.getElementById('form-login').style.display = 'none';
+    document.getElementById('form-register').style.display = 'none';
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('reg-error').style.display = 'none';
+    
+    if(formName === 'login') document.getElementById('form-login').style.display = 'flex';
+    if(formName === 'register') document.getElementById('form-register').style.display = 'flex';
+    if(formName === 'main') document.getElementById('form-main').style.display = 'flex';
+}
+
+async function registerUser() {
+    const name = document.getElementById('reg-name').value;
+    const email = document.getElementById('reg-email').value;
+    const pass = document.getElementById('reg-pass').value;
+    const errorBox = document.getElementById('reg-error');
+    if (!name || !email || !pass) { errorBox.innerText = "Заполните все поля!"; errorBox.style.display = "block"; return; }
+    
+    try {
+        const response = await fetch("http://localhost:8000/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: name, email: email, password: pass }) });
+        const data = await response.json();
+        if (data.status === "success") { currentUserEmail = email; setUserProfile(data.username); enterApp(); } 
+        else { errorBox.innerText = data.message; errorBox.style.display = "block"; }
+    } catch (err) { errorBox.innerText = "Сервер недоступен."; errorBox.style.display = "block"; }
+}
+
+async function loginUser() {
+    const email = document.getElementById('login-email').value;
+    const pass = document.getElementById('login-pass').value;
+    const errorBox = document.getElementById('login-error');
+    if (!email || !pass) { errorBox.innerText = "Заполните все поля!"; errorBox.style.display = "block"; return; }
+    
+    try {
+        const response = await fetch("http://localhost:8000/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: pass }) });
+        const data = await response.json();
+        if (data.status === "success") { currentUserEmail = email; setUserProfile(data.username); enterApp(); } 
+        else { errorBox.innerText = data.message; errorBox.style.display = "block"; }
+    } catch (err) { errorBox.innerText = "Сервер недоступен."; errorBox.style.display = "block"; }
+}
+
+function loginAsGuest() {
+    currentUserEmail = "guest";
+    setUserProfile("Гость");
+    enterApp();
+}
+
+function setUserProfile(username) {
+    document.getElementById('sidebar-username').innerText = username;
+    document.getElementById('sidebar-avatar').innerText = username.charAt(0).toUpperCase();
+}
+
+async function enterApp() {
+    const authScreen = document.getElementById('auth-screen');
+    const appContainer = document.getElementById('app-container');
+    authScreen.style.opacity = '0'; 
+    setTimeout(() => { 
+        authScreen.style.display = 'none'; 
+        appContainer.style.display = 'flex'; 
+    }, 500); 
+    await loadHistory();
+}
+
+// --- ЛОГИКА САЙДБАРОВ И ИСТОРИИ ---
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+
+async function loadHistory() {
+    if (currentUserEmail === "guest") {
+        document.getElementById("sidebar-history").innerHTML = "<div class='history-item'>История недоступна для гостей</div>";
+        return; 
+    }
+    
+    try {
+        const response = await fetch("http://localhost:8000/history", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUserEmail }) });
+        const data = await response.json();
+        
+        if (data.status === "success" && data.history.length > 0) {
+            const chatBox = document.getElementById("chat");
+            const sidebarHistory = document.getElementById("sidebar-history");
+            chatBox.innerHTML = ""; sidebarHistory.innerHTML = ""; 
+            
+            data.history.forEach(msg => {
+                if (msg.role === "user") {
+                    chatBox.innerHTML += `<div class="message user">${msg.content}</div>`;
+                    let shortTitle = msg.content.substring(0, 25);
+                    if(msg.content.length > 25) shortTitle += "...";
+                    sidebarHistory.innerHTML += `<div class="history-item">${shortTitle}</div>`;
+                } else {
+                    chatBox.innerHTML += `<div class="message ai">${marked.parse(msg.content)}</div>`;
+                }
+            });
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    } catch (error) { console.error("Ошибка истории:", error); }
+}
+
+function startNewChat() {
+    document.getElementById("chat").innerHTML = `<div class="message ai">Сессия очищена. Память сброшена.</div>`;
+    if(window.innerWidth < 768) toggleSidebar(); 
+}
+
+// --- ЛОГИКА ИНСТРУМЕНТОВ ---
+function useTool(type, event) {
+    currentMode = type;
+    const input = document.getElementById("user-input");
+    
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text-muted)';
+        btn.style.background = 'var(--bg-main)';
+    });
+    
+    const activeBtn = event.currentTarget;
+    activeBtn.style.borderColor = 'var(--accent-blue)';
+    activeBtn.style.color = 'var(--text-main)';
+    activeBtn.style.background = 'rgba(59, 130, 246, 0.1)';
+
+    if (type === 'code') input.placeholder = "Опишите логику кода, который нужно написать...";
+    else if (type === 'scan') input.placeholder = "Введите домен или IP (например: google.com)...";
+    else if (type === 'image') input.placeholder = "Опишите картинку (например: киберпанк город в неоне)...";
+    
+    input.focus();
+}
+
+function resetTools() {
+    currentMode = "chat";
+    document.getElementById("user-input").placeholder = "Введите сообщение...";
+    document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text-muted)';
+        btn.style.background = 'var(--bg-main)';
+    });
+}
+
+// --- ОТПРАВКА СООБЩЕНИЙ ---
+function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
+
+async function sendMessage() {
+    const input = document.getElementById("user-input");
+    const chat = document.getElementById("chat");
+    const sidebarHistory = document.getElementById("sidebar-history");
+    const text = input.value.trim();
+
+    if (text === "") return;
+
+    chat.innerHTML += `<div class="message user">${text}</div>`;
+    input.value = ""; 
+    chat.scrollTop = chat.scrollHeight;
+
+    if (currentUserEmail !== "guest") {
+        let shortTitle = text.substring(0, 25);
+        if(text.length > 25) shortTitle += "...";
+        sidebarHistory.innerHTML += `<div class="history-item">${shortTitle}</div>`;
+    }
+
+    const loadingId = "ai-" + Date.now();
+    chat.innerHTML += `
+        <div class="message ai" id="${loadingId}">
+            <div style="display:flex; height:24px; align-items:center;">
+                <span class="typing"></span><span class="typing"></span><span class="typing"></span>
+            </div>
+        </div>
+    `;
+    chat.scrollTop = chat.scrollHeight;
+
+    const modeToSend = currentMode;
+    resetTools();
+
+    try {
+        const response = await fetch("http://localhost:8000/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: text, email: currentUserEmail, mode: modeToSend })
+        });
+        
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder("utf-8");
+        const messageElement = document.getElementById(loadingId);
+        messageElement.innerHTML = ""; 
+
+        let charQueue = [];
+        let isAnimating = false;
+        let currentAiMarkdown = ""; 
+
+        function processQueue() {
+            if (charQueue.length > 0) {
+                isAnimating = true;
+                currentAiMarkdown += charQueue.shift();
+                messageElement.innerHTML = marked.parse(currentAiMarkdown);
+                chat.scrollTop = chat.scrollHeight;
+                setTimeout(processQueue, 15); 
+            } else {
+                isAnimating = false; 
+            }
+        }
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break; 
+            const chunk = decoder.decode(value, { stream: true });
+            charQueue.push(...chunk.split(''));
+            if (!isAnimating) processQueue();
+        }
+    } catch (error) {
+        document.getElementById(loadingId).innerHTML = "<span style='color: #ef4444;'>Ошибка сервера. Убедитесь, что Python запущен.</span>";
+    }
+}
+</script>
+
+</body>
+</html>
