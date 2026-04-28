@@ -11,7 +11,8 @@ from urllib.parse import urlparse, quote
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse
+# Добавили HTMLResponse для вывода сайта
+from fastapi.responses import StreamingResponse, HTMLResponse 
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 from groq import Groq
@@ -35,8 +36,8 @@ GROQ_MODEL = "llama3-8b-8192"
 
 if not GROQ_API_KEY:
     print("🚨 ВНИМАНИЕ: GROQ_API_KEY не найден в переменных окружения!")
-
-client = Groq(api_key=GROQ_API_KEY)
+else:
+    client = Groq(api_key=GROQ_API_KEY)
 
 # === 1. БАЗА ДАННЫХ ===
 def init_db():
@@ -51,7 +52,6 @@ init_db()
 
 # === 2. ФУНКЦИИ И ИНСТРУМЕНТЫ ===
 def ask_ai_quick(prompt):
-    """Быстрый запрос к облаку (без потока) для обработки инструментов"""
     try:
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
@@ -59,7 +59,6 @@ def ask_ai_quick(prompt):
         )
         return chat_completion.choices[0].message.content.strip()
     except Exception as e:
-        print(f"Ошибка API: {e}")
         return ""
 
 def search_web(query):
@@ -113,6 +112,17 @@ class UserLogin(BaseModel): email: str; password: str
 class HistoryRequest(BaseModel): email: str
 class ChatRequest(BaseModel): text: str; email: str; mode: str = "chat"
 
+# -----------------------------------------------------
+# НОВЫЙ МАРШРУТ: Выдача самого сайта (index.html)
+# -----------------------------------------------------
+@app.get("/")
+def serve_frontend():
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Ошибка: файл index.html не найден! Убедитесь, что он лежит в одной папке с server.py</h1>", status_code=404)
+
 @app.post("/register")
 def register(user: UserRegister):
     conn = sqlite3.connect('users.db'); cursor = conn.cursor()
@@ -151,7 +161,10 @@ def chat_with_ai(req: ChatRequest):
         conn.commit(); conn.close()
     
     def generate_stream():
-        # СЕКРЕТНАЯ ПАНЕЛЬ
+        if not GROQ_API_KEY:
+            yield "Ошибка сервера: Отсутствует GROQ_API_KEY. Добавьте его в переменные окружения Render."
+            return
+
         if is_admin_command:
             conn = sqlite3.connect('users.db'); cursor = conn.cursor()
             cursor.execute('SELECT id, username, email FROM users')
@@ -172,7 +185,6 @@ def chat_with_ai(req: ChatRequest):
         
         final_prompt = req.text
 
-        # МАГИЯ ИЗОБРАЖЕНИЙ
         if req.mode == "image":
             translate_prompt = f"Translate to English for image prompt, output only translation: '{req.text}'"
             english_prompt = ask_ai_quick(translate_prompt) or "landscape"
@@ -191,7 +203,6 @@ def chat_with_ai(req: ChatRequest):
                 conn.commit(); conn.close()
             return
 
-        # ИНСТРУМЕНТЫ
         elif req.mode == "code":
             final_prompt = f"Напиши профессиональный код для: {req.text}"
         elif req.mode == "scan":
@@ -208,7 +219,6 @@ def chat_with_ai(req: ChatRequest):
                 search_query = ask_ai_quick(f"Search query for: {req.text}")
                 final_prompt = f"Факты из сети:\n{search_web(search_query)}\nОтветь на русском: {req.text}"
 
-        # ОБЛАЧНЫЙ СТРИМИНГ
         try:
             stream = client.chat.completions.create(
                 model=GROQ_MODEL,
