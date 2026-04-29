@@ -10,7 +10,7 @@ from urllib.parse import urlparse, quote
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse, HTMLResponse 
+from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 from groq import Groq
@@ -134,7 +134,22 @@ def serve_frontend():
             return HTMLResponse(content=f.read())
     except FileNotFoundError:
         return HTMLResponse(content="<h1>Ошибка: файл index.html не найден! Убедитесь, что он лежит в одной папке с server.py</h1>", status_code=404)
+@app.get("/")
+def serve_frontend():
+    try:
+        with open("index.html", "r", encoding="utf-8") as f:
+            return HTMLResponse(content=f.read())
+    except FileNotFoundError:
+        return HTMLResponse(content="<h1>Ошибка: файл index.html не найден!</h1>", status_code=404)
 
+# --- НОВЫЙ БЛОК: РАЗРЕШАЕМ ВЫДАВАТЬ ИКОНКУ ---
+@app.get("/DarynAI_Avatar.jpg")
+def serve_avatar():
+    try:
+        return FileResponse("DarynAI_Avatar.jpg")
+    except RuntimeError:
+        return HTMLResponse(status_code=404)
+# ---------------------------------------------
 @app.post("/register")
 def register(user: UserRegister):
     try:
@@ -237,7 +252,7 @@ def chat_with_ai(req: ChatRequest):
                 f"<div style='display:flex; flex-direction:column; gap:12px; margin-top:5px;'>"
                 f"<img src='{img_url}' style='border-radius:12px; border:1px solid var(--border); width:100%;' alt='Art'>"
                 f"<a href='{img_url}' download='DarynAI_Art.jpg' target='_blank' style='background:var(--accent-blue); color:#fff; text-decoration:none; padding:12px 20px; border-radius:10px; font-weight:600; text-align:center; width:fit-content; display:flex; align-items:center; gap:8px;'>"
-                f"Скачать в 4K</a></div>"
+                f"Скачать </a></div>"
             )
             yield html_response
             if req.email != "guest":
