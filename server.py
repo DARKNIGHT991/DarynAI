@@ -32,7 +32,7 @@ app.add_middleware(
 
 # === НАСТРОЙКИ GROQ API (ОБЛАКО) ===
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-GROQ_MODEL = "GROQ_MODEL = "llama-3.1-8b-instant"
+GROQ_MODEL = "llama-3.1-8b-instant"
 
 if not GROQ_API_KEY:
     print("🚨 ВНИМАНИЕ: GROQ_API_KEY не найден в переменных окружения!")
