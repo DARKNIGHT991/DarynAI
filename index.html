@@ -66,9 +66,9 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
 .history-item:hover { background: var(--user-bubble); color: var(--text-main); }
 .sidebar-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
 
-/* --- ОБНОВЛЕННЫЙ АВАТАР (ИКОНКА) --- */
-.user-avatar { width: 32px; height: 32px; background: transparent; color: #fff; border-radius: 8px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-.user-avatar-icon { width: 100%; height: 100%; object-fit: contain; filter: invert(1); /* Делаем белым */ }
+/* --- ОБНОВЛЕННЫЙ АВАТАР (ВЕКТОРНЫЙ SVG) --- */
+.user-avatar { width: 32px; height: 32px; background: transparent; color: var(--text-main); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border); }
+.user-avatar svg { width: 18px; height: 18px; }
 
 /* ГЛАВНЫЙ ЭКРАН */
 #main-content { flex: 1; display: flex; flex-direction: column; height: 100%; background: var(--bg-main); width: 100%; }
@@ -77,10 +77,9 @@ body { background: var(--bg-main); color: var(--text-main); height: 100vh; overf
 .menu-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 .menu-btn:hover { background: var(--user-bubble); color: var(--text-main); }
 
-/* --- ОБНОВЛЕННЫЙ ЛОГОТИП (ИКОНКА) --- */
+/* --- ОБНОВЛЕННЫЙ ЛОГОТИП (ВЕКТОРНЫЙ SVG) --- */
 .logo { font-size: 15px; font-weight: 600; letter-spacing: 1px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-/* Убрали старую синюю точку */
-.logo-icon { width: 18px; height: 18px; object-fit: contain; filter: invert(1); /* Делаем белым */ margin-right: 2px; }
+.logo svg { width: 20px; height: 20px; margin-right: 2px; color: var(--text-main); }
 
 .logout-btn { font-size: 13px; font-weight: 500; color: #ef4444; cursor: pointer; }
 
@@ -125,24 +124,16 @@ input.chat-input:focus { border-color: var(--accent-blue); }
 @keyframes bounce { 0%, 80%, 100% { transform: scale(0); opacity: 0.5; } 40% { transform: scale(1); opacity: 1; } }
 
 /* ========================================================
-   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ (до 768px)
+   АДАПТАЦИЯ ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ
    ======================================================== */
 @media (max-width: 768px) {
-    /* Сайдбар на мобилках прячется полностью за экран */
     #sidebar { position: fixed; height: 100%; z-index: 20; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
-    
-    /* Убираем лишние отступы вокруг чата, чтобы он занимал весь экран */
     .wrapper { padding: 0; }
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
-    
-    /* Сообщения могут быть шире */
     .message { max-width: 95%; }
-    
-    /* Уменьшаем шрифты в админ-панели */
     .auth-card { padding: 30px 20px; }
 }
 
-/* Десктопная версия: Сайдбар сдвигает контент, а не перекрывает */
 @media (min-width: 769px) {
     #sidebar { position: relative; transform: translateX(0); margin-left: calc(-1 * var(--sidebar-width)); }
     #sidebar.open { margin-left: 0; }
@@ -193,7 +184,11 @@ input.chat-input:focus { border-color: var(--accent-blue); }
         <div class="history-list" id="sidebar-history"></div>
         <div class="sidebar-footer">
             <div class="user-avatar" id="sidebar-avatar">
-                <img src="https://i.postimg.cc/0jCj1XFh/image-4.png" class="user-avatar-icon" alt="User">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 18 22 12 16 6"></polyline>
+                    <polyline points="8 6 2 12 8 18"></polyline>
+                    <line x1="14" y1="4" x2="10" y2="20"></line>
+                </svg>
             </div>
             <span id="sidebar-username">Гость</span>
         </div>
@@ -206,7 +201,11 @@ input.chat-input:focus { border-color: var(--accent-blue); }
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
                 <div class="logo">
-                    <img src="https://i.postimg.cc/0jCj1XFh/image-4.png" class="logo-icon" alt="Logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                        <line x1="14" y1="4" x2="10" y2="20"></line>
+                    </svg>
                     DARYN AI
                 </div>
             </div>
@@ -215,7 +214,7 @@ input.chat-input:focus { border-color: var(--accent-blue); }
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status">Подключено</div>
+                <div class="status" id="app-status">Подключено к Облаку Groq</div>
 
                 <div class="chat" id="chat">
                     <div class="message ai">Система Daryn AI инициализирована. Выберите инструмент или задайте вопрос.</div>
@@ -248,10 +247,7 @@ input.chat-input:focus { border-color: var(--accent-blue); }
 </div>
 
 <script>
-// =========================================================================
-// ⚠️ ВАЖНО: Вставь сюда свой реальный адрес сайта из Render (БЕЗ СЛЭША НА КОНЦЕ)
-// =========================================================================
-const BACKEND_URL = "https://darynai.onrender.com"; // Оставь пустым, если используешь "монолитный" запуск
+const BACKEND_URL = ""; 
 
 marked.setOptions({
     highlight: function(code, lang) {
@@ -312,8 +308,6 @@ function loginAsGuest() { currentUserEmail = "guest"; setUserProfile("Гость
 
 function setUserProfile(username) {
     document.getElementById('sidebar-username').innerText = username;
-    // Удаляем старый код для буквы Г
-    // document.getElementById('sidebar-avatar').innerText = username.charAt(0).toUpperCase();
 }
 
 async function enterApp() {
@@ -324,7 +318,6 @@ async function enterApp() {
     await loadHistory();
 }
 
-// УПРАВЛЕНИЕ САЙДБАРОМ С УЧЕТОМ МОБИЛОК
 function toggleSidebar() { 
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
@@ -370,7 +363,6 @@ async function loadHistory() {
 
 function startNewChat() {
     document.getElementById("chat").innerHTML = `<div class="message ai">Сессия очищена. Память сброшена.</div>`;
-    // На мобилках закрываем сайдбар после создания чата
     if(window.innerWidth <= 768) toggleSidebar(); 
 }
 
