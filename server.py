@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import bcrypt
 import requests
 import socket
@@ -11,11 +10,11 @@ from urllib.parse import urlparse, quote
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-# Добавили HTMLResponse для вывода сайта
 from fastapi.responses import StreamingResponse, HTMLResponse 
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 from groq import Groq
+import psycopg2 # --- НОВАЯ БИБЛИОТЕКА ДЛЯ POSTGRESQL ---
 
 # Загружаем переменные из .env
 load_dotenv()
@@ -30,7 +29,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === НАСТРОЙКИ GROQ API (ОБЛАКО) ===
+# === НАСТРОЙКИ GROQ API ===
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama-3.1-8b-instant"
 
@@ -39,14 +38,30 @@ if not GROQ_API_KEY:
 else:
     client = Groq(api_key=GROQ_API_KEY)
 
+# === НАСТРОЙКИ POSTGRESQL ===
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+def get_db_connection():
+    if not DATABASE_URL:
+        raise ValueError("🚨 DATABASE_URL не найден! БД не может быть подключена.")
+    return psycopg2.connect(DATABASE_URL)
+
 # === 1. БАЗА ДАННЫХ ===
 def init_db():
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL)''')
-    cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, email TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL)''')
-    conn.commit()
-    conn.close()
+    if not DATABASE_URL:
+        print("Пропуск инициализации БД (нет ссылки DATABASE_URL)")
+        return
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # В Postgres используется SERIAL вместо AUTOINCREMENT, а типы данных - VARCHAR и TEXT
+        cursor.execute('''CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL)''')
+        cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, email VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL, content TEXT NOT NULL)''')
+        conn.commit()
+        conn.close()
+        print("✅ База данных PostgreSQL успешно инициализирована!")
+    except Exception as e:
+        print(f"🚨 Ошибка БД: {e}")
 
 init_db()
 
@@ -112,9 +127,6 @@ class UserLogin(BaseModel): email: str; password: str
 class HistoryRequest(BaseModel): email: str
 class ChatRequest(BaseModel): text: str; email: str; mode: str = "chat"
 
-# -----------------------------------------------------
-# НОВЫЙ МАРШРУТ: Выдача самого сайта (index.html)
-# -----------------------------------------------------
 @app.get("/")
 def serve_frontend():
     try:
@@ -125,29 +137,50 @@ def serve_frontend():
 
 @app.post("/register")
 def register(user: UserRegister):
-    conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-    cursor.execute('SELECT email FROM users WHERE email = ?', (user.email,))
-    if cursor.fetchone(): return {"status": "error", "message": "Email уже зарегистрирован"}
-    hashed = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt())
-    cursor.execute('INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)', (user.username, user.email, hashed))
-    conn.commit(); conn.close()
-    return {"status": "success", "username": user.username, "email": user.email}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        # В Postgres используем %s вместо ?
+        cursor.execute('SELECT email FROM users WHERE email = %s', (user.email,))
+        if cursor.fetchone(): 
+            conn.close()
+            return {"status": "error", "message": "Email уже зарегистрирован"}
+        
+        hashed = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        cursor.execute('INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)', (user.username, user.email, hashed))
+        conn.commit()
+        conn.close()
+        return {"status": "success", "username": user.username, "email": user.email}
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка БД: {str(e)}"}
 
 @app.post("/login")
 def login(user: UserLogin):
-    conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-    cursor.execute('SELECT username, password_hash FROM users WHERE email = ?', (user.email,))
-    row = cursor.fetchone(); conn.close()
-    if not row: return {"status": "error", "message": "Email не найден"}
-    if bcrypt.checkpw(user.password.encode('utf-8'), row[1]): return {"status": "success", "username": row[0], "email": user.email}
-    return {"status": "error", "message": "Неверный пароль"}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT username, password_hash FROM users WHERE email = %s', (user.email,))
+        row = cursor.fetchone()
+        conn.close()
+        
+        if not row: return {"status": "error", "message": "Email не найден"}
+        if bcrypt.checkpw(user.password.encode('utf-8'), row[1].encode('utf-8')): 
+            return {"status": "success", "username": row[0], "email": user.email}
+        return {"status": "error", "message": "Неверный пароль"}
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка БД: {str(e)}"}
 
 @app.post("/history")
 def get_history(req: HistoryRequest):
-    conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-    cursor.execute('SELECT role, content FROM messages WHERE email = ? ORDER BY id ASC', (req.email,))
-    rows = cursor.fetchall(); conn.close()
-    return {"status": "success", "history": [{"role": r[0], "content": r[1]} for r in rows]}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT role, content FROM messages WHERE email = %s ORDER BY id ASC', (req.email,))
+        rows = cursor.fetchall()
+        conn.close()
+        return {"status": "success", "history": [{"role": r[0], "content": r[1]} for r in rows]}
+    except:
+        return {"status": "success", "history": []}
 
 # === 4. ГЛАВНЫЙ МАРШРУТ ЧАТА ===
 @app.post("/chat")
@@ -156,9 +189,14 @@ def chat_with_ai(req: ChatRequest):
     is_admin_command = (req.text.strip() == "/admin/db/1103")
     
     if req.email != "guest" and not is_admin_command:
-        conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-        cursor.execute('INSERT INTO messages (email, role, content) VALUES (?, ?, ?)', (req.email, 'user', req.text))
-        conn.commit(); conn.close()
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'user', req.text))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            print(f"Ошибка сохранения истории: {e}")
     
     def generate_stream():
         if not GROQ_API_KEY:
@@ -166,14 +204,19 @@ def chat_with_ai(req: ChatRequest):
             return
 
         if is_admin_command:
-            conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-            cursor.execute('SELECT id, username, email FROM users')
-            users_data = cursor.fetchall(); conn.close()
-            admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
-            if not users_data: admin_response += "| - | Пусто | - |\n"
-            else:
-                for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
-            yield admin_response
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute('SELECT id, username, email FROM users')
+                users_data = cursor.fetchall()
+                conn.close()
+                admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
+                if not users_data: admin_response += "| - | Пусто | - |\n"
+                else:
+                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                yield admin_response
+            except Exception as e:
+                yield f"Ошибка доступа к БД: {e}"
             return
 
         full_ai_response = "" 
@@ -198,9 +241,13 @@ def chat_with_ai(req: ChatRequest):
             )
             yield html_response
             if req.email != "guest":
-                conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-                cursor.execute('INSERT INTO messages (email, role, content) VALUES (?, ?, ?)', (req.email, 'ai', html_response))
-                conn.commit(); conn.close()
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', html_response))
+                    conn.commit()
+                    conn.close()
+                except: pass
             return
 
         elif req.mode == "code":
@@ -234,8 +281,13 @@ def chat_with_ai(req: ChatRequest):
             yield f"Ошибка облака: {str(e)}"
 
         if req.email != "guest" and full_ai_response:
-            conn = sqlite3.connect('users.db'); cursor = conn.cursor()
-            cursor.execute('INSERT INTO messages (email, role, content) VALUES (?, ?, ?)', (req.email, 'ai', full_ai_response))
-            conn.commit(); conn.close()
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', full_ai_response))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"Ошибка сохранения ответа ИИ: {e}")
 
     return StreamingResponse(generate_stream(), media_type="text/plain")
