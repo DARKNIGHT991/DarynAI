@@ -6,3 +6,4 @@ duckduckgo_search
 groq
 python-dotenv
 psycopg2-binary
+PyPDF2
