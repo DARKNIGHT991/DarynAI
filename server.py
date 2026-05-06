@@ -116,7 +116,6 @@ class ChatRequest(BaseModel):
     file_type: str | None = None
     file_data: str | None = None
 
-# --- НОВЫЕ СТРУКТУРЫ ДЛЯ ПРОФИЛЯ ---
 class ProfileUpdate(BaseModel):
     email: str
     new_username: str
@@ -159,7 +158,6 @@ def get_history(req: HistoryRequest):
         return {"status": "success", "history": [{"role": r[0], "content": r[1]} for r in rows]}
     except: return {"status": "success", "history": []}
 
-# --- НОВЫЙ ЭНДПОИНТ: ОБНОВИТЬ ИМЯ ---
 @app.post("/update_profile")
 def update_profile(req: ProfileUpdate):
     if req.email == "guest": return {"status": "error", "message": "Гости не могут менять профиль."}
@@ -173,7 +171,6 @@ def update_profile(req: ProfileUpdate):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
-# --- НОВЫЙ ЭНДПОИНТ: ОЧИСТИТЬ ИСТОРИЮ ИЗ БД ---
 @app.post("/clear_history")
 def clear_user_history(req: HistoryRequest):
     if req.email == "guest": return {"status": "success"}
@@ -230,7 +227,7 @@ def chat_with_ai(req: ChatRequest):
         current_model = GROQ_MODEL
         messages = []
 
-if req.file_data:
+        if req.file_data:
             try:
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
