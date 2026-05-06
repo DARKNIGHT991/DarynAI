@@ -18,27 +18,42 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .chat::-webkit-scrollbar-track, .history-list::-webkit-scrollbar-track { background: transparent; }
 .chat::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
-/* === НОВОЕ: СТАРТОВЫЙ ЭКРАН (LANDING) === */
-#landing-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 2000; display: flex; flex-direction: column; overflow-y: auto; transition: opacity 0.5s ease; }
-.landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; border-bottom: 1px solid var(--border); background: rgba(9, 9, 11, 0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 2010; }
-.landing-nav .logo { font-size: 18px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
-.btn-try { padding: 10px 24px; font-size: 14px; width: auto; margin: 0; }
-.landing-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 60px 20px; text-align: center; }
-.landing-title { font-size: 48px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(to right, #ffffff, #a1a1aa); -webkit-background-clip: text; color: transparent; line-height: 1.2; }
-.landing-subtitle { font-size: 18px; color: var(--text-muted); margin-bottom: 50px; max-width: 600px; line-height: 1.6; }
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; width: 100%; max-width: 1000px; }
-.feature-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 30px; border-radius: 16px; text-align: left; transition: transform 0.2s, border-color 0.2s; }
-.feature-card:hover { transform: translateY(-5px); border-color: var(--accent-blue); }
-.feature-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: 12px; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); margin-bottom: 20px; }
-.feature-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; color: var(--text-main); }
-.feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+/* === ЖИВОЙ СТАРТОВЫЙ ЭКРАН === */
+#landing-screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; transition: opacity 0.5s ease; background-color: var(--bg-main); }
 
-/* Экран авторизации (теперь скрыт по умолчанию) */
+/* Хайтек сетка на фоне */
+.landing-bg-grid { position: fixed; inset: 0; z-index: -2; pointer-events: none; background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); }
+
+/* Анимированные светящиеся шары */
+.glow-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; }
+.orb-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(59, 130, 246, 0.25); animation: float1 15s infinite alternate ease-in-out; }
+.orb-2 { bottom: 10%; right: -5%; width: 40vw; height: 40vw; background: rgba(147, 51, 234, 0.2); animation: float2 20s infinite alternate ease-in-out; }
+@keyframes float1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, 15%) scale(1.1); } }
+@keyframes float2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-10%, -15%) scale(1.2); } }
+
+/* Навигация и кнопка */
+.landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(9, 9, 11, 0.6); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 2010; }
+.landing-nav .logo { font-size: 20px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
+.nav-btn { background: var(--accent-blue); color: #fff; border: none; padding: 12px 28px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); white-space: nowrap; }
+.nav-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6); background: #2563eb; }
+
+/* Контент */
+.landing-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 80px 20px; text-align: center; position: relative; z-index: 10; }
+.landing-title { font-size: 56px; font-weight: 700; margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; line-height: 1.2; letter-spacing: -1px; }
+.landing-subtitle { font-size: 18px; color: var(--text-muted); margin-bottom: 60px; max-width: 600px; line-height: 1.6; }
+.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; width: 100%; max-width: 1100px; }
+.feature-card { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); padding: 35px; border-radius: 20px; text-align: left; transition: all 0.3s ease; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
+.feature-card:hover { transform: translateY(-8px); border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2); }
+.feature-icon { display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 14px; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); margin-bottom: 24px; border: 1px solid rgba(59, 130, 246, 0.2); }
+.feature-title { font-size: 19px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
+.feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+
+/* === ОСТАЛЬНОЙ ИНТЕРФЕЙС === */
 #auth-screen { display: none; position: fixed; inset: 0; background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s ease; padding: 20px; opacity: 0; }
 .auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 .auth-card h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
 .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
-.auth-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; }
+.auth-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
 .auth-input:focus { border-color: var(--accent-blue); }
 .btn-primary { background: var(--text-main); color: var(--bg-main); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px; transition: opacity 0.2s;}
 .btn-primary:hover { opacity: 0.9; }
@@ -50,12 +65,10 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 #form-login, #form-register { display: none; flex-direction: column; }
 #form-main { display: flex; flex-direction: column; }
 
-/* Окно профиля */
 #profile-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 1001; }
 #profile-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; width: 90%; max-width: 380px; padding: 30px; }
 .profile-info { color: var(--accent-blue); font-weight: 500; font-size: 14px; margin-bottom: 20px; word-break: break-all; }
 
-/* Каркас чата */
 #app-container { display: none; width: 100%; height: 100%; position: relative; }
 #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; backdrop-filter: blur(2px); opacity: 0; }
 #sidebar-overlay.active { display: block; opacity: 1; }
@@ -111,9 +124,9 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 .send-btn { position: absolute; right: 6px; width: 34px; height: 34px; border-radius: 10px; border: none; background: var(--text-main); color: var(--bg-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 @media (max-width: 768px) {
-    .landing-title { font-size: 36px; }
+    .landing-title { font-size: 38px; }
     .landing-nav { padding: 15px 20px; }
-    .btn-try { font-size: 13px; padding: 8px 16px; }
+    .nav-btn { font-size: 13px; padding: 10px 18px; }
     #sidebar { position: fixed; height: 100%; z-index: 20; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
     .wrapper { padding: 0; }
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
@@ -129,21 +142,28 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 
 <body>
 
-<!-- === НОВОЕ: СТАРТОВЫЙ ЭКРАН === -->
+<!-- === СТАРТОВЫЙ ЭКРАН (LANDING) === -->
 <div id="landing-screen">
+    <!-- Живой фон -->
+    <div class="landing-bg-grid"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    
     <nav class="landing-nav">
         <div class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:24px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:26px;">
                 <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
                 <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
             </svg> 
             DARYN AI
         </div>
-        <button class="btn-primary btn-try" onclick="goToAuth()">Попробовать Daryn AI</button>
+        <!-- Кнопка "Попробовать" с уникальным классом nav-btn -->
+        <button class="nav-btn" onclick="goToAuth()">Попробовать Daryn AI</button>
     </nav>
+    
     <div class="landing-content">
         <h1 class="landing-title">Представляем Daryn AI</h1>
-        <p class="landing-subtitle">Ваш персональный интеллектуальный ассистент нового поколения. Он видит, читает, пишет код и помогает решать задачи любой сложности.</p>
+        <p class="landing-subtitle">Ваш персональный интеллектуальный ассистент нового поколения. Он видит картинки, читает документы, пишет код и помогает решать задачи любой сложности.</p>
         
         <div class="feature-grid">
             <div class="feature-card">
@@ -151,7 +171,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
                 </div>
                 <h3 class="feature-title">Написание и анализ кода</h3>
-                <p class="feature-desc">Попросите Daryn AI написать скрипт, найти ошибку в вашем коде или проанализировать прикрепленный файл .py, .js или .html.</p>
+                <p class="feature-desc">Попросите бота написать скрипт, найти ошибку в коде или проанализировать прикрепленный файл .py, .js или .html.</p>
             </div>
             
             <div class="feature-card">
@@ -159,7 +179,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                 </div>
                 <h3 class="feature-title">Машинное зрение</h3>
-                <p class="feature-desc">Прикрепите скриншот, фотографию или мем. Нейросеть детально рассмотрит изображение и ответит на любые ваши вопросы по нему.</p>
+                <p class="feature-desc">Прикрепите скриншот, фотографию или график. Нейросеть детально рассмотрит изображение и ответит на любые вопросы.</p>
             </div>
 
             <div class="feature-card">
@@ -167,7 +187,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
                 </div>
                 <h3 class="feature-title">Чтение PDF-документов</h3>
-                <p class="feature-desc">Больше не нужно читать длинные отчеты. Загрузите PDF-файл, и Daryn AI сделает для вас краткую выжимку или найдет нужную информацию.</p>
+                <p class="feature-desc">Загрузите большой PDF-файл или текстовый документ, и Daryn AI сделает для вас краткую выжимку или найдет нужную деталь.</p>
             </div>
 
             <div class="feature-card">
@@ -175,17 +195,17 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                 </div>
                 <h3 class="feature-title">Сетевые инструменты</h3>
-                <p class="feature-desc">Встроенные функции для IT-специалистов: сканирование открытых портов (Скан), проверка доступности серверов (Пинг) и многое другое.</p>
+                <p class="feature-desc">Встроенные функции для IT-специалистов: сканирование открытых портов, проверка доступности серверов и парсинг доменов.</p>
             </div>
         </div>
     </div>
 </div>
-<!-- =================================== -->
 
+<!-- === ОКНО АВТОРИЗАЦИИ === -->
 <div id="auth-screen">
     <div class="auth-card">
-        <h2>Daryn AI</h2>
-        <p>Войдите для сохранения истории</p>
+        <h2 style="font-size: 28px;">Daryn AI</h2>
+        <p>Войдите, чтобы сохранять историю чатов</p>
         <div id="form-main">
             <button class="btn-primary" onclick="showForm('login')">Войти</button>
             <button class="btn-secondary" onclick="showForm('register')">Создать аккаунт</button>
@@ -209,16 +229,14 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     </div>
 </div>
 
+<!-- === ОКНО ПРОФИЛЯ === -->
 <div id="profile-overlay" onclick="closeProfile()"></div>
 <div id="profile-modal" class="auth-card">
     <h2 style="margin-bottom: 5px;">Ваш профиль</h2>
     <div class="profile-info" id="profile-email">email@example.com</div>
-    
     <p id="profile-error" class="error-msg"></p>
     <p id="profile-success" style="color: #10b981; font-size: 13px; margin-bottom: 12px; display: none;"></p>
-
     <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя">
-    
     <button class="btn-primary" onclick="saveProfile()">Сохранить имя</button>
     <button class="btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="clearUserHistory()">
         <svg style="vertical-align: middle; margin-right: 5px; width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2;" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
@@ -227,6 +245,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     <button class="btn-text" onclick="closeProfile()">Закрыть настройки</button>
 </div>
 
+<!-- === ГЛАВНЫЙ ИНТЕРФЕЙС === -->
 <div id="app-container">
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar">
@@ -236,7 +255,6 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
             </button>
         </div>
         <div class="history-list" id="sidebar-history"></div>
-        
         <div class="sidebar-footer" onclick="openProfile()" title="Настройки профиля">
             <div class="user-avatar" id="sidebar-avatar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;">
@@ -267,7 +285,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status">Подключено к Облаку Groq</div>
+                <div class="status" id="app-status"> </div>
                 <div class="chat" id="chat">
                     <div class="message ai">
                         <div class="md-content">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
@@ -309,7 +327,6 @@ let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
 
-// --- НОВАЯ ФУНКЦИЯ ДЛЯ ПЕРЕХОДА ОТ ПРЕВЬЮ К АВТОРИЗАЦИИ ---
 function goToAuth() {
     const landing = document.getElementById('landing-screen');
     const auth = document.getElementById('auth-screen');
@@ -318,11 +335,9 @@ function goToAuth() {
     setTimeout(() => {
         landing.style.display = 'none';
         auth.style.display = 'flex';
-        // Небольшая задержка перед появлением для плавности
         setTimeout(() => { auth.style.opacity = '1'; }, 50);
     }, 500);
 }
-// ---------------------------------------------------------
 
 const getActionsHtml = () => `
     <div class="message-actions">
@@ -382,7 +397,6 @@ async function saveProfile() {
 
 async function clearUserHistory() {
     if (!confirm("ВНИМАНИЕ: Вы уверены, что хотите навсегда удалить всю историю переписки? Это действие нельзя отменить.")) return;
-    
     const err = document.getElementById('profile-error');
     const succ = document.getElementById('profile-success');
     
