@@ -21,29 +21,17 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 /* === ЖИВОЙ СТАРТОВЫЙ ЭКРАН === */
 #landing-screen { position: fixed; inset: 0; z-index: 2000; overflow-y: auto; overflow-x: hidden; background-color: var(--bg-main); scroll-behavior: smooth; transition: opacity 0.5s ease; }
 
-/* Хайтек сетка */
 .landing-bg-grid { position: fixed; inset: 0; z-index: -2; pointer-events: none; background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px); }
 
-/* Анимированные сферы, меняющиеся местами */
 .glow-orb { position: fixed; border-radius: 50%; filter: blur(150px); z-index: -1; pointer-events: none; }
 .orb-1 { top: 0; left: 0; width: 45vw; height: 45vw; background: rgba(59, 130, 246, 0.4); animation: swapBlue 20s infinite ease-in-out alternate; }
 .orb-2 { bottom: 0; right: 0; width: 45vw; height: 45vw; background: rgba(147, 51, 234, 0.3); animation: swapPurple 20s infinite ease-in-out alternate; }
 
-@keyframes swapBlue {
-    0% { transform: translate(-10%, -10%) scale(1); }
-    50% { transform: translate(50vw, 50vh) scale(1.2); }
-    100% { transform: translate(100vw, 100vh) scale(1); }
-}
-@keyframes swapPurple {
-    0% { transform: translate(10%, 10%) scale(1); }
-    50% { transform: translate(-50vw, -50vh) scale(1.2); }
-    100% { transform: translate(-100vw, -100vh) scale(1); }
-}
+@keyframes swapBlue { 0% { transform: translate(-10%, -10%) scale(1); } 50% { transform: translate(50vw, 50vh) scale(1.2); } 100% { transform: translate(100vw, 100vh) scale(1); } }
+@keyframes swapPurple { 0% { transform: translate(10%, 10%) scale(1); } 50% { transform: translate(-50vw, -50vh) scale(1.2); } 100% { transform: translate(-100vw, -100vh) scale(1); } }
 
-/* Секция 1: Герой (100vh) */
+/* Секция 1: Герой */
 .hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 20px; text-align: center; }
-
-/* Анимации появления */
 @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseGlow { 0% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } 50% { filter: drop-shadow(0 0 30px rgba(59,130,246,0.9)); } 100% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } }
 
@@ -62,18 +50,34 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .arrow-down { width: 20px; height: 20px; animation: bounce 2s infinite; stroke: currentColor; stroke-width: 2; fill: none; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
 
+/* === АНИМАЦИЯ ПРИ СКРОЛЛЕ (REVEAL) === */
+.reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
+.reveal.active { opacity: 1; transform: translateY(0); }
+.delay-1 { transition-delay: 0.1s; }
+.delay-2 { transition-delay: 0.2s; }
+.delay-3 { transition-delay: 0.3s; }
+.delay-4 { transition-delay: 0.4s; }
+
 /* Секция 2: Хардкор Ядро */
-.core-section { min-height: 100vh; padding: 100px 20px 40px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
+.core-section { padding: 100px 20px 40px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 .core-header { font-size: 42px; font-weight: 800; margin-bottom: 60px; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
-.core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+.core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 80px; }
 .core-card { background: #0a0a0a; border: 1px solid var(--border); border-left: 4px solid var(--accent-blue); padding: 30px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; }
 .core-tag { display: inline-block; background: rgba(59,130,246,0.1); color: var(--accent-blue); font-size: 12px; padding: 4px 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; }
 .core-card h3 { font-size: 20px; color: #fff; margin-bottom: 15px; font-family: 'Inter', sans-serif; }
 .core-card p { font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 15px; }
 .core-code { background: #000; border: 1px solid #222; padding: 10px; border-radius: 6px; font-size: 12px; color: #4ade80; overflow-x: auto; }
 
+/* === НОВОЕ: ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ === */
+.specs-section { margin-bottom: 80px; }
+.specs-header { font-size: 28px; font-weight: 800; margin-bottom: 40px; color: #fff; font-family: 'JetBrains Mono', monospace; }
+.specs-list { display: flex; flex-direction: column; border-top: 1px solid var(--border); }
+.spec-item { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+.spec-key { color: var(--text-muted); font-family: 'JetBrains Mono', monospace; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; }
+.spec-value { color: #fff; font-weight: 600; font-size: 16px; text-align: right; }
+
 /* Подвал миссии */
-.mission-footer { margin-top: auto; padding-top: 80px; text-align: center; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.mission-footer { padding-top: 40px; text-align: center; color: var(--text-muted); font-family: 'Inter', sans-serif; border-top: 1px solid var(--border); margin-top: auto; }
 .mission-footer p { max-width: 800px; margin: 0 auto 15px auto; line-height: 1.6; font-size: 15px; }
 .mission-footer strong { color: var(--text-main); }
 
@@ -162,6 +166,8 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
     .message { max-width: 95%; }
     .message-actions { opacity: 1; } 
+    .spec-item { flex-direction: column; align-items: flex-start; }
+    .spec-value { text-align: left; }
 }
 @media (min-width: 769px) {
     #sidebar { position: relative; transform: translateX(0); margin-left: calc(-1 * var(--sidebar-width)); }
@@ -199,31 +205,31 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     </div>
 
     <div class="core-section" id="core">
-        <h2 class="core-header">SYSTEM.CORE()</h2>
+        <h2 class="core-header reveal">SYSTEM.CORE()</h2>
         <div class="core-grid">
             
-            <div class="core-card">
+            <div class="core-card reveal delay-1">
                 <span class="core-tag">LLM / VISION</span>
                 <h3>Daryn AI</h3>
                 <p>Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.</p>
                 <div class="core-code">current_model = "daryn-ai-core"</div>
             </div>
 
-            <div class="core-card">
+            <div class="core-card reveal delay-2">
                 <span class="core-tag">BACKEND</span>
                 <h3>FastAPI + Python 3</h3>
                 <p>Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.</p>
                 <div class="core-code">class ChatRequest(BaseModel):<br>&nbsp;&nbsp;text: str<br>&nbsp;&nbsp;file_data: str | None = None</div>
             </div>
 
-            <div class="core-card">
+            <div class="core-card reveal delay-3">
                 <span class="core-tag">DATABASE</span>
                 <h3>PostgreSQL + Bcrypt</h3>
                 <p>Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.</p>
-                <div class="core-code">cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', ...)</div>
+                <div class="core-code">cursor.execute('INSERT INTO messages...', ...)</div>
             </div>
 
-            <div class="core-card">
+            <div class="core-card reveal delay-4">
                 <span class="core-tag">NETWORK UTILS</span>
                 <h3>Subprocess & Sockets</h3>
                 <p>Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
@@ -231,7 +237,33 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
             </div>
         </div>
 
-        <div class="mission-footer">
+        <div class="specs-section reveal">
+            <h2 class="specs-header">>_ ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ</h2>
+            <div class="specs-list">
+                <div class="spec-item reveal delay-1">
+                    <span class="spec-key">Вычислительная архитектура</span>
+                    <span class="spec-value">Асинхронный Stateless API (FastAPI)</span>
+                </div>
+                <div class="spec-item reveal delay-2">
+                    <span class="spec-key">Скорость генерации (LPU)</span>
+                    <span class="spec-value">~800 токенов в секунду</span>
+                </div>
+                <div class="spec-item reveal delay-3">
+                    <span class="spec-key">Контекстное окно</span>
+                    <span class="spec-value">131,072 токенов (Long Context)</span>
+                </div>
+                <div class="spec-item reveal delay-4">
+                    <span class="spec-key">Система хранения данных</span>
+                    <span class="spec-value">Реляционная СУБД (PostgreSQL)</span>
+                </div>
+                <div class="spec-item reveal delay-1">
+                    <span class="spec-key">Протоколы безопасности</span>
+                    <span class="spec-value">Bcrypt Hashing / CORS / ENV Encryption</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mission-footer reveal">
             <p>Проект основан в 2026 году разработчиком <strong>Daryn</strong>.</p>
             <p>Главная цель — создать мощный, независимый и универсальный инструмент, который стирает границы между человеком и технологиями. Daryn AI призван автоматизировать рутину, ускорять решение сложнейших технических задач и помогать людям эффективно воплощать в жизнь самые масштабные проекты.</p>
         </div>
@@ -357,6 +389,20 @@ let currentUserEmail = "guest";
 let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
+
+// === НОВОЕ: СКРИПТ АНИМАЦИИ ПРИ СКРОЛЛЕ (INTERSECTION OBSERVER) ===
+document.addEventListener("DOMContentLoaded", () => {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('active');
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+});
+// =================================================================
 
 function openAuth(type) {
     document.getElementById('login-error').style.display = 'none';
