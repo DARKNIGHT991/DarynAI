@@ -243,7 +243,7 @@ def chat_with_ai(req: ChatRequest):
                         for page in reader.pages: file_content += (page.extract_text() or "") + "\n"
                     else: file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
-                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n
+                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n```\n\nМой вопрос: {final_prompt}"
 ```\n\nМой вопрос: {final_prompt}"
                     messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": combined_prompt}]
             except Exception as e:
