@@ -35,7 +35,7 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_MODEL = "llama-3.1-8b-instant"
 
 if not GROQ_API_KEY:
-    print("🚨 ВНИМАНИЕ: GROQ_API_KEY не найден в переменных окружения!")
+    print("🚨 ВНИМАНИЕ: GROQ_API_KEY не найден!")
 else:
     client = Groq(api_key=GROQ_API_KEY)
 
@@ -43,7 +43,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db_connection():
     if not DATABASE_URL:
-        raise ValueError("🚨 DATABASE_URL не найден! БД не может быть подключена.")
+        raise ValueError("🚨 DATABASE_URL не найден! БД не подключена.")
     return psycopg2.connect(DATABASE_URL)
 
 def init_db():
@@ -59,7 +59,6 @@ def init_db():
 
 init_db()
 
-# Функции инструментов
 def ask_ai_quick(prompt):
     try:
         res = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model=GROQ_MODEL)
@@ -105,12 +104,10 @@ def scan_ports(host):
         return f"Цель: {clean_host} ({ip})\nОткрытые порты: {', '.join(open_ports)}" if open_ports else f"Цель: {clean_host} ({ip})\nОткрытых портов нет."
     except Exception as e: return f"Ошибка сканирования: {str(e)}"
 
-# Модели API
 class UserRegister(BaseModel): username: str; email: str; password: str
 class UserLogin(BaseModel): email: str; password: str
 class HistoryRequest(BaseModel): email: str
 
-# НОВАЯ СТРУКТУРА ЗАПРОСА ЧАТА (разрешаем пустоту для файлов через str | None)
 class ChatRequest(BaseModel): 
     text: str
     email: str
@@ -118,6 +115,11 @@ class ChatRequest(BaseModel):
     file_name: str | None = None
     file_type: str | None = None
     file_data: str | None = None
+
+# --- НОВЫЕ СТРУКТУРЫ ДЛЯ ПРОФИЛЯ ---
+class ProfileUpdate(BaseModel):
+    email: str
+    new_username: str
 
 @app.get("/")
 def serve_frontend():
@@ -157,15 +159,40 @@ def get_history(req: HistoryRequest):
         return {"status": "success", "history": [{"role": r[0], "content": r[1]} for r in rows]}
     except: return {"status": "success", "history": []}
 
+# --- НОВЫЙ ЭНДПОИНТ: ОБНОВИТЬ ИМЯ ---
+@app.post("/update_profile")
+def update_profile(req: ProfileUpdate):
+    if req.email == "guest": return {"status": "error", "message": "Гости не могут менять профиль."}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('UPDATE users SET username = %s WHERE email = %s', (req.new_username, req.email))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+# --- НОВЫЙ ЭНДПОИНТ: ОЧИСТИТЬ ИСТОРИЮ ИЗ БД ---
+@app.post("/clear_history")
+def clear_user_history(req: HistoryRequest):
+    if req.email == "guest": return {"status": "success"}
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('DELETE FROM messages WHERE email = %s', (req.email,))
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 @app.post("/chat")
 def chat_with_ai(req: ChatRequest):
     prompt_text = req.text.lower()
-    
-    # БЕЗОПАСНАЯ АДМИНКА (Берет секрет из Render)
     SECRET_ADMIN_COMMAND = os.getenv("ADMIN_COMMAND")
     is_admin_command = bool(SECRET_ADMIN_COMMAND and req.text.strip() == SECRET_ADMIN_COMMAND)
     
-    # Сохраняем сообщение пользователя в БД
     history_save_text = req.text
     if req.file_name:
         history_save_text = f"📎 [{req.file_name}]\n" + req.text
@@ -182,7 +209,6 @@ def chat_with_ai(req: ChatRequest):
             yield "Ошибка сервера: Отсутствует GROQ_API_KEY."
             return
 
-        # --- ЛОГИКА АДМИН ПАНЕЛИ ---
         if is_admin_command:
             try:
                 conn = get_db_connection()
@@ -190,20 +216,13 @@ def chat_with_ai(req: ChatRequest):
                 cursor.execute('SELECT id, username, email FROM users')
                 users_data = cursor.fetchall()
                 conn.close()
-                
                 admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
-                
-                if not users_data:
-                    admin_response += "| - | Пусто | - |\n"
+                if not users_data: admin_response += "| - | Пусто | - |\n"
                 else:
-                    for u in users_data:
-                        admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
-                        
+                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
                 yield admin_response
-            except Exception as e:
-                yield f"Ошибка доступа к БД: {e}"
+            except Exception as e: yield f"Ошибка доступа к БД: {e}"
             return
-        # -----------------------------
 
         full_ai_response = "" 
         system_instruction = "Тебя зовут Daryn AI. Твой создатель — Daryn. Общайся на грамотном русском языке. Если тебе отправили файл или код, внимательно проанализируй его."
@@ -211,38 +230,25 @@ def chat_with_ai(req: ChatRequest):
         current_model = GROQ_MODEL
         messages = []
 
-        # --- ЛОГИКА ОБРАБОТКИ ФАЙЛОВ ---
         if req.file_data:
             try:
-                # Если это КАРТИНКА (Vision) - ИСПОЛЬЗУЕМ НОВУЮ МОДЕЛЬ!
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
-                    messages = [
-                        {"role": "user", "content": [
-                            {"type": "text", "text": final_prompt if final_prompt else "Опиши, что на этой картинке детально."},
-                            {"type": "image_url", "image_url": {"url": f"data:{req.file_type};base64,{req.file_data}"}}
-                        ]}
-                    ]
-                # Если это ДОКУМЕНТ (PDF, TXT, Код)
+                    messages = [{"role": "user", "content": [{"type": "text", "text": final_prompt if final_prompt else "Опиши, что на этой картинке детально."}, {"type": "image_url", "image_url": {"url": f"data:{req.file_type};base64,{req.file_data}"}}]}]
                 else:
                     file_content = ""
                     if req.file_name.lower().endswith(".pdf"):
                         pdf_bytes = io.BytesIO(base64.b64decode(req.file_data))
                         reader = PyPDF2.PdfReader(pdf_bytes)
-                        for page in reader.pages:
-                            file_content += (page.extract_text() or "") + "\n"
-                    else:
-                        file_content = base64.b64decode(req.file_data).decode('utf-8')
-                    
+                        for page in reader.pages: file_content += (page.extract_text() or "") + "\n"
+                    else: file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
-                    
-                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n```\n\nМой вопрос: {final_prompt}"
+                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n
+```\n\nМой вопрос: {final_prompt}"
                     messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": combined_prompt}]
             except Exception as e:
                 yield f"⚠️ Ошибка при чтении файла: {str(e)}. Проверьте формат файла."
                 return
-        
-        # --- СТАНДАРТНАЯ ЛОГИКА (Если файла нет) ---
         else:
             if req.mode == "image":
                 eng_prompt = ask_ai_quick(f"Translate to English for image prompt: '{req.text}'") or "landscape"
@@ -262,10 +268,8 @@ def chat_with_ai(req: ChatRequest):
                 if "пинг" in prompt_text: final_prompt = f"Пинг:\n{ping_host(ask_ai_quick(f'Extract domain: {req.text}'))}\nОтветь."
                 elif "погод" in prompt_text: final_prompt = f"Погода: {get_weather(ask_ai_quick(f'Extract city English: {req.text}') or 'London')}\nВопрос: {req.text}"
                 elif "найди" in prompt_text: final_prompt = f"Факты:\n{search_web(ask_ai_quick(f'Search query: {req.text}'))}\nОтветь: {req.text}"
-
             messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": final_prompt}]
 
-        # --- ЗАПРОС К НЕЙРОСЕТИ ---
         try:
             stream = client.chat.completions.create(model=current_model, messages=messages, stream=True)
             for chunk in stream:
@@ -273,10 +277,8 @@ def chat_with_ai(req: ChatRequest):
                 if token:
                     full_ai_response += token
                     yield token
-        except Exception as e:
-            yield f"Ошибка облака: {str(e)}"
+        except Exception as e: yield f"Ошибка облака: {str(e)}"
 
-        # Сохранение ответа
         if req.email != "guest" and full_ai_response:
             try:
                 conn = get_db_connection(); cursor = conn.cursor()
