@@ -176,7 +176,24 @@ def chat_with_ai(req: ChatRequest):
         if not GROQ_API_KEY:
             yield "Ошибка сервера: Отсутствует GROQ_API_KEY."
             return
-
+        if is_admin_command:
+            try:
+                conn = get_db_connection(); cursor = conn.cursor()
+                cursor.execute('SELECT id, username, email FROM users')
+                users_data = cursor.fetchall(); conn.close()
+                admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
+                if not users_data: admin_response += "| - | Пусто | - |\n"
+                else:
+                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                yield admin_response
+            except Exception as e:
+                yield f"Ошибка доступа к БД: {e}"
+            return
+                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                yield admin_response
+            except Exception as e:
+                yield f"Ошибка доступа к БД: {e}"
+            return
         full_ai_response = "" 
         system_instruction = "Тебя зовут Daryn AI. Твой создатель — Daryn. Общайся на грамотном русском языке. Если тебе отправили файл или код, внимательно проанализируй его."
         final_prompt = req.text
