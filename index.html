@@ -20,19 +20,29 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 
 /* Экран авторизации */
 #auth-screen { position: fixed; inset: 0; background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s ease; padding: 20px; }
-.auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; }
+.auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
 .auth-card h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
 .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
 .auth-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; }
 .auth-input:focus { border-color: var(--accent-blue); }
-.btn-primary { background: var(--text-main); color: var(--bg-main); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px; }
-.btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; margin-bottom: 12px; }
-.btn-text { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; }
+.btn-primary { background: var(--text-main); color: var(--bg-main); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px; transition: opacity 0.2s;}
+.btn-primary:hover { opacity: 0.9; }
+.btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; margin-bottom: 12px; transition: background 0.2s;}
+.btn-secondary:hover { background: var(--user-bubble); }
+.btn-text { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: color 0.2s;}
+.btn-text:hover { color: var(--text-main); }
 .error-msg { color: #ef4444; font-size: 13px; margin-bottom: 12px; display: none; }
 #form-login, #form-register { display: none; flex-direction: column; }
 #form-main { display: flex; flex-direction: column; }
 
-/* Каркас */
+/* === НОВОЕ: СТИЛИ ПРОФИЛЯ === */
+#profile-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 1001; }
+#profile-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; width: 90%; max-width: 380px; padding: 30px; }
+.profile-info { color: var(--accent-blue); font-weight: 500; font-size: 14px; margin-bottom: 20px; word-break: break-all; }
+.sidebar-footer { padding: 15px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; cursor: pointer; transition: background 0.2s; margin: 10px; border-radius: 12px; }
+.sidebar-footer:hover { background: var(--user-bubble); }
+/* =========================== */
+
 #app-container { display: none; width: 100%; height: 100%; position: relative; }
 #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; backdrop-filter: blur(2px); opacity: 0; }
 #sidebar-overlay.active { display: block; opacity: 1; }
@@ -40,11 +50,11 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 #sidebar { width: var(--sidebar-width); height: 100%; background: var(--bg-panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.3s; flex-shrink: 0; z-index: 20; position: absolute; left: 0; top: 0; transform: translateX(-100%); }
 #sidebar.open { transform: translateX(0); }
 .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
-.new-chat-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.new-chat-btn { background: transparent; color: var(--text-main); border: 1px solid var(--border); width: 100%; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;}
+.new-chat-btn:hover { background: var(--user-bubble); }
 .history-list { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 4px; -webkit-overflow-scrolling: touch; }
 .history-item { padding: 12px; border-radius: 8px; font-size: 13px; color: var(--text-muted); cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .history-item:hover { background: var(--user-bubble); color: var(--text-main); }
-.sidebar-footer { padding: 20px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 500; }
 .user-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
 #main-content { flex: 1; display: flex; flex-direction: column; height: 100%; background: var(--bg-main); width: 100%; }
@@ -64,10 +74,8 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .user { align-self: flex-end; background: var(--user-bubble); border-radius: 16px 16px 4px 16px; }
 .ai pre { background-color: #000 !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); font-size: 13px; }
 
-/* === КНОПКИ ДЕЙСТВИЙ === */
-/* Теперь прозрачность 0.3, чтобы их было немного видно всегда */
 .message-actions { display: flex; gap: 4px; margin-top: 8px; opacity: 0.3; transition: opacity 0.2s; }
-.message.ai:hover .message-actions { opacity: 1; } /* При наведении они становятся яркими 1.0 */
+.message.ai:hover .message-actions { opacity: 1; } 
 .action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .action-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
 .action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
@@ -76,10 +84,10 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 
 .tools-bar { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
 .tools-bar::-webkit-scrollbar { display: none; } 
-.tool-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.tool-btn { background: var(--bg-main); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 12px; border-radius: 10px; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap; transition: all 0.2s; }
+.tool-btn:hover { border-color: var(--accent-blue); color: var(--text-main); }
 .tool-btn.active { border-color: var(--accent-blue); color: var(--text-main); background: rgba(59, 130, 246, 0.1); }
 
-/* ПАНЕЛЬ ВВОДА И СКРЕПКА */
 #file-preview { display: none; align-items: center; justify-content: space-between; background: var(--bg-main); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; color: var(--accent-blue); font-weight: 500; }
 .input-wrapper { position: relative; display: flex; align-items: center; }
 .attach-btn { position: absolute; left: 6px; width: 34px; height: 34px; background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color 0.2s; }
@@ -129,6 +137,26 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     </div>
 </div>
 
+<!-- НОВОЕ: ОКНО ПРОФИЛЯ -->
+<div id="profile-overlay" onclick="closeProfile()"></div>
+<div id="profile-modal" class="auth-card">
+    <h2 style="margin-bottom: 5px;">Ваш профиль</h2>
+    <div class="profile-info" id="profile-email">email@example.com</div>
+    
+    <p id="profile-error" class="error-msg"></p>
+    <p id="profile-success" style="color: #10b981; font-size: 13px; margin-bottom: 12px; display: none;"></p>
+
+    <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя">
+    
+    <button class="btn-primary" onclick="saveProfile()">Сохранить имя</button>
+    <button class="btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="clearUserHistory()">
+        <svg style="vertical-align: middle; margin-right: 5px; width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2;" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        Очистить историю
+    </button>
+    <button class="btn-text" onclick="closeProfile()">Закрыть настройки</button>
+</div>
+<!-- =================== -->
+
 <div id="app-container">
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar">
@@ -138,7 +166,9 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
             </button>
         </div>
         <div class="history-list" id="sidebar-history"></div>
-        <div class="sidebar-footer">
+        
+        <!-- КНОПКА ОТКРЫТИЯ ПРОФИЛЯ -->
+        <div class="sidebar-footer" onclick="openProfile()" title="Настройки профиля">
             <div class="user-avatar" id="sidebar-avatar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;">
                     <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
@@ -146,6 +176,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                 </svg>
             </div>
             <span id="sidebar-username">Гость</span>
+            <svg style="margin-left:auto; stroke:var(--text-muted);" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
     </div>
 
@@ -162,7 +193,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     </svg> DARYN AI
                 </div>
             </div>
-            <div class="logout-btn" onclick="location.reload()">Выйти</div>
+            <div class="logout-btn" onclick="location.reload()">Выйти из аккаунта</div>
         </div>
 
         <div class="wrapper">
@@ -209,7 +240,6 @@ let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
 
-// Генерируем HTML для кнопок, чтобы использовать его в нескольких местах
 const getActionsHtml = () => `
     <div class="message-actions">
         <button class="action-btn" onclick="copyMessageText(this)" title="Копировать">
@@ -226,6 +256,73 @@ const getActionsHtml = () => `
         </button>
     </div>
 `;
+
+// --- ЛОГИКА ПРОФИЛЯ ---
+function openProfile() {
+    if (currentUserEmail === "guest") {
+        alert("Профиль недоступен для гостя. Пожалуйста, войдите в аккаунт.");
+        return;
+    }
+    document.getElementById('profile-email').innerText = currentUserEmail;
+    document.getElementById('profile-name-input').value = document.getElementById('sidebar-username').innerText;
+    document.getElementById('profile-overlay').style.display = 'block';
+    document.getElementById('profile-modal').style.display = 'block';
+    document.getElementById('profile-error').style.display = 'none';
+    document.getElementById('profile-success').style.display = 'none';
+    if(window.innerWidth <= 768) toggleSidebar(); 
+}
+
+function closeProfile() {
+    document.getElementById('profile-overlay').style.display = 'none';
+    document.getElementById('profile-modal').style.display = 'none';
+}
+
+async function saveProfile() {
+    const newName = document.getElementById('profile-name-input').value.trim();
+    const err = document.getElementById('profile-error');
+    const succ = document.getElementById('profile-success');
+    
+    if (!newName) { err.innerText = "Имя не может быть пустым"; err.style.display = "block"; succ.style.display = "none"; return; }
+    
+    try {
+        const res = await fetch(`${BACKEND_URL}/update_profile`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: currentUserEmail, new_username: newName })
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+            document.getElementById('sidebar-username').innerText = newName;
+            err.style.display = "none";
+            succ.innerText = "Имя успешно обновлено!";
+            succ.style.display = "block";
+            setTimeout(closeProfile, 1500);
+        } else { err.innerText = data.message; err.style.display = "block"; succ.style.display = "none"; }
+    } catch { err.innerText = "Ошибка соединения."; err.style.display = "block"; succ.style.display = "none"; }
+}
+
+async function clearUserHistory() {
+    if (!confirm("ВНИМАНИЕ: Вы уверены, что хотите навсегда удалить всю историю переписки? Это действие нельзя отменить.")) return;
+    
+    const err = document.getElementById('profile-error');
+    const succ = document.getElementById('profile-success');
+    
+    try {
+        const res = await fetch(`${BACKEND_URL}/clear_history`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: currentUserEmail })
+        });
+        const data = await res.json();
+        if (data.status === "success") {
+            document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">История вашей переписки была полностью удалена с сервера.</div></div>`;
+            document.getElementById("sidebar-history").innerHTML = "";
+            err.style.display = "none";
+            succ.innerText = "История очищена!";
+            succ.style.display = "block";
+            setTimeout(closeProfile, 1500);
+        } else { err.innerText = data.message; err.style.display = "block"; succ.style.display = "none"; }
+    } catch { err.innerText = "Ошибка соединения."; err.style.display = "block"; succ.style.display = "none"; }
+}
+// -----------------------
 
 function copyMessageText(btn) {
     const mdContent = btn.closest('.message.ai').querySelector('.md-content');
@@ -318,7 +415,6 @@ async function loadHistory() {
                     chatBox.innerHTML += `<div class="message user">${msg.content}</div>`;
                     sbHist.innerHTML += `<div class="history-item">${msg.content.substring(0, 25)}...</div>`;
                 } else {
-                    // ТЕПЕРЬ КНОПКИ ДОБАВЛЯЮТСЯ ДАЖЕ В ИСТОРИЮ
                     chatBox.innerHTML += `<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div>${getActionsHtml()}</div>`;
                 }
             });
