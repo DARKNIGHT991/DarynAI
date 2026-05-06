@@ -2,16 +2,16 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Daryn AI - Ваш умный ассистент</title>
+<title>Daryn AI - Core</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2'></polygon><path d='M9 8h3.5a4 4 0 1 1 0 8H9v-8z'></path></svg>">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
 <style>
-:root { --bg-main: #09090b; --bg-panel: #18181b; --border: #27272a; --text-main: #fafafa; --text-muted: #a1a1aa; --accent-blue: #3b82f6; --user-bubble: #27272a; --sidebar-width: 280px; }
+:root { --bg-main: #050505; --bg-panel: #111111; --border: #222222; --text-main: #ffffff; --text-muted: #888888; --accent-blue: #3b82f6; --user-bubble: #1a1a1a; --sidebar-width: 280px; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
 body { background: var(--bg-main); color: var(--text-main); height: 100dvh; overflow: hidden; display: flex; }
 .chat::-webkit-scrollbar, .history-list::-webkit-scrollbar { width: 6px; }
@@ -19,56 +19,83 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .chat::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
 
 /* === ЖИВОЙ СТАРТОВЫЙ ЭКРАН === */
-#landing-screen { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; overflow-y: auto; overflow-x: hidden; transition: opacity 0.5s ease; background-color: var(--bg-main); }
+#landing-screen { position: fixed; inset: 0; z-index: 2000; overflow-y: auto; overflow-x: hidden; background-color: var(--bg-main); scroll-behavior: smooth; transition: opacity 0.5s ease; }
 
-/* Хайтек сетка на фоне */
-.landing-bg-grid { position: fixed; inset: 0; z-index: -2; pointer-events: none; background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px); }
+/* Хайтек сетка */
+.landing-bg-grid { position: fixed; inset: 0; z-index: -2; pointer-events: none; background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px); }
 
-/* Анимированные светящиеся шары */
-.glow-orb { position: absolute; border-radius: 50%; filter: blur(120px); z-index: -1; pointer-events: none; }
-.orb-1 { top: -10%; left: -5%; width: 50vw; height: 50vw; background: rgba(59, 130, 246, 0.25); animation: float1 15s infinite alternate ease-in-out; }
-.orb-2 { bottom: 10%; right: -5%; width: 40vw; height: 40vw; background: rgba(147, 51, 234, 0.2); animation: float2 20s infinite alternate ease-in-out; }
-@keyframes float1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(10%, 15%) scale(1.1); } }
-@keyframes float2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-10%, -15%) scale(1.2); } }
+/* Анимированные сферы, меняющиеся местами */
+.glow-orb { position: fixed; border-radius: 50%; filter: blur(150px); z-index: -1; pointer-events: none; }
+.orb-1 { top: 0; left: 0; width: 45vw; height: 45vw; background: rgba(59, 130, 246, 0.4); animation: swapBlue 20s infinite ease-in-out alternate; }
+.orb-2 { bottom: 0; right: 0; width: 45vw; height: 45vw; background: rgba(147, 51, 234, 0.3); animation: swapPurple 20s infinite ease-in-out alternate; }
 
-/* Навигация и кнопка */
-.landing-nav { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(9, 9, 11, 0.6); backdrop-filter: blur(16px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 2010; }
-.landing-nav .logo { font-size: 20px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
-.nav-btn { background: var(--accent-blue); color: #fff; border: none; padding: 12px 28px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3); white-space: nowrap; }
-.nav-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 6px 25px rgba(59, 130, 246, 0.6); background: #2563eb; }
+@keyframes swapBlue {
+    0% { transform: translate(-10%, -10%) scale(1); }
+    50% { transform: translate(50vw, 50vh) scale(1.2); }
+    100% { transform: translate(100vw, 100vh) scale(1); }
+}
+@keyframes swapPurple {
+    0% { transform: translate(10%, 10%) scale(1); }
+    50% { transform: translate(-50vw, -50vh) scale(1.2); }
+    100% { transform: translate(-100vw, -100vh) scale(1); }
+}
 
-/* Контент */
-.landing-content { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 80px 20px; text-align: center; position: relative; z-index: 10; }
-.landing-title { font-size: 56px; font-weight: 700; margin-bottom: 24px; background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%); -webkit-background-clip: text; color: transparent; line-height: 1.2; letter-spacing: -1px; }
-.landing-subtitle { font-size: 18px; color: var(--text-muted); margin-bottom: 60px; max-width: 600px; line-height: 1.6; }
-.feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; width: 100%; max-width: 1100px; }
-.feature-card { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.08); padding: 35px; border-radius: 20px; text-align: left; transition: all 0.3s ease; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); }
-.feature-card:hover { transform: translateY(-8px); border-color: rgba(59, 130, 246, 0.5); box-shadow: 0 20px 40px -10px rgba(59, 130, 246, 0.2); }
-.feature-icon { display: inline-flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 14px; background: rgba(59, 130, 246, 0.1); color: var(--accent-blue); margin-bottom: 24px; border: 1px solid rgba(59, 130, 246, 0.2); }
-.feature-title { font-size: 19px; font-weight: 600; margin-bottom: 12px; color: var(--text-main); }
-.feature-desc { font-size: 14px; color: var(--text-muted); line-height: 1.6; }
+/* Секция 1: Герой (100vh) */
+.hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 20px; text-align: center; }
 
-/* === ОСТАЛЬНОЙ ИНТЕРФЕЙС === */
-#auth-screen { display: none; position: fixed; inset: 0; background: rgba(9, 9, 11, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 1000; transition: opacity 0.5s ease; padding: 20px; opacity: 0; }
-.auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+/* Анимации появления */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulseGlow { 0% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } 50% { filter: drop-shadow(0 0 30px rgba(59,130,246,0.9)); } 100% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } }
+
+.hero-icon { opacity: 0; animation: fadeUp 1s ease 0.3s forwards, pulseGlow 3s infinite 1.3s; margin-bottom: 20px; }
+.hero-title { font-size: 8vw; font-weight: 900; letter-spacing: -3px; margin-bottom: 40px; background: linear-gradient(180deg, #ffffff 0%, #71717a 100%); -webkit-background-clip: text; color: transparent; opacity: 0; animation: fadeUp 1s ease 0.6s forwards; line-height: 1; }
+@media (min-width: 1000px) { .hero-title { font-size: 100px; } }
+
+.hero-buttons { display: flex; gap: 15px; opacity: 0; animation: fadeUp 1s ease 0.9s forwards; flex-wrap: wrap; justify-content: center; }
+.hero-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 16px 32px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px); }
+.hero-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-blue); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.hero-btn.primary { background: var(--accent-blue); border-color: var(--accent-blue); }
+.hero-btn.primary:hover { background: #2563eb; box-shadow: 0 10px 25px rgba(59,130,246,0.4); }
+
+.scroll-indicator { position: absolute; bottom: 40px; opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; animation: fadeUp 1s ease 1.5s forwards; cursor: pointer; transition: color 0.3s; }
+.scroll-indicator:hover { color: var(--text-main); }
+.arrow-down { width: 20px; height: 20px; animation: bounce 2s infinite; stroke: currentColor; stroke-width: 2; fill: none; }
+@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+
+/* Секция 2: Хардкор Ядро */
+.core-section { min-height: 100vh; padding: 100px 20px; max-width: 1200px; margin: 0 auto; }
+.core-header { font-size: 42px; font-weight: 800; margin-bottom: 60px; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
+.core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+.core-card { background: #0a0a0a; border: 1px solid var(--border); border-left: 4px solid var(--accent-blue); padding: 30px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; }
+.core-tag { display: inline-block; background: rgba(59,130,246,0.1); color: var(--accent-blue); font-size: 12px; padding: 4px 10px; border-radius: 4px; margin-bottom: 15px; font-weight: bold; }
+.core-card h3 { font-size: 20px; color: #fff; margin-bottom: 15px; font-family: 'Inter', sans-serif; }
+.core-card p { font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 15px; }
+.core-code { background: #000; border: 1px solid #222; padding: 10px; border-radius: 6px; font-size: 12px; color: #4ade80; overflow-x: auto; }
+
+/* === ОКНО АВТОРИЗАЦИИ (OVERLAY) === */
+#auth-screen { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 3000; transition: opacity 0.3s ease; opacity: 0; padding: 20px; }
+.auth-card { background: var(--bg-panel); border: 1px solid var(--border); padding: 40px 30px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 1); position: relative; }
+.close-auth { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); cursor: pointer; transition: color 0.2s; }
+.close-auth:hover { color: #fff; }
 .auth-card h2 { font-size: 24px; font-weight: 600; margin-bottom: 8px; }
 .auth-card p { color: var(--text-muted); font-size: 14px; margin-bottom: 30px; }
 .auth-input { width: 100%; background: var(--bg-main); border: 1px solid var(--border); color: var(--text-main); padding: 14px 16px; border-radius: 12px; font-size: 16px; margin-bottom: 12px; outline: none; transition: border-color 0.2s; }
 .auth-input:focus { border-color: var(--accent-blue); }
 .btn-primary { background: var(--text-main); color: var(--bg-main); border: none; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; margin-bottom: 12px; transition: opacity 0.2s;}
 .btn-primary:hover { opacity: 0.9; }
+.error-msg { color: #ef4444; font-size: 13px; margin-bottom: 12px; display: none; }
+#form-login, #form-register { display: none; flex-direction: column; }
+
+/* === ОКНО ПРОФИЛЯ === */
+#profile-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 1001; }
+#profile-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; width: 90%; max-width: 380px; padding: 30px; }
+.profile-info { color: var(--accent-blue); font-weight: 500; font-size: 14px; margin-bottom: 20px; word-break: break-all; }
 .btn-secondary { background: transparent; color: var(--text-main); border: 1px solid var(--border); padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; width: 100%; margin-bottom: 12px; transition: background 0.2s;}
 .btn-secondary:hover { background: var(--user-bubble); }
 .btn-text { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: color 0.2s;}
 .btn-text:hover { color: var(--text-main); }
-.error-msg { color: #ef4444; font-size: 13px; margin-bottom: 12px; display: none; }
-#form-login, #form-register { display: none; flex-direction: column; }
-#form-main { display: flex; flex-direction: column; }
 
-#profile-overlay { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(5px); z-index: 1001; }
-#profile-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1002; width: 90%; max-width: 380px; padding: 30px; }
-.profile-info { color: var(--accent-blue); font-weight: 500; font-size: 14px; margin-bottom: 20px; word-break: break-all; }
-
+/* === ГЛАВНЫЙ ИНТЕРФЕЙС === */
 #app-container { display: none; width: 100%; height: 100%; position: relative; }
 #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; backdrop-filter: blur(2px); opacity: 0; }
 #sidebar-overlay.active { display: block; opacity: 1; }
@@ -86,10 +113,10 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .user-avatar { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
 #main-content { flex: 1; display: flex; flex-direction: column; height: 100%; background: var(--bg-main); width: 100%; }
-.topbar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--border); background: rgba(9, 9, 11, 0.7); backdrop-filter: blur(12px); z-index: 10; }
+.topbar { height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--border); background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(12px); z-index: 10; }
 .topbar-left { display: flex; align-items: center; gap: 12px; }
 .menu-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; padding: 8px; border-radius: 8px; }
-.logo { font-size: 16px; font-weight: 600; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+.logo { font-size: 16px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
 .logout-btn { font-size: 13px; color: #ef4444; cursor: pointer; }
 
 .wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: hidden; }
@@ -124,9 +151,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 .send-btn { position: absolute; right: 6px; width: 34px; height: 34px; border-radius: 10px; border: none; background: var(--text-main); color: var(--bg-main); cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 @media (max-width: 768px) {
-    .landing-title { font-size: 38px; }
-    .landing-nav { padding: 15px 20px; }
-    .nav-btn { font-size: 13px; padding: 10px 18px; }
+    .hero-title { font-size: 15vw; }
     #sidebar { position: fixed; height: 100%; z-index: 20; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
     .wrapper { padding: 0; }
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
@@ -142,94 +167,93 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 
 <body>
 
-<!-- === СТАРТОВЫЙ ЭКРАН (LANDING) === -->
 <div id="landing-screen">
-    <!-- Живой фон -->
     <div class="landing-bg-grid"></div>
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     
-    <nav class="landing-nav">
-        <div class="logo">
-            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:26px;">
+    <div class="hero-section">
+        <div class="hero-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" style="width:80px;">
                 <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
                 <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
-            </svg> 
-            DARYN AI
+            </svg>
         </div>
-        <!-- Кнопка "Попробовать" с уникальным классом nav-btn -->
-        <button class="nav-btn" onclick="goToAuth()">Попробовать Daryn AI</button>
-    </nav>
-    
-    <div class="landing-content">
-        <h1 class="landing-title">Представляем Daryn AI</h1>
-        <p class="landing-subtitle">Ваш персональный интеллектуальный ассистент нового поколения. Он видит картинки, читает документы, пишет код и помогает решать задачи любой сложности.</p>
+        <h1 class="hero-title">DARYN AI</h1>
         
-        <div class="feature-grid">
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
-                </div>
-                <h3 class="feature-title">Написание и анализ кода</h3>
-                <p class="feature-desc">Попросите бота написать скрипт, найти ошибку в коде или проанализировать прикрепленный файл .py, .js или .html.</p>
-            </div>
+        <div class="hero-buttons">
+            <button class="hero-btn primary" onclick="openAuth('register')">Регистрация</button>
+            <button class="hero-btn" onclick="openAuth('login')">Войти</button>
+            <button class="hero-btn" onclick="loginAsGuest()">Гость</button>
+        </div>
+
+        <div class="scroll-indicator" onclick="document.getElementById('core').scrollIntoView()">
+            Изучать ядро
+            <svg class="arrow-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </div>
+    </div>
+
+    <div class="core-section" id="core">
+        <h2 class="core-header">SYSTEM.CORE()</h2>
+        <div class="core-grid">
             
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                </div>
-                <h3 class="feature-title">Машинное зрение</h3>
-                <p class="feature-desc">Прикрепите скриншот, фотографию или график. Нейросеть детально рассмотрит изображение и ответит на любые вопросы.</p>
+            <div class="core-card">
+                <span class="core-tag">LLM / VISION</span>
+                <h3>Llama 4 Scout 17B / Groq</h3>
+                <p>Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.</p>
+                <div class="core-code">current_model = "meta-llama/llama-4-scout-17b-16e-instruct"</div>
             </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg>
-                </div>
-                <h3 class="feature-title">Чтение PDF-документов</h3>
-                <p class="feature-desc">Загрузите большой PDF-файл или текстовый документ, и Daryn AI сделает для вас краткую выжимку или найдет нужную деталь.</p>
+            <div class="core-card">
+                <span class="core-tag">BACKEND</span>
+                <h3>FastAPI + Python 3</h3>
+                <p>Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.</p>
+                <div class="core-code">class ChatRequest(BaseModel):<br>&nbsp;&nbsp;text: str<br>&nbsp;&nbsp;file_data: str | None = None</div>
             </div>
 
-            <div class="feature-card">
-                <div class="feature-icon">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                </div>
-                <h3 class="feature-title">Сетевые инструменты</h3>
-                <p class="feature-desc">Встроенные функции для IT-специалистов: сканирование открытых портов, проверка доступности серверов и парсинг доменов.</p>
+            <div class="core-card">
+                <span class="core-tag">DATABASE</span>
+                <h3>PostgreSQL + Bcrypt</h3>
+                <p>Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.</p>
+                <div class="core-code">cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', ...)</div>
             </div>
+
+            <div class="core-card">
+                <span class="core-tag">NETWORK UTILS</span>
+                <h3>Subprocess & Sockets</h3>
+                <p>Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
+                <div class="core-code">sock.connect_ex((ip, port)) == 0</div>
+            </div>
+
         </div>
     </div>
 </div>
 
-<!-- === ОКНО АВТОРИЗАЦИИ === -->
 <div id="auth-screen">
     <div class="auth-card">
-        <h2 style="font-size: 28px;">Daryn AI</h2>
-        <p>Войдите, чтобы сохранять историю чатов</p>
-        <div id="form-main">
-            <button class="btn-primary" onclick="showForm('login')">Войти</button>
-            <button class="btn-secondary" onclick="showForm('register')">Создать аккаунт</button>
-            <button class="btn-text" onclick="loginAsGuest()">Продолжить как гость</button>
-        </div>
+        <button class="close-auth" onclick="closeAuth()">
+            <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <h2 id="auth-title" style="font-size: 24px;">Вход в систему</h2>
+        <p id="auth-subtitle">Укажите данные для доступа</p>
+        
         <div id="form-login">
             <p id="login-error" class="error-msg"></p>
             <input type="email" class="auth-input" placeholder="Email" id="login-email">
             <input type="password" class="auth-input" placeholder="Пароль" id="login-pass">
-            <button class="btn-primary" onclick="loginUser()">Войти</button>
-            <button class="btn-text" onclick="showForm('main')">Вернуться назад</button>
+            <button class="btn-primary" onclick="loginUser()">Авторизация</button>
         </div>
+        
         <div id="form-register">
             <p id="reg-error" class="error-msg"></p>
             <input type="text" class="auth-input" placeholder="Имя пользователя" id="reg-name">
             <input type="email" class="auth-input" placeholder="Email" id="reg-email">
             <input type="password" class="auth-input" placeholder="Придумайте пароль" id="reg-pass">
-            <button class="btn-primary" onclick="registerUser()">Зарегистрироваться</button>
-            <button class="btn-text" onclick="showForm('main')">Вернуться назад</button>
+            <button class="btn-primary" onclick="registerUser()">Создать</button>
         </div>
     </div>
 </div>
 
-<!-- === ОКНО ПРОФИЛЯ === -->
 <div id="profile-overlay" onclick="closeProfile()"></div>
 <div id="profile-modal" class="auth-card">
     <h2 style="margin-bottom: 5px;">Ваш профиль</h2>
@@ -240,12 +264,11 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     <button class="btn-primary" onclick="saveProfile()">Сохранить имя</button>
     <button class="btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="clearUserHistory()">
         <svg style="vertical-align: middle; margin-right: 5px; width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2;" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        Очистить историю
+        Очистить БД
     </button>
     <button class="btn-text" onclick="closeProfile()">Закрыть настройки</button>
 </div>
 
-<!-- === ГЛАВНЫЙ ИНТЕРФЕЙС === -->
 <div id="app-container">
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
     <div id="sidebar">
@@ -280,12 +303,12 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     </svg> DARYN AI
                 </div>
             </div>
-            <div class="logout-btn" onclick="location.reload()">Выйти из аккаунта</div>
+            <div class="logout-btn" onclick="location.reload()">Выйти</div>
         </div>
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status"> </div>
+                <div class="status" id="app-status">Подключено к Облаку Groq</div>
                 <div class="chat" id="chat">
                     <div class="message ai">
                         <div class="md-content">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
@@ -309,7 +332,7 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     </button>
                     <input type="file" id="file-upload" style="display:none;" accept=".pdf,.txt,.js,.py,.html,.css,.json,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
                     
-                    <input type="text" id="user-input" class="chat-input" placeholder="Введите сообщение..." onkeypress="handleKeyPress(event)" autocomplete="off">
+                    <input type="text" id="user-input" class="chat-input" placeholder="Команда терминалу..." onkeypress="handleKeyPress(event)" autocomplete="off">
                     <button class="send-btn" onclick="sendMessage()"><svg width="16" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg></button>
                 </div>
             </div>
@@ -327,17 +350,45 @@ let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
 
-function goToAuth() {
-    const landing = document.getElementById('landing-screen');
-    const auth = document.getElementById('auth-screen');
+// --- ЛОГИКА НОВЫХ ОКОН ВХОДА ---
+function openAuth(type) {
+    document.getElementById('login-error').style.display = 'none';
+    document.getElementById('reg-error').style.display = 'none';
     
-    landing.style.opacity = '0';
-    setTimeout(() => {
-        landing.style.display = 'none';
-        auth.style.display = 'flex';
-        setTimeout(() => { auth.style.opacity = '1'; }, 50);
-    }, 500);
+    if(type === 'login') {
+        document.getElementById('auth-title').innerText = "Вход в систему";
+        document.getElementById('auth-subtitle').innerText = "Введите данные для доступа к ядру";
+        document.getElementById('form-login').style.display = 'flex';
+        document.getElementById('form-register').style.display = 'none';
+    } else {
+        document.getElementById('auth-title').innerText = "Регистрация";
+        document.getElementById('auth-subtitle').innerText = "Создайте новый профиль доступа";
+        document.getElementById('form-login').style.display = 'none';
+        document.getElementById('form-register').style.display = 'flex';
+    }
+
+    const authScreen = document.getElementById('auth-screen');
+    authScreen.style.display = 'flex';
+    setTimeout(() => { authScreen.style.opacity = '1'; }, 10);
 }
+
+function closeAuth() {
+    const authScreen = document.getElementById('auth-screen');
+    authScreen.style.opacity = '0';
+    setTimeout(() => { authScreen.style.display = 'none'; }, 300);
+}
+
+async function enterApp() {
+    document.getElementById('auth-screen').style.opacity = '0'; 
+    document.getElementById('landing-screen').style.opacity = '0'; 
+    setTimeout(() => { 
+        document.getElementById('auth-screen').style.display = 'none'; 
+        document.getElementById('landing-screen').style.display = 'none'; 
+        document.getElementById('app-container').style.display = 'flex'; 
+    }, 500); 
+    await loadHistory();
+}
+// --------------------------------
 
 const getActionsHtml = () => `
     <div class="message-actions">
@@ -452,13 +503,6 @@ function handleFileSelect(event) {
 
 function removeFile() { attachedFile = null; document.getElementById('file-upload').value = ""; document.getElementById('file-preview').style.display = 'none'; }
 
-function showForm(formName) {
-    ['form-main', 'form-login', 'form-register'].forEach(id => document.getElementById(id).style.display = 'none');
-    document.getElementById('login-error').style.display = 'none';
-    document.getElementById('reg-error').style.display = 'none';
-    document.getElementById(`form-${formName}`).style.display = 'flex';
-}
-
 async function registerUser() {
     const name = document.getElementById('reg-name').value, email = document.getElementById('reg-email').value, pass = document.getElementById('reg-pass').value, err = document.getElementById('reg-error');
     if (!name || !email || !pass) { err.innerText = "Заполните все поля!"; err.style.display = "block"; return; }
@@ -482,12 +526,6 @@ async function loginUser() {
 }
 
 function loginAsGuest() { currentUserEmail = "guest"; document.getElementById('sidebar-username').innerText = "Гость"; enterApp(); }
-
-async function enterApp() {
-    document.getElementById('auth-screen').style.opacity = '0'; 
-    setTimeout(() => { document.getElementById('auth-screen').style.display = 'none'; document.getElementById('app-container').style.display = 'flex'; }, 500); 
-    await loadHistory();
-}
 
 function toggleSidebar() { 
     const sb = document.getElementById('sidebar'), ov = document.getElementById('sidebar-overlay');
@@ -523,7 +561,7 @@ function useTool(type, event) {
     const input = document.getElementById("user-input");
     document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
-    input.placeholder = type === 'code' ? "Опишите логику кода..." : type === 'scan' ? "Домен или IP (google.com)..." : type === 'image' ? "Опишите картинку (киберпанк)..." : "Введите сообщение...";
+    input.placeholder = type === 'code' ? "Команда для парсинга кода..." : type === 'scan' ? "IP или домен цели..." : type === 'image' ? "Анализ изображения..." : "Команда терминалу...";
     input.focus();
 }
 
@@ -546,7 +584,7 @@ async function sendMessage() {
     if (currentUserEmail !== "guest") sbHist.innerHTML += `<div class="history-item">${text.substring(0, 25) || attachedFile.name}...</div>`;
 
     const loadingId = "ai-" + Date.now();
-    chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">⏳ Загрузка...</div></div>`;
+    chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">⏳ Обработка запроса ядром...</div></div>`;
     chat.scrollTop = chat.scrollHeight;
 
     const payload = { 
@@ -592,7 +630,7 @@ async function sendMessage() {
             charQueue.push(...decoder.decode(value, { stream: true }).split(''));
             if (!isAnimating) processQueue();
         }
-    } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = "<span style='color: #ef4444;'>Ошибка сервера.</span>"; }
+    } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = "<span style='color: #ef4444;'>[SYS_ERROR] Ошибка ответа сервера.</span>"; }
 }
 </script>
 </body>
