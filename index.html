@@ -64,14 +64,15 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .user { align-self: flex-end; background: var(--user-bubble); border-radius: 16px 16px 4px 16px; }
 .ai pre { background-color: #000 !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); font-size: 13px; }
 
-/* === КНОПКИ ДЕЙСТВИЙ ПОД ОТВЕТОМ ИИ === */
-.message-actions { display: flex; gap: 4px; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
-.message.ai:hover .message-actions { opacity: 1; }
+/* === КНОПКИ ДЕЙСТВИЙ === */
+/* Теперь прозрачность 0.3, чтобы их было немного видно всегда */
+.message-actions { display: flex; gap: 4px; margin-top: 8px; opacity: 0.3; transition: opacity 0.2s; }
+.message.ai:hover .message-actions { opacity: 1; } /* При наведении они становятся яркими 1.0 */
 .action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .action-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
 .action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
-.action-btn.active-good { color: #10b981; } /* Зеленый лайк */
-.action-btn.active-bad { color: #ef4444; } /* Красный дизлайк */
+.action-btn.active-good { color: #10b981; } 
+.action-btn.active-bad { color: #ef4444; } 
 
 .tools-bar { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
 .tools-bar::-webkit-scrollbar { display: none; } 
@@ -91,7 +92,6 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     .wrapper { padding: 0; }
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
     .message { max-width: 95%; }
-    /* На мобильных кнопки всегда видны */
     .message-actions { opacity: 1; } 
 }
 @media (min-width: 769px) {
@@ -180,14 +180,12 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     <button class="tool-btn" onclick="useTool('scan', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Скан</button>
                 </div>
 
-                <!-- БЛОК ПРЕДПРОСМОТРА ФАЙЛА -->
                 <div id="file-preview">
                     <span id="file-name-display" style="display:flex; align-items:center; gap:6px;"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline></svg> <span id="fname-text">Файл.pdf</span></span>
                     <button onclick="removeFile()" style="background:none; border:none; cursor:pointer; color:var(--text-muted);">✖</button>
                 </div>
 
                 <div class="input-wrapper">
-                    <!-- КНОПКА СКРЕПКИ -->
                     <button class="attach-btn" onclick="document.getElementById('file-upload').click()">
                         <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                     </button>
@@ -209,15 +207,29 @@ marked.setOptions({ highlight: function(code, lang) { return hljs.highlight(code
 let currentUserEmail = "guest";
 let currentMode = "chat";
 let attachedFile = null; 
-let lastUserMessage = ""; // Запоминаем последний текст для кнопки "Повторить"
+let lastUserMessage = ""; 
 
-// --- ЛОГИКА НОВЫХ КНОПОК ---
+// Генерируем HTML для кнопок, чтобы использовать его в нескольких местах
+const getActionsHtml = () => `
+    <div class="message-actions">
+        <button class="action-btn" onclick="copyMessageText(this)" title="Копировать">
+            <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <button class="action-btn" onclick="rateMessage(this, 'good')" title="Хороший ответ">
+            <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+        </button>
+        <button class="action-btn" onclick="rateMessage(this, 'bad')" title="Плохой ответ">
+            <svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+        </button>
+        <button class="action-btn" onclick="regenerateMessage()" title="Повторить">
+            <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+        </button>
+    </div>
+`;
+
 function copyMessageText(btn) {
-    // Находим текст внутри конкретного сообщения
     const mdContent = btn.closest('.message.ai').querySelector('.md-content');
     navigator.clipboard.writeText(mdContent.innerText.trim());
-    
-    // Красивая анимация галочки
     const originalSvg = btn.innerHTML;
     btn.innerHTML = `<svg viewBox="0 0 24 24" stroke="#10b981"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
     setTimeout(() => btn.innerHTML = originalSvg, 2000);
@@ -225,12 +237,7 @@ function copyMessageText(btn) {
 
 function rateMessage(btn, type) {
     const parent = btn.parentElement;
-    // Сбрасываем цвета у обеих кнопок
-    parent.querySelectorAll('.action-btn').forEach(b => {
-        b.classList.remove('active-good');
-        b.classList.remove('active-bad');
-    });
-    // Красим нужную кнопку
+    parent.querySelectorAll('.action-btn').forEach(b => { b.classList.remove('active-good'); b.classList.remove('active-bad'); });
     btn.classList.add(type === 'good' ? 'active-good' : 'active-bad');
 }
 
@@ -239,12 +246,11 @@ function regenerateMessage() {
     document.getElementById("user-input").value = lastUserMessage;
     sendMessage();
 }
-// ---------------------------
 
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Файл слишком большой! Пожалуйста, выберите файл до 5 МБ."); event.target.value = ""; return; }
+    if (file.size > 5 * 1024 * 1024) { alert("Файл слишком большой!"); event.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = function(e) {
         attachedFile = { name: file.name, type: file.type || "application/octet-stream", data: e.target.result.split(',')[1] };
@@ -312,7 +318,8 @@ async function loadHistory() {
                     chatBox.innerHTML += `<div class="message user">${msg.content}</div>`;
                     sbHist.innerHTML += `<div class="history-item">${msg.content.substring(0, 25)}...</div>`;
                 } else {
-                    chatBox.innerHTML += `<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div></div>`;
+                    // ТЕПЕРЬ КНОПКИ ДОБАВЛЯЮТСЯ ДАЖЕ В ИСТОРИЮ
+                    chatBox.innerHTML += `<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div>${getActionsHtml()}</div>`;
                 }
             });
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -338,7 +345,7 @@ async function sendMessage() {
     const text = input.value.trim();
     if (text === "" && !attachedFile) return;
 
-    lastUserMessage = text; // Запоминаем для кнопки повтора
+    lastUserMessage = text; 
 
     let displayMsg = text;
     if (attachedFile) displayMsg = `📎 [${attachedFile.name}]<br>` + text;
@@ -350,7 +357,6 @@ async function sendMessage() {
     if (currentUserEmail !== "guest") sbHist.innerHTML += `<div class="history-item">${text.substring(0, 25) || attachedFile.name}...</div>`;
 
     const loadingId = "ai-" + Date.now();
-    // Обрати внимание: теперь есть отдельный блок .md-content для текста
     chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">⏳ Загрузка...</div></div>`;
     chat.scrollTop = chat.scrollHeight;
 
@@ -372,24 +378,6 @@ async function sendMessage() {
         mdContainer.innerHTML = ""; 
         let charQueue = [], isAnimating = false, currentAiMarkdown = ""; 
 
-        // HTML-код для кнопок, который добавится в конце ответа
-        const actionsHtml = `
-            <div class="message-actions">
-                <button class="action-btn" onclick="copyMessageText(this)" title="Копировать">
-                    <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                </button>
-                <button class="action-btn" onclick="rateMessage(this, 'good')" title="Хороший ответ">
-                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
-                </button>
-                <button class="action-btn" onclick="rateMessage(this, 'bad')" title="Плохой ответ">
-                    <svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
-                </button>
-                <button class="action-btn" onclick="regenerateMessage()" title="Повторить">
-                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                </button>
-            </div>
-        `;
-
         function processQueue() {
             if (charQueue.length > 0) {
                 isAnimating = true;
@@ -403,11 +391,10 @@ async function sendMessage() {
         while (true) {
             const { done, value } = await reader.read();
             if (done) {
-                // Ждем окончания анимации текста, затем добавляем кнопки
                 const checkDone = setInterval(() => {
                     if (!isAnimating) {
                         clearInterval(checkDone);
-                        messageElement.innerHTML += actionsHtml;
+                        messageElement.innerHTML += getActionsHtml();
                         chat.scrollTop = chat.scrollHeight;
                     }
                 }, 50);
