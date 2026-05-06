@@ -63,7 +63,7 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
 
 /* Секция 2: Хардкор Ядро */
-.core-section { min-height: 100vh; padding: 100px 20px; max-width: 1200px; margin: 0 auto; }
+.core-section { min-height: 100vh; padding: 100px 20px 40px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
 .core-header { font-size: 42px; font-weight: 800; margin-bottom: 60px; border-bottom: 2px solid var(--border); padding-bottom: 20px; }
 .core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
 .core-card { background: #0a0a0a; border: 1px solid var(--border); border-left: 4px solid var(--accent-blue); padding: 30px; border-radius: 8px; font-family: 'JetBrains Mono', monospace; }
@@ -71,6 +71,11 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .core-card h3 { font-size: 20px; color: #fff; margin-bottom: 15px; font-family: 'Inter', sans-serif; }
 .core-card p { font-size: 14px; color: #a1a1aa; line-height: 1.6; margin-bottom: 15px; }
 .core-code { background: #000; border: 1px solid #222; padding: 10px; border-radius: 6px; font-size: 12px; color: #4ade80; overflow-x: auto; }
+
+/* Подвал миссии */
+.mission-footer { margin-top: auto; padding-top: 80px; text-align: center; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+.mission-footer p { max-width: 800px; margin: 0 auto 15px auto; line-height: 1.6; font-size: 15px; }
+.mission-footer strong { color: var(--text-main); }
 
 /* === ОКНО АВТОРИЗАЦИИ (OVERLAY) === */
 #auth-screen { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(10px); align-items: center; justify-content: center; z-index: 3000; transition: opacity 0.3s ease; opacity: 0; padding: 20px; }
@@ -199,9 +204,9 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
             
             <div class="core-card">
                 <span class="core-tag">LLM / VISION</span>
-                <h3>Llama 4 Scout 17B / Groq</h3>
+                <h3>Daryn AI</h3>
                 <p>Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.</p>
-                <div class="core-code">current_model = "meta-llama/llama-4-scout-17b-16e-instruct"</div>
+                <div class="core-code">current_model = "daryn-ai-core"</div>
             </div>
 
             <div class="core-card">
@@ -224,7 +229,11 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                 <p>Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
                 <div class="core-code">sock.connect_ex((ip, port)) == 0</div>
             </div>
+        </div>
 
+        <div class="mission-footer">
+            <p>Проект основан в 2026 году разработчиком <strong>Daryn</strong>.</p>
+            <p>Главная цель — создать мощный, независимый и универсальный инструмент, который стирает границы между человеком и технологиями. Daryn AI призван автоматизировать рутину, ускорять решение сложнейших технических задач и помогать людям эффективно воплощать в жизнь самые масштабные проекты.</p>
         </div>
     </div>
 </div>
@@ -303,12 +312,11 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
                     </svg> DARYN AI
                 </div>
             </div>
-            <div class="logout-btn" onclick="location.reload()">Выйти</div>
+            <div class="logout-btn" onclick="location.reload()">Выйти из аккаунта</div>
         </div>
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status">Подключено к Облаку Groq</div>
                 <div class="chat" id="chat">
                     <div class="message ai">
                         <div class="md-content">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
@@ -350,7 +358,6 @@ let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
 
-// --- ЛОГИКА НОВЫХ ОКОН ВХОДА ---
 function openAuth(type) {
     document.getElementById('login-error').style.display = 'none';
     document.getElementById('reg-error').style.display = 'none';
@@ -388,7 +395,6 @@ async function enterApp() {
     }, 500); 
     await loadHistory();
 }
-// --------------------------------
 
 const getActionsHtml = () => `
     <div class="message-actions">
