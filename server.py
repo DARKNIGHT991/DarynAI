@@ -49,10 +49,12 @@ def get_db_connection():
 def init_db():
     if not DATABASE_URL: return
     try:
-        conn = get_db_connection(); cursor = conn.cursor()
+        conn = get_db_connection()
+        cursor = conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, email VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL, content TEXT NOT NULL)''')
-        conn.commit(); conn.close()
+        conn.commit()
+        conn.close()
     except Exception as e: print(f"🚨 Ошибка БД: {e}")
 
 init_db()
@@ -108,7 +110,7 @@ class UserRegister(BaseModel): username: str; email: str; password: str
 class UserLogin(BaseModel): email: str; password: str
 class HistoryRequest(BaseModel): email: str
 
-# НОВАЯ СТРУКТУРА ЗАПРОСА ЧАТА (с поддержкой файлов)
+# НОВАЯ СТРУКТУРА ЗАПРОСА ЧАТА (разрешаем пустоту для файлов через str | None)
 class ChatRequest(BaseModel): 
     text: str
     email: str
@@ -158,9 +160,12 @@ def get_history(req: HistoryRequest):
 @app.post("/chat")
 def chat_with_ai(req: ChatRequest):
     prompt_text = req.text.lower()
-    is_admin_command = (req.text.strip() == "/admin/db/1103")
     
-    # Сохраняем в БД (если есть файл, делаем пометку)
+    # БЕЗОПАСНАЯ АДМИНКА (Берет секрет из Render)
+    SECRET_ADMIN_COMMAND = os.getenv("ADMIN_COMMAND")
+    is_admin_command = bool(SECRET_ADMIN_COMMAND and req.text.strip() == SECRET_ADMIN_COMMAND)
+    
+    # Сохраняем сообщение пользователя в БД
     history_save_text = req.text
     if req.file_name:
         history_save_text = f"📎 [{req.file_name}]\n" + req.text
@@ -176,24 +181,30 @@ def chat_with_ai(req: ChatRequest):
         if not GROQ_API_KEY:
             yield "Ошибка сервера: Отсутствует GROQ_API_KEY."
             return
+
+        # --- ЛОГИКА АДМИН ПАНЕЛИ ---
         if is_admin_command:
             try:
-                conn = get_db_connection(); cursor = conn.cursor()
+                conn = get_db_connection()
+                cursor = conn.cursor()
                 cursor.execute('SELECT id, username, email FROM users')
-                users_data = cursor.fetchall(); conn.close()
+                users_data = cursor.fetchall()
+                conn.close()
+                
                 admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
-                if not users_data: admin_response += "| - | Пусто | - |\n"
+                
+                if not users_data:
+                    admin_response += "| - | Пусто | - |\n"
                 else:
-                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                    for u in users_data:
+                        admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                        
                 yield admin_response
             except Exception as e:
                 yield f"Ошибка доступа к БД: {e}"
             return
-                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
-                yield admin_response
-            except Exception as e:
-                yield f"Ошибка доступа к БД: {e}"
-            return
+        # -----------------------------
+
         full_ai_response = "" 
         system_instruction = "Тебя зовут Daryn AI. Твой создатель — Daryn. Общайся на грамотном русском языке. Если тебе отправили файл или код, внимательно проанализируй его."
         final_prompt = req.text
@@ -203,7 +214,7 @@ def chat_with_ai(req: ChatRequest):
         # --- ЛОГИКА ОБРАБОТКИ ФАЙЛОВ ---
         if req.file_data:
             try:
-                # Если это КАРТИНКА (Vision)
+                # Если это КАРТИНКА (Vision) - ИСПОЛЬЗУЕМ НОВУЮ МОДЕЛЬ!
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
                     messages = [
@@ -223,7 +234,6 @@ def chat_with_ai(req: ChatRequest):
                     else:
                         file_content = base64.b64decode(req.file_data).decode('utf-8')
                     
-                    # Обрезаем текст, чтобы не превысить лимит памяти нейросети (ок. 30к символов)
                     file_content = file_content[:20000] 
                     
                     combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n```\n\nМой вопрос: {final_prompt}"
