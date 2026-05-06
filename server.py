@@ -230,7 +230,7 @@ def chat_with_ai(req: ChatRequest):
         current_model = GROQ_MODEL
         messages = []
 
-        if req.file_data:
+if req.file_data:
             try:
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
@@ -241,10 +241,10 @@ def chat_with_ai(req: ChatRequest):
                         pdf_bytes = io.BytesIO(base64.b64decode(req.file_data))
                         reader = PyPDF2.PdfReader(pdf_bytes)
                         for page in reader.pages: file_content += (page.extract_text() or "") + "\n"
-                    else: file_content = base64.b64decode(req.file_data).decode('utf-8')
+                    else: 
+                        file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
                     combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n```\n\nМой вопрос: {final_prompt}"
-```\n\nМой вопрос: {final_prompt}"
                     messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": combined_prompt}]
             except Exception as e:
                 yield f"⚠️ Ошибка при чтении файла: {str(e)}. Проверьте формат файла."
