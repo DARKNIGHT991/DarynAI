@@ -188,7 +188,7 @@ def chat_with_ai(req: ChatRequest):
             try:
                 # Если это КАРТИНКА (Vision)
                 if req.file_type and req.file_type.startswith("image/"):
-                    current_model = "openai/gpt-oss-120b"
+                    current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
                     messages = [
                         {"role": "user", "content": [
                             {"type": "text", "text": final_prompt if final_prompt else "Опиши, что на этой картинке детально."},
