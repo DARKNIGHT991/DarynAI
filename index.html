@@ -58,11 +58,20 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .panel { width: 100%; max-width: 840px; height: 100%; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 20px; display: flex; flex-direction: column; padding: 20px; }
 
 .chat { flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; margin-bottom: 15px; }
-.message { max-width: 85%; padding: 12px 16px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s ease; }
+.message { max-width: 85%; padding: 12px 16px; font-size: 14px; line-height: 1.5; animation: fadeIn 0.3s ease; position: relative; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .ai { align-self: flex-start; border-left: 3px solid var(--accent-blue); padding-left: 12px; width: 100%; word-break: break-word; }
 .user { align-self: flex-end; background: var(--user-bubble); border-radius: 16px 16px 4px 16px; }
 .ai pre { background-color: #000 !important; padding: 12px; border-radius: 10px; overflow-x: auto; margin: 12px 0; border: 1px solid var(--border); font-size: 13px; }
+
+/* === КНОПКИ ДЕЙСТВИЙ ПОД ОТВЕТОМ ИИ === */
+.message-actions { display: flex; gap: 4px; margin-top: 8px; opacity: 0; transition: opacity 0.2s; }
+.message.ai:hover .message-actions { opacity: 1; }
+.action-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.action-btn:hover { background: rgba(255,255,255,0.1); color: var(--text-main); }
+.action-btn svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; }
+.action-btn.active-good { color: #10b981; } /* Зеленый лайк */
+.action-btn.active-bad { color: #ef4444; } /* Красный дизлайк */
 
 .tools-bar { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; }
 .tools-bar::-webkit-scrollbar { display: none; } 
@@ -82,6 +91,8 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
     .wrapper { padding: 0; }
     .panel { border-radius: 0; border: none; padding: 10px 15px 15px 15px; }
     .message { max-width: 95%; }
+    /* На мобильных кнопки всегда видны */
+    .message-actions { opacity: 1; } 
 }
 @media (min-width: 769px) {
     #sidebar { position: relative; transform: translateX(0); margin-left: calc(-1 * var(--sidebar-width)); }
@@ -156,9 +167,11 @@ input.chat-input { width: 100%; padding: 14px 45px 14px 45px; border-radius: 14p
 
         <div class="wrapper">
             <div class="panel">
-                <div class="status" id="app-status">Подключено</div>
+                <div class="status" id="app-status">Подключено к Облаку Groq</div>
                 <div class="chat" id="chat">
-                    <div class="message ai">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
+                    <div class="message ai">
+                        <div class="md-content">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
+                    </div>
                 </div>
 
                 <div class="tools-bar">
@@ -195,38 +208,53 @@ marked.setOptions({ highlight: function(code, lang) { return hljs.highlight(code
 
 let currentUserEmail = "guest";
 let currentMode = "chat";
-let attachedFile = null; // Хранилище для прикрепленного файла
+let attachedFile = null; 
+let lastUserMessage = ""; // Запоминаем последний текст для кнопки "Повторить"
 
-// Обработка выбора файла
+// --- ЛОГИКА НОВЫХ КНОПОК ---
+function copyMessageText(btn) {
+    // Находим текст внутри конкретного сообщения
+    const mdContent = btn.closest('.message.ai').querySelector('.md-content');
+    navigator.clipboard.writeText(mdContent.innerText.trim());
+    
+    // Красивая анимация галочки
+    const originalSvg = btn.innerHTML;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" stroke="#10b981"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    setTimeout(() => btn.innerHTML = originalSvg, 2000);
+}
+
+function rateMessage(btn, type) {
+    const parent = btn.parentElement;
+    // Сбрасываем цвета у обеих кнопок
+    parent.querySelectorAll('.action-btn').forEach(b => {
+        b.classList.remove('active-good');
+        b.classList.remove('active-bad');
+    });
+    // Красим нужную кнопку
+    btn.classList.add(type === 'good' ? 'active-good' : 'active-bad');
+}
+
+function regenerateMessage() {
+    if (!lastUserMessage) return;
+    document.getElementById("user-input").value = lastUserMessage;
+    sendMessage();
+}
+// ---------------------------
+
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
-    
-    // Проверка размера (не больше 5 МБ для страховки браузера)
-    if (file.size > 5 * 1024 * 1024) {
-        alert("Файл слишком большой! Пожалуйста, выберите файл до 5 МБ.");
-        event.target.value = "";
-        return;
-    }
-
+    if (file.size > 5 * 1024 * 1024) { alert("Файл слишком большой! Пожалуйста, выберите файл до 5 МБ."); event.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = function(e) {
-        attachedFile = {
-            name: file.name,
-            type: file.type || "application/octet-stream",
-            data: e.target.result.split(',')[1] // Берем только base64 часть
-        };
+        attachedFile = { name: file.name, type: file.type || "application/octet-stream", data: e.target.result.split(',')[1] };
         document.getElementById('fname-text').innerText = file.name;
         document.getElementById('file-preview').style.display = 'flex';
     };
     reader.readAsDataURL(file);
 }
 
-function removeFile() {
-    attachedFile = null;
-    document.getElementById('file-upload').value = "";
-    document.getElementById('file-preview').style.display = 'none';
-}
+function removeFile() { attachedFile = null; document.getElementById('file-upload').value = ""; document.getElementById('file-preview').style.display = 'none'; }
 
 function showForm(formName) {
     ['form-main', 'form-login', 'form-register'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -284,7 +312,7 @@ async function loadHistory() {
                     chatBox.innerHTML += `<div class="message user">${msg.content}</div>`;
                     sbHist.innerHTML += `<div class="history-item">${msg.content.substring(0, 25)}...</div>`;
                 } else {
-                    chatBox.innerHTML += `<div class="message ai">${marked.parse(msg.content)}</div>`;
+                    chatBox.innerHTML += `<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div></div>`;
                 }
             });
             chatBox.scrollTop = chatBox.scrollHeight;
@@ -292,7 +320,7 @@ async function loadHistory() {
     } catch (e) { console.error(e); }
 }
 
-function startNewChat() { document.getElementById("chat").innerHTML = `<div class="message ai">Сессия очищена.</div>`; if(window.innerWidth <= 768) toggleSidebar(); }
+function startNewChat() { document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">Сессия очищена.</div></div>`; if(window.innerWidth <= 768) toggleSidebar(); }
 
 function useTool(type, event) {
     currentMode = type;
@@ -308,9 +336,9 @@ function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
 async function sendMessage() {
     const input = document.getElementById("user-input"), chat = document.getElementById("chat"), sbHist = document.getElementById("sidebar-history");
     const text = input.value.trim();
-    
-    // Можно отправить пустой текст, если прикреплен файл (например, картинка)
     if (text === "" && !attachedFile) return;
+
+    lastUserMessage = text; // Запоминаем для кнопки повтора
 
     let displayMsg = text;
     if (attachedFile) displayMsg = `📎 [${attachedFile.name}]<br>` + text;
@@ -322,36 +350,51 @@ async function sendMessage() {
     if (currentUserEmail !== "guest") sbHist.innerHTML += `<div class="history-item">${text.substring(0, 25) || attachedFile.name}...</div>`;
 
     const loadingId = "ai-" + Date.now();
-    chat.innerHTML += `<div class="message ai" id="${loadingId}">⏳ Загрузка...</div>`;
+    // Обрати внимание: теперь есть отдельный блок .md-content для текста
+    chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">⏳ Загрузка...</div></div>`;
     chat.scrollTop = chat.scrollHeight;
 
-    // Формируем payload для отправки
     const payload = { 
-        text: text, 
-        email: currentUserEmail, 
-        mode: currentMode,
-        file_name: attachedFile ? attachedFile.name : null,
-        file_type: attachedFile ? attachedFile.type : null,
-        file_data: attachedFile ? attachedFile.data : null
+        text: text, email: currentUserEmail, mode: currentMode,
+        file_name: attachedFile ? attachedFile.name : null, file_type: attachedFile ? attachedFile.type : null, file_data: attachedFile ? attachedFile.data : null
     };
 
-    removeFile(); // Очищаем скрепку после отправки
+    removeFile(); 
 
     try {
         const response = await fetch(`${BACKEND_URL}/chat`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
         const messageElement = document.getElementById(loadingId);
+        const mdContainer = messageElement.querySelector('.md-content');
         
-        if (currentMode === 'image') { messageElement.innerHTML = await response.text(); chat.scrollTop = chat.scrollHeight; return; }
+        if (currentMode === 'image') { mdContainer.innerHTML = await response.text(); chat.scrollTop = chat.scrollHeight; return; }
 
         const reader = response.body.getReader(), decoder = new TextDecoder("utf-8");
-        messageElement.innerHTML = ""; 
+        mdContainer.innerHTML = ""; 
         let charQueue = [], isAnimating = false, currentAiMarkdown = ""; 
+
+        // HTML-код для кнопок, который добавится в конце ответа
+        const actionsHtml = `
+            <div class="message-actions">
+                <button class="action-btn" onclick="copyMessageText(this)" title="Копировать">
+                    <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+                <button class="action-btn" onclick="rateMessage(this, 'good')" title="Хороший ответ">
+                    <svg viewBox="0 0 24 24"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>
+                </button>
+                <button class="action-btn" onclick="rateMessage(this, 'bad')" title="Плохой ответ">
+                    <svg viewBox="0 0 24 24"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path></svg>
+                </button>
+                <button class="action-btn" onclick="regenerateMessage()" title="Повторить">
+                    <svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                </button>
+            </div>
+        `;
 
         function processQueue() {
             if (charQueue.length > 0) {
                 isAnimating = true;
                 currentAiMarkdown += charQueue.shift();
-                messageElement.innerHTML = marked.parse(currentAiMarkdown);
+                mdContainer.innerHTML = marked.parse(currentAiMarkdown);
                 chat.scrollTop = chat.scrollHeight;
                 setTimeout(processQueue, 15); 
             } else { isAnimating = false; }
@@ -359,11 +402,21 @@ async function sendMessage() {
 
         while (true) {
             const { done, value } = await reader.read();
-            if (done) break; 
+            if (done) {
+                // Ждем окончания анимации текста, затем добавляем кнопки
+                const checkDone = setInterval(() => {
+                    if (!isAnimating) {
+                        clearInterval(checkDone);
+                        messageElement.innerHTML += actionsHtml;
+                        chat.scrollTop = chat.scrollHeight;
+                    }
+                }, 50);
+                break; 
+            }
             charQueue.push(...decoder.decode(value, { stream: true }).split(''));
             if (!isAnimating) processQueue();
         }
-    } catch { document.getElementById(loadingId).innerHTML = "<span style='color: #ef4444;'>Ошибка сервера.</span>"; }
+    } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = "<span style='color: #ef4444;'>Ошибка сервера.</span>"; }
 }
 </script>
 </body>
