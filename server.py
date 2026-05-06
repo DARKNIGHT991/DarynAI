@@ -113,9 +113,9 @@ class ChatRequest(BaseModel):
     text: str
     email: str
     mode: str = "chat"
-    file_name: str = None
-    file_type: str = None
-    file_data: str = None
+    file_name: str | None = None
+    file_type: str | None = None
+    file_data: str | None = None
 
 @app.get("/")
 def serve_frontend():
