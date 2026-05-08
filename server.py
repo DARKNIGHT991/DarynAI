@@ -32,7 +32,6 @@ app.add_middleware(
 )
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
-# Используем самую мощную модель для отличного понимания контекста и языков
 GROQ_MODEL = "llama-3.3-70b-versatile"
 
 if not GROQ_API_KEY:
@@ -54,6 +53,13 @@ def init_db():
         cursor = conn.cursor()
         cursor.execute('''CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, email VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL, content TEXT NOT NULL)''')
+        
+        # --- НОВОЕ: Автоматическое добавление системы кредитов (5 попыток) ---
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='credits'")
+        if not cursor.fetchone():
+            cursor.execute("ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 5")
+        # ----------------------------------------------------------------------
+        
         conn.commit()
         conn.close()
     except Exception as e: print(f"🚨 Ошибка БД: {e}")
@@ -81,7 +87,6 @@ def get_weather(city):
         return "Ошибка: город не найден."
     except: return "Служба погоды недоступна."
 
-# --- ЖЕЛЕЗОБЕТОННЫЙ ПАРСЕР ДОМЕНОВ ---
 def clean_domain(text):
     match = re.search(r'([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})', text.lower())
     if match:
@@ -218,13 +223,13 @@ def chat_with_ai(req: ChatRequest):
             try:
                 conn = get_db_connection()
                 cursor = conn.cursor()
-                cursor.execute('SELECT id, username, email FROM users')
+                cursor.execute('SELECT id, username, email, credits FROM users')
                 users_data = cursor.fetchall()
                 conn.close()
-                admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email |\n|---|---|---|\n"
-                if not users_data: admin_response += "| - | Пусто | - |\n"
+                admin_response = "### 🛠 Секретная Панель Администратора\n\n| ID | Имя | Email | Лимит фото |\n|---|---|---|---|\n"
+                if not users_data: admin_response += "| - | Пусто | - | - |\n"
                 else:
-                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} |\n"
+                    for u in users_data: admin_response += f"| {u[0]} | {u[1]} | {u[2]} | {u[3]} |\n"
                 yield admin_response
             except Exception as e: yield f"Ошибка доступа к БД: {e}"
             return
@@ -263,7 +268,6 @@ def chat_with_ai(req: ChatRequest):
                         file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
                     
-                    # --- БЕЗОПАСНЫЙ ПЕРЕНОС СТРОКИ (ЗАЩИТА ОТ SyntaxError) ---
                     combined_prompt = (
                         f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n"
                         f"```\n{file_content}\n```\n\n"
@@ -275,14 +279,41 @@ def chat_with_ai(req: ChatRequest):
                 return
         else:
             if req.mode == "image":
+                # --- НОВОЕ: Проверка лимитов на генерацию картинок ---
+                if req.email == "guest":
+                    yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[AUTH_REQUIRED] Гостевой доступ ограничен. Зарегистрируйтесь, чтобы получить 5 бесплатных генераций.</div>"
+                    return
+
+                try:
+                    conn = get_db_connection()
+                    cursor = conn.cursor()
+                    cursor.execute('SELECT credits FROM users WHERE email = %s', (req.email,))
+                    row = cursor.fetchone()
+                    
+                    if not row or row[0] <= 0:
+                        conn.close()
+                        yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[LIMIT_EXCEEDED] Лимит исчерпан. Ваши 5 бесплатных попыток для генерации фото закончились.</div>"
+                        return
+                    
+                    # Списываем 1 токен
+                    cursor.execute('UPDATE users SET credits = credits - 1 WHERE email = %s', (req.email,))
+                    conn.commit()
+                    credits_left = row[0] - 1
+                    conn.close()
+                except Exception as e:
+                    yield f"<div style='color: #ef4444;'>[DB_ERROR] Ошибка проверки лимитов: {str(e)}</div>"
+                    return
+                # --------------------------------------------------------
+
                 eng_prompt = ask_ai_quick(f"Translate strictly to English for image prompt. Return only translation: '{req.text}'") or "landscape"
                 img_url = f"https://image.pollinations.ai/prompt/{quote(eng_prompt.strip())}?width=800&height=400&nologo=true"
                 
-                # --- HTML КАРТОЧКА С КНОПКОЙ СКАЧИВАНИЯ ---
+                # --- HTML КАРТОЧКА С КНОПКОЙ СКАЧИВАНИЯ И СЧЕТЧИКОМ ---
                 html_resp = (
                     f"<div class='generated-image-card'>"
                     f"  <img src='{img_url}' alt='Generated by Daryn AI' class='generated-image-content'>"
                     f"  <div class='generated-image-actions'>"
+                    f"    <span style='margin-right:auto; color:#4ade80; font-size:12px; align-self:center; font-family: monospace;'>> Токенов: {credits_left}/5</span>"
                     f"    <button class='action-btn download-btn' onclick=\"downloadGeneratedImage('{img_url}', 'daryn_ai_image.png')\" title='Скачать изображение'>"
                     f"      <svg viewBox='0 0 24 24'><path d='M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3'></path></svg>"
                     f"      Скачать"
