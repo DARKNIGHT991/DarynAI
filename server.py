@@ -260,4 +260,58 @@ def chat_with_ai(req: ChatRequest):
                     else: 
                         file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
-                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\nhttp://googleusercontent.com/immersive_entry_chip/0
+                    
+                    # --- БЕЗОПАСНЫЙ ПЕРЕНОС СТРОКИ ---
+                    combined_prompt = (
+                        f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n"
+                        f"```\n{file_content}\n```\n\n"
+                        f"Мой вопрос: {final_prompt}"
+                    )
+                    # ---------------------------------
+
+                    messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": combined_prompt}]
+            except Exception as e:
+                yield f"⚠️ Ошибка при чтении файла: {str(e)}. Проверьте формат файла."
+                return
+        else:
+            if req.mode == "image":
+                eng_prompt = ask_ai_quick(f"Translate strictly to English for image prompt. Return only translation: '{req.text}'") or "landscape"
+                img_url = f"https://image.pollinations.ai/prompt/{quote(eng_prompt.strip())}?width=800&height=400&nologo=true"
+                html_resp = f"<img src='{img_url}' style='border-radius:12px; width:100%;'>"
+                yield html_resp
+                if req.email != "guest":
+                    try:
+                        conn = get_db_connection(); cursor = conn.cursor()
+                        cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', html_resp))
+                        conn.commit(); conn.close()
+                    except: pass
+                return
+            elif req.mode == "code": final_prompt = f"Напиши профессиональный код для: {req.text}"
+            elif req.mode == "scan": final_prompt = f"Данные для {req.text}:\n{scan_ports(req.text)}\nПроанализируй."
+            else:
+                if "пинг" in prompt_text: 
+                    final_prompt = f"Пинг:\n{ping_host(req.text)}\nОтветь."
+                elif "погод" in prompt_text: 
+                    final_prompt = f"Погода: {get_weather(ask_ai_quick(f'Extract strictly the city name in English from this text, nothing else: {req.text}') or 'London')}\nВопрос: {req.text}"
+                elif "найди" in prompt_text: 
+                    final_prompt = f"Факты:\n{search_web(ask_ai_quick(f'Extract strictly the core search query from this text, nothing else: {req.text}'))}\nОтветь: {req.text}"
+            
+            messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": final_prompt}]
+
+        try:
+            stream = client.chat.completions.create(model=current_model, messages=messages, stream=True)
+            for chunk in stream:
+                token = chunk.choices[0].delta.content
+                if token:
+                    full_ai_response += token
+                    yield token
+        except Exception as e: yield f"Ошибка облака: {str(e)}"
+
+        if req.email != "guest" and full_ai_response:
+            try:
+                conn = get_db_connection(); cursor = conn.cursor()
+                cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', full_ai_response))
+                conn.commit(); conn.close()
+            except: pass
+
+    return StreamingResponse(generate_stream(), media_type="text/plain")
