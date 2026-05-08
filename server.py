@@ -9,6 +9,7 @@ import json
 import base64
 import io
 import PyPDF2
+from datetime import datetime, timedelta
 from urllib.parse import urlparse, quote
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -54,11 +55,16 @@ def init_db():
         cursor.execute('''CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, email VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL, content TEXT NOT NULL)''')
         
-        # --- НОВОЕ: Автоматическое добавление системы кредитов (5 попыток) ---
+        # Автоматическое добавление системы кредитов (5 попыток)
         cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='credits'")
         if not cursor.fetchone():
             cursor.execute("ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 5")
-        # ----------------------------------------------------------------------
+            
+        # --- НОВОЕ: Колонка для отслеживания времени (24 часа) ---
+        cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='last_reset'")
+        if not cursor.fetchone():
+            cursor.execute("ALTER TABLE users ADD COLUMN last_reset TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
+        # --------------------------------------------------------
         
         conn.commit()
         conn.close()
@@ -279,36 +285,52 @@ def chat_with_ai(req: ChatRequest):
                 return
         else:
             if req.mode == "image":
-                # --- НОВОЕ: Проверка лимитов на генерацию картинок ---
                 if req.email == "guest":
-                    yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[AUTH_REQUIRED] Гостевой доступ ограничен. Зарегистрируйтесь, чтобы получить 5 бесплатных генераций.</div>"
+                    yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[AUTH_REQUIRED] Гостевой доступ ограничен. Зарегистрируйтесь, чтобы получить 5 бесплатных генераций в день.</div>"
                     return
 
-                try:
-                    conn = get_db_connection()
-                    cursor = conn.cursor()
-                    cursor.execute('SELECT credits FROM users WHERE email = %s', (req.email,))
-                    row = cursor.fetchone()
-                    
-                    if not row or row[0] <= 0:
+                # --- НОВОЕ: Админская проверка и восстановление 24 часа ---
+                # Вставь сюда свой email (через который ты регистрировался на сайте)
+                ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "daryn@daryn.ai") 
+                is_admin = (req.email == ADMIN_EMAIL)
+                credits_left = "∞"
+
+                if not is_admin:
+                    try:
+                        conn = get_db_connection()
+                        cursor = conn.cursor()
+                        cursor.execute('SELECT credits, last_reset FROM users WHERE email = %s', (req.email,))
+                        row = cursor.fetchone()
+                        
+                        if row:
+                            credits_left = row[0]
+                            last_reset = row[1]
+                            now = datetime.now()
+                            
+                            # Проверяем, прошло ли 24 часа (86400 секунд)
+                            if last_reset is None or (now - last_reset).total_seconds() >= 86400:
+                                credits_left = 5
+                                cursor.execute('UPDATE users SET credits = 5, last_reset = %s WHERE email = %s', (now, req.email))
+                                conn.commit()
+
+                            if credits_left <= 0:
+                                conn.close()
+                                yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[LIMIT_EXCEEDED] Лимит исчерпан. Ваши 5 бесплатных попыток обновятся через 24 часа.</div>"
+                                return
+                            
+                            # Списываем 1 токен
+                            cursor.execute('UPDATE users SET credits = credits - 1 WHERE email = %s', (req.email,))
+                            conn.commit()
+                            credits_left -= 1
                         conn.close()
-                        yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[LIMIT_EXCEEDED] Лимит исчерпан. Ваши 5 бесплатных попыток для генерации фото закончились.</div>"
+                    except Exception as e:
+                        yield f"<div style='color: #ef4444;'>[DB_ERROR] Ошибка проверки лимитов: {str(e)}</div>"
                         return
-                    
-                    # Списываем 1 токен
-                    cursor.execute('UPDATE users SET credits = credits - 1 WHERE email = %s', (req.email,))
-                    conn.commit()
-                    credits_left = row[0] - 1
-                    conn.close()
-                except Exception as e:
-                    yield f"<div style='color: #ef4444;'>[DB_ERROR] Ошибка проверки лимитов: {str(e)}</div>"
-                    return
-                # --------------------------------------------------------
+                # -------------------------------------------------------------
 
                 eng_prompt = ask_ai_quick(f"Translate strictly to English for image prompt. Return only translation: '{req.text}'") or "landscape"
                 img_url = f"https://image.pollinations.ai/prompt/{quote(eng_prompt.strip())}?width=800&height=400&nologo=true"
                 
-                # --- HTML КАРТОЧКА С КНОПКОЙ СКАЧИВАНИЯ И СЧЕТЧИКОМ ---
                 html_resp = (
                     f"<div class='generated-image-card'>"
                     f"  <img src='{img_url}' alt='Generated by Daryn AI' class='generated-image-content'>"
