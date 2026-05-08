@@ -80,9 +80,7 @@ def get_weather(city):
         return "Ошибка: город не найден."
     except: return "Служба погоды недоступна."
 
-# --- НОВЫЙ ЖЕЛЕЗОБЕТОННЫЙ ПАРСЕР ДОМЕНОВ ---
 def clean_domain(text):
-    # Регулярное выражение ищет домен (google.com) или IP (192.168.1.1) в любом тексте
     match = re.search(r'([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})', text.lower())
     if match:
         domain = match.group(1)
@@ -90,7 +88,6 @@ def clean_domain(text):
             return domain[4:]
         return domain
     return text.strip()
-# ---------------------------------------------
 
 def ping_host(host):
     try:
