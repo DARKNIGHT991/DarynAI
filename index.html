@@ -166,6 +166,22 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .send-btn { position: absolute; right: 6px; width: 34px; height: 34px; border-radius: 10px; border: none; background: var(--accent-blue); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
 .send-btn:hover { background: #2563eb; }
 
+/* НОВОЕ: СТИЛИ ДЛЯ КАРТОЧКИ ИЗОБРАЖЕНИЯ */
+.generated-image-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 10px;
+    max-width: 100%;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+.generated-image-content { width: 100%; height: auto; display: block; border-bottom: 1px solid var(--border); }
+.generated-image-actions { padding: 8px 12px; display: flex; justify-content: flex-end; gap: 8px; background: rgba(255,255,255,0.02); }
+.action-btn.download-btn { background: none; border: 1px solid transparent; color: var(--accent-blue); cursor: pointer; padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; }
+.action-btn.download-btn:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
+.action-btn.download-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
+
 @media (max-width: 768px) {
     .hero-title { font-size: 15vw; }
     #sidebar { position: fixed; height: 100%; z-index: 20; box-shadow: 5px 0 15px rgba(0,0,0,0.8); }
@@ -481,24 +497,18 @@ function setLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('daryn_lang', lang);
     
-    // Подсвечиваем активную кнопку
     document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.innerText.toLowerCase() === lang);
     });
 
-    // Переводим DOM элементы
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (i18n[lang] && i18n[lang][key]) {
-            if (el.tagName === 'INPUT') {
-                el.placeholder = i18n[lang][key];
-            } else {
-                el.innerHTML = i18n[lang][key];
-            }
+            if (el.tagName === 'INPUT') el.placeholder = i18n[lang][key];
+            else el.innerHTML = i18n[lang][key];
         }
     });
 
-    // Обновляем плейсхолдер ввода в зависимости от выбранного режима
     updatePlaceholder();
 }
 
@@ -510,14 +520,10 @@ function updatePlaceholder() {
     else input.placeholder = i18n[currentLang]["ph-input"];
 }
 
-// Запуск перевода при первой загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
     setLanguage(currentLang);
-    
     const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) entry.target.classList.add('active');
-        });
+        entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('active'); });
     }, { threshold: 0.1 });
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 });
@@ -801,6 +807,28 @@ async function sendMessage() {
             if (!isAnimating) processQueue();
         }
     } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = `<span style='color: #ef4444;'>${i18n[currentLang]["sys-err"]}</span>`; }
+}
+
+// === НОВАЯ ФУНКЦИЯ ДЛЯ СКАЧИВАНИЯ СГЕНЕРИРОВАННЫХ ИЗОБРАЖЕНИЙ ===
+async function downloadGeneratedImage(imageUrl, fileName) {
+    try {
+        const response = await fetch(imageUrl);
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        
+        document.body.appendChild(link);
+        link.click();
+        
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+        console.error('Ошибка при скачивании изображения:', error);
+        alert(currentLang === 'ru' ? 'Не удалось скачать изображение.' : (currentLang === 'kk' ? 'Суретті жүктеу мүмкін болмады.' : 'Failed to download image.'));
+    }
 }
 </script>
 </body>
