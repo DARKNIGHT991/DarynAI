@@ -734,9 +734,17 @@ async function loadHistory() {
 function startNewChat() { document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">${i18n[currentLang]["init-msg"]}</div></div>`; if(window.innerWidth <= 768) toggleSidebar(); }
 
 function useTool(type, event) {
-    currentMode = type;
-    document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (currentMode === type) {
+        // Если кликнули по уже активному инструменту — отключаем его
+        currentMode = "chat";
+        event.currentTarget.classList.remove('active');
+    } else {
+        // Если выбрали новый инструмент — включаем его
+        currentMode = type;
+        document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+    
     updatePlaceholder();
     document.getElementById("user-input").focus();
 }
