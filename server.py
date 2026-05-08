@@ -260,5 +260,4 @@ def chat_with_ai(req: ChatRequest):
                     else: 
                         file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
-                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n
-http://googleusercontent.com/immersive_entry_chip/0
+                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\nhttp://googleusercontent.com/immersive_entry_chip/0
