@@ -61,7 +61,7 @@ init_db()
 
 def ask_ai_quick(prompt):
     try:
-        res = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model=GROQ_MODEL)
+        res = client.chat.completions.create(messages=[{"role": "user", "content": prompt}], model="llama-3.1-8b-instant")
         return res.choices[0].message.content.strip()
     except: return ""
 
@@ -80,10 +80,17 @@ def get_weather(city):
         return "Ошибка: город не найден."
     except: return "Служба погоды недоступна."
 
+# --- НОВЫЙ ЖЕЛЕЗОБЕТОННЫЙ ПАРСЕР ДОМЕНОВ ---
 def clean_domain(text):
-    text = text.strip(); text = re.sub(r'[<>"\'\s]', '', text)
-    if not text.startswith(('http://', 'https://')): text = 'http://' + text
-    return urlparse(text).netloc.split(':')[0]
+    # Регулярное выражение ищет домен (google.com) или IP (192.168.1.1) в любом тексте
+    match = re.search(r'([a-zA-Z0-9.-]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})', text.lower())
+    if match:
+        domain = match.group(1)
+        if domain.startswith("www."): 
+            return domain[4:]
+        return domain
+    return text.strip()
+# ---------------------------------------------
 
 def ping_host(host):
     try:
@@ -96,9 +103,11 @@ def ping_host(host):
 def scan_ports(host):
     try:
         clean_host = clean_domain(host)
-        ip = socket.gethostbyname(clean_host); open_ports = []
+        ip = socket.gethostbyname(clean_host)
+        open_ports = []
         for port in [21, 22, 25, 53, 80, 110, 143, 443, 3306, 3389, 8080]:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM); sock.settimeout(0.5)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(0.5)
             if sock.connect_ex((ip, port)) == 0: open_ports.append(str(port))
             sock.close()
         return f"Цель: {clean_host} ({ip})\nОткрытые порты: {', '.join(open_ports)}" if open_ports else f"Цель: {clean_host} ({ip})\nОткрытых портов нет."
@@ -222,6 +231,7 @@ def chat_with_ai(req: ChatRequest):
             return
 
         full_ai_response = "" 
+        
         system_instruction = (
             "Ты — Daryn AI, высокоинтеллектуальный ассистент и Dev-платформа. Твой создатель — Daryn. "
             "ГЛАВНОЕ ПРАВИЛО ЯЗЫКА: Всегда отвечай строго на том языке, на котором к тебе обращается пользователь! "
@@ -234,6 +244,7 @@ def chat_with_ai(req: ChatRequest):
             "5) Машинное зрение: детальный анализ фотографий и скриншотов. "
             "Опирайся только на достоверные факты."
         )
+
         final_prompt = req.text
         current_model = GROQ_MODEL
         messages = []
@@ -252,46 +263,5 @@ def chat_with_ai(req: ChatRequest):
                     else: 
                         file_content = base64.b64decode(req.file_data).decode('utf-8')
                     file_content = file_content[:20000] 
-                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n```\n{file_content}\n```\n\nМой вопрос: {final_prompt}"
-                    messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": combined_prompt}]
-            except Exception as e:
-                yield f"⚠️ Ошибка при чтении файла: {str(e)}. Проверьте формат файла."
-                return
-        else:
-            if req.mode == "image":
-                eng_prompt = ask_ai_quick(f"Translate to English for image prompt: '{req.text}'") or "landscape"
-                img_url = f"https://image.pollinations.ai/prompt/{quote(eng_prompt.strip())}?width=800&height=400&nologo=true"
-                html_resp = f"<img src='{img_url}' style='border-radius:12px; width:100%;'>"
-                yield html_resp
-                if req.email != "guest":
-                    try:
-                        conn = get_db_connection(); cursor = conn.cursor()
-                        cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', html_resp))
-                        conn.commit(); conn.close()
-                    except: pass
-                return
-            elif req.mode == "code": final_prompt = f"Напиши профессиональный код для: {req.text}"
-            elif req.mode == "scan": final_prompt = f"Данные для {req.text}:\n{scan_ports(ask_ai_quick(f'Extract domain: {req.text}'))}\nПроанализируй."
-            else:
-                if "пинг" in prompt_text: final_prompt = f"Пинг:\n{ping_host(ask_ai_quick(f'Extract domain: {req.text}'))}\nОтветь."
-                elif "погод" in prompt_text: final_prompt = f"Погода: {get_weather(ask_ai_quick(f'Extract city English: {req.text}') or 'London')}\nВопрос: {req.text}"
-                elif "найди" in prompt_text: final_prompt = f"Факты:\n{search_web(ask_ai_quick(f'Search query: {req.text}'))}\nОтветь: {req.text}"
-            messages = [{"role": "system", "content": system_instruction}, {"role": "user", "content": final_prompt}]
-
-        try:
-            stream = client.chat.completions.create(model=current_model, messages=messages, stream=True)
-            for chunk in stream:
-                token = chunk.choices[0].delta.content
-                if token:
-                    full_ai_response += token
-                    yield token
-        except Exception as e: yield f"Ошибка облака: {str(e)}"
-
-        if req.email != "guest" and full_ai_response:
-            try:
-                conn = get_db_connection(); cursor = conn.cursor()
-                cursor.execute('INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)', (req.email, 'ai', full_ai_response))
-                conn.commit(); conn.close()
-            except: pass
-
-    return StreamingResponse(generate_stream(), media_type="text/plain")
+                    combined_prompt = f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n
+http://googleusercontent.com/immersive_entry_chip/0
