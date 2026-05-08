@@ -18,45 +18,42 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .chat::-webkit-scrollbar-track, .history-list::-webkit-scrollbar-track { background: transparent; }
 .chat::-webkit-scrollbar-thumb, .history-list::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
+/* === ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ === */
+.lang-switch { display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 8px; border: 1px solid var(--border); }
+.lang-btn { background: none; border: none; color: var(--text-muted); font-size: 12px; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 4px; transition: all 0.2s; }
+.lang-btn.active { background: var(--accent-blue); color: #fff; }
+.lang-btn:hover:not(.active) { color: #fff; }
+
 /* === ЖИВОЙ СТАРТОВЫЙ ЭКРАН === */
 #landing-screen { position: fixed; inset: 0; z-index: 2000; overflow-y: auto; overflow-x: hidden; background-color: var(--bg-main); scroll-behavior: smooth; transition: opacity 0.5s ease; }
-
 .landing-bg-grid { position: fixed; inset: 0; z-index: -2; pointer-events: none; background-size: 50px 50px; background-image: linear-gradient(to right, rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.02) 1px, transparent 1px); }
-
 .glow-orb { position: fixed; border-radius: 50%; filter: blur(150px); z-index: -1; pointer-events: none; }
 .orb-1 { top: 0; left: 0; width: 45vw; height: 45vw; background: rgba(59, 130, 246, 0.4); animation: swapBlue 20s infinite ease-in-out alternate; }
 .orb-2 { bottom: 0; right: 0; width: 45vw; height: 45vw; background: rgba(147, 51, 234, 0.3); animation: swapPurple 20s infinite ease-in-out alternate; }
-
 @keyframes swapBlue { 0% { transform: translate(-10%, -10%) scale(1); } 50% { transform: translate(50vw, 50vh) scale(1.2); } 100% { transform: translate(100vw, 100vh) scale(1); } }
 @keyframes swapPurple { 0% { transform: translate(10%, 10%) scale(1); } 50% { transform: translate(-50vw, -50vh) scale(1.2); } 100% { transform: translate(-100vw, -100vh) scale(1); } }
 
 /* Секция 1: Герой */
 .hero-section { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; padding: 20px; text-align: center; }
+.landing-top-right { position: absolute; top: 20px; right: 20px; z-index: 2010; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes pulseGlow { 0% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } 50% { filter: drop-shadow(0 0 30px rgba(59,130,246,0.9)); } 100% { filter: drop-shadow(0 0 10px rgba(59,130,246,0.5)); } }
-
 .hero-icon { opacity: 0; animation: fadeUp 1s ease 0.3s forwards, pulseGlow 3s infinite 1.3s; margin-bottom: 20px; }
 .hero-title { font-size: 8vw; font-weight: 900; letter-spacing: -3px; margin-bottom: 40px; background: linear-gradient(180deg, #ffffff 0%, #71717a 100%); -webkit-background-clip: text; color: transparent; opacity: 0; animation: fadeUp 1s ease 0.6s forwards; line-height: 1; }
 @media (min-width: 1000px) { .hero-title { font-size: 100px; } }
-
 .hero-buttons { display: flex; gap: 15px; opacity: 0; animation: fadeUp 1s ease 0.9s forwards; flex-wrap: wrap; justify-content: center; }
 .hero-btn { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 16px 32px; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; backdrop-filter: blur(10px); }
 .hero-btn:hover { background: rgba(255,255,255,0.1); border-color: var(--accent-blue); transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
 .hero-btn.primary { background: var(--accent-blue); border-color: var(--accent-blue); }
 .hero-btn.primary:hover { background: #2563eb; box-shadow: 0 10px 25px rgba(59,130,246,0.4); }
-
 .scroll-indicator { position: absolute; bottom: 40px; opacity: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; color: var(--text-muted); font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; animation: fadeUp 1s ease 1.5s forwards; cursor: pointer; transition: color 0.3s; }
 .scroll-indicator:hover { color: var(--text-main); }
 .arrow-down { width: 20px; height: 20px; animation: bounce 2s infinite; stroke: currentColor; stroke-width: 2; fill: none; }
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
 
-/* АНИМАЦИЯ ПРИ СКРОЛЛЕ */
 .reveal { opacity: 0; transform: translateY(40px); transition: all 0.8s cubic-bezier(0.5, 0, 0, 1); }
 .reveal.active { opacity: 1; transform: translateY(0); }
-.delay-1 { transition-delay: 0.1s; }
-.delay-2 { transition-delay: 0.2s; }
-.delay-3 { transition-delay: 0.3s; }
-.delay-4 { transition-delay: 0.4s; }
+.delay-1 { transition-delay: 0.1s; } .delay-2 { transition-delay: 0.2s; } .delay-3 { transition-delay: 0.3s; } .delay-4 { transition-delay: 0.4s; }
 
 /* Секция 2: Ядро */
 .core-section { padding: 100px 20px 40px; max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; }
@@ -105,20 +102,16 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 
 /* === ГЛАВНЫЙ ИНТЕРФЕЙС ЧАТА === */
 #app-container { display: none; width: 100%; height: 100%; position: relative; background: var(--bg-main); overflow: hidden; }
-
-/* НОВОЕ: Живой фон для чата (Изумрудный и Синий) */
 .chat-bg-grid { position: absolute; inset: 0; z-index: 0; pointer-events: none; background-size: 40px 40px; background-image: linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(to bottom, rgba(255,255,255,0.015) 1px, transparent 1px); }
 .chat-orb { position: absolute; border-radius: 50%; filter: blur(160px); z-index: 0; pointer-events: none; }
-.chat-orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(16, 185, 129, 0.15); animation: floatChat1 25s infinite ease-in-out alternate; } /* Изумрудный */
-.chat-orb-2 { bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: rgba(14, 165, 233, 0.12); animation: floatChat2 20s infinite ease-in-out alternate; } /* Кибер-синий */
-
+.chat-orb-1 { top: -10%; left: -10%; width: 50vw; height: 50vw; background: rgba(16, 185, 129, 0.15); animation: floatChat1 25s infinite ease-in-out alternate; } 
+.chat-orb-2 { bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: rgba(14, 165, 233, 0.12); animation: floatChat2 20s infinite ease-in-out alternate; } 
 @keyframes floatChat1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(20vw, 20vh) scale(1.3); } }
 @keyframes floatChat2 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(-20vw, -20vh) scale(1.2); } }
 
 #sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 15; backdrop-filter: blur(2px); opacity: 0; transition: opacity 0.3s; }
 #sidebar-overlay.active { display: block; opacity: 1; }
 
-/* ОБНОВЛЕНО: Сайдбар теперь имеет плавную анимацию margins на десктопе */
 #sidebar { width: var(--sidebar-width); height: 100%; background: rgba(10, 10, 10, 0.85); backdrop-filter: blur(20px); border-right: 1px solid var(--border); display: flex; flex-direction: column; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin-left 0.4s cubic-bezier(0.4, 0, 0.2, 1); flex-shrink: 0; z-index: 20; position: absolute; left: 0; top: 0; transform: translateX(-100%); }
 #sidebar.open { transform: translateX(0); }
 .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
@@ -141,7 +134,6 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .logout-btn:hover { opacity: 0.8; }
 
 .wrapper { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; overflow: hidden; }
-/* ОБНОВЛЕНО: Полупрозрачная панель со стеклом */
 .panel { width: 100%; max-width: 880px; height: 100%; background: rgba(12, 12, 12, 0.6); backdrop-filter: blur(25px); border: 1px solid var(--border); border-radius: 20px; display: flex; flex-direction: column; padding: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
 
 .chat { flex: 1; overflow-y: auto; padding-right: 5px; display: flex; flex-direction: column; gap: 16px; scroll-behavior: smooth; margin-bottom: 15px; }
@@ -184,7 +176,6 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
     .spec-item { flex-direction: column; align-items: flex-start; }
     .spec-value { text-align: left; }
 }
-/* ОБНОВЛЕНО: Теперь на десктопе у margin-left есть плавная анимация (настроено в #sidebar) */
 @media (min-width: 769px) {
     #sidebar { position: relative; transform: translateX(0); margin-left: calc(-1 * var(--sidebar-width)); }
     #sidebar.open { margin-left: 0; }
@@ -199,6 +190,14 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
     
+    <div class="landing-top-right">
+        <div class="lang-switch">
+            <button class="lang-btn active" onclick="setLanguage('ru')">RU</button>
+            <button class="lang-btn" onclick="setLanguage('kk')">KK</button>
+            <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+        </div>
+    </div>
+
     <div class="hero-section">
         <div class="hero-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2" style="width:80px;">
@@ -209,13 +208,13 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
         <h1 class="hero-title">DARYN AI</h1>
         
         <div class="hero-buttons">
-            <button class="hero-btn primary" onclick="openAuth('register')">Регистрация</button>
-            <button class="hero-btn" onclick="openAuth('login')">Войти</button>
-            <button class="hero-btn" onclick="loginAsGuest()">Гость</button>
+            <button class="hero-btn primary" onclick="openAuth('register')" data-i18n="hero-reg">Регистрация</button>
+            <button class="hero-btn" onclick="openAuth('login')" data-i18n="hero-login">Войти</button>
+            <button class="hero-btn" onclick="loginAsGuest()" data-i18n="hero-guest">Гость</button>
         </div>
 
         <div class="scroll-indicator" onclick="document.getElementById('core').scrollIntoView()">
-            Изучать ядро
+            <span data-i18n="hero-scroll">Изучать ядро</span>
             <svg class="arrow-down" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </div>
     </div>
@@ -227,61 +226,61 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
             <div class="core-card reveal delay-1">
                 <span class="core-tag">LLM / VISION</span>
                 <h3>Daryn AI</h3>
-                <p>Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.</p>
+                <p data-i18n="core-llm-desc">Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.</p>
                 <div class="core-code">current_model = "daryn-ai-core"</div>
             </div>
 
             <div class="core-card reveal delay-2">
                 <span class="core-tag">BACKEND</span>
                 <h3>FastAPI + Python 3</h3>
-                <p>Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.</p>
+                <p data-i18n="core-backend-desc">Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.</p>
                 <div class="core-code">class ChatRequest(BaseModel):<br>&nbsp;&nbsp;text: str<br>&nbsp;&nbsp;file_data: str | None = None</div>
             </div>
 
             <div class="core-card reveal delay-3">
                 <span class="core-tag">DATABASE</span>
                 <h3>PostgreSQL + Bcrypt</h3>
-                <p>Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.</p>
+                <p data-i18n="core-db-desc">Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.</p>
                 <div class="core-code">cursor.execute('INSERT INTO messages...', ...)</div>
             </div>
 
             <div class="core-card reveal delay-4">
                 <span class="core-tag">NETWORK UTILS</span>
                 <h3>Subprocess & Sockets</h3>
-                <p>Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
+                <p data-i18n="core-net-desc">Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
                 <div class="core-code">sock.connect_ex((ip, port)) == 0</div>
             </div>
         </div>
 
         <div class="specs-section reveal">
-            <h2 class="specs-header">>_ ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ</h2>
+            <h2 class="specs-header" data-i18n="specs-header">>_ ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ</h2>
             <div class="specs-list">
                 <div class="spec-item reveal delay-1">
-                    <span class="spec-key">Вычислительная архитектура</span>
-                    <span class="spec-value">Асинхронный Stateless API (FastAPI)</span>
+                    <span class="spec-key" data-i18n="spec-arch">Вычислительная архитектура</span>
+                    <span class="spec-value" data-i18n="spec-arch-val">Асинхронный Stateless API (FastAPI)</span>
                 </div>
                 <div class="spec-item reveal delay-2">
-                    <span class="spec-key">Скорость генерации (LPU)</span>
-                    <span class="spec-value">~800 токенов в секунду</span>
+                    <span class="spec-key" data-i18n="spec-speed">Скорость генерации (LPU)</span>
+                    <span class="spec-value" data-i18n="spec-speed-val">~800 токенов в секунду</span>
                 </div>
                 <div class="spec-item reveal delay-3">
-                    <span class="spec-key">Контекстное окно</span>
-                    <span class="spec-value">131,072 токенов (Long Context)</span>
+                    <span class="spec-key" data-i18n="spec-ctx">Контекстное окно</span>
+                    <span class="spec-value" data-i18n="spec-ctx-val">131,072 токенов (Long Context)</span>
                 </div>
                 <div class="spec-item reveal delay-4">
-                    <span class="spec-key">Система хранения данных</span>
-                    <span class="spec-value">Реляционная СУБД (PostgreSQL)</span>
+                    <span class="spec-key" data-i18n="spec-db">Система хранения данных</span>
+                    <span class="spec-value" data-i18n="spec-db-val">Реляционная СУБД (PostgreSQL)</span>
                 </div>
                 <div class="spec-item reveal delay-1">
-                    <span class="spec-key">Протоколы безопасности</span>
-                    <span class="spec-value">Bcrypt Hashing / CORS / ENV Encryption</span>
+                    <span class="spec-key" data-i18n="spec-sec">Протоколы безопасности</span>
+                    <span class="spec-value" data-i18n="spec-sec-val">Bcrypt Hashing / CORS / ENV Encryption</span>
                 </div>
             </div>
         </div>
 
         <div class="mission-footer reveal">
-            <p>Проект основан в 2026 году разработчиком <strong>Daryn</strong>.</p>
-            <p>Главная цель — создать мощный, независимый и универсальный инструмент, который стирает границы между человеком и технологиями. Daryn AI призван автоматизировать рутину, ускорять решение сложнейших технических задач и помогать людям эффективно воплощать в жизнь самые масштабные проекты.</p>
+            <p data-i18n="mission-1">Проект основан в 2026 году разработчиком <strong>Daryn</strong>.</p>
+            <p data-i18n="mission-2">Главная цель — создать мощный, независимый и универсальный инструмент, который стирает границы между человеком и технологиями. Daryn AI призван автоматизировать рутину, ускорять решение сложнейших технических задач и помогать людям эффективно воплощать в жизнь самые масштабные проекты.</p>
         </div>
     </div>
 </div>
@@ -291,39 +290,39 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
         <button class="close-auth" onclick="closeAuth()">
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
-        <h2 id="auth-title" style="font-size: 24px;">Вход в систему</h2>
-        <p id="auth-subtitle">Укажите данные для доступа</p>
+        <h2 id="auth-title" style="font-size: 24px;" data-i18n="auth-login-title">Вход в систему</h2>
+        <p id="auth-subtitle" data-i18n="auth-login-sub">Укажите данные для доступа</p>
         
         <div id="form-login">
             <p id="login-error" class="error-msg"></p>
-            <input type="email" class="auth-input" placeholder="Email" id="login-email">
-            <input type="password" class="auth-input" placeholder="Пароль" id="login-pass">
-            <button class="btn-primary" onclick="loginUser()">Авторизация</button>
+            <input type="email" class="auth-input" placeholder="Email" id="login-email" data-i18n="ph-email">
+            <input type="password" class="auth-input" placeholder="Пароль" id="login-pass" data-i18n="ph-pass">
+            <button class="btn-primary" onclick="loginUser()" data-i18n="btn-login">Авторизация</button>
         </div>
         
         <div id="form-register">
             <p id="reg-error" class="error-msg"></p>
-            <input type="text" class="auth-input" placeholder="Имя пользователя" id="reg-name">
-            <input type="email" class="auth-input" placeholder="Email" id="reg-email">
-            <input type="password" class="auth-input" placeholder="Придумайте пароль" id="reg-pass">
-            <button class="btn-primary" onclick="registerUser()">Создать</button>
+            <input type="text" class="auth-input" placeholder="Имя пользователя" id="reg-name" data-i18n="ph-name">
+            <input type="email" class="auth-input" placeholder="Email" id="reg-email" data-i18n="ph-email">
+            <input type="password" class="auth-input" placeholder="Придумайте пароль" id="reg-pass" data-i18n="ph-pass">
+            <button class="btn-primary" onclick="registerUser()" data-i18n="btn-reg">Создать</button>
         </div>
     </div>
 </div>
 
 <div id="profile-overlay" onclick="closeProfile()"></div>
 <div id="profile-modal" class="auth-card">
-    <h2 style="margin-bottom: 5px;">Ваш профиль</h2>
+    <h2 style="margin-bottom: 5px;" data-i18n="prof-title">Ваш профиль</h2>
     <div class="profile-info" id="profile-email">email@example.com</div>
     <p id="profile-error" class="error-msg"></p>
     <p id="profile-success" style="color: #10b981; font-size: 13px; margin-bottom: 12px; display: none;"></p>
-    <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя">
-    <button class="btn-primary" onclick="saveProfile()">Сохранить имя</button>
+    <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя" data-i18n="ph-new-name">
+    <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить имя</button>
     <button class="btn-secondary" style="color: #ef4444; border-color: rgba(239, 68, 68, 0.3);" onclick="clearUserHistory()">
         <svg style="vertical-align: middle; margin-right: 5px; width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2;" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-        Очистить БД
+        <span data-i18n="btn-clear">Очистить БД</span>
     </button>
-    <button class="btn-text" onclick="closeProfile()">Закрыть настройки</button>
+    <button class="btn-text" onclick="closeProfile()" data-i18n="btn-close">Закрыть настройки</button>
 </div>
 
 <div id="app-container">
@@ -335,18 +334,16 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
     <div id="sidebar">
         <div class="sidebar-header">
             <button class="new-chat-btn" onclick="startNewChat()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Новая сессия
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> 
+                <span data-i18n="sb-new">Новая сессия</span>
             </button>
         </div>
         <div class="history-list" id="sidebar-history"></div>
         <div class="sidebar-footer" onclick="openProfile()" title="Настройки профиля">
             <div class="user-avatar" id="sidebar-avatar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;">
-                    <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-                    <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
-                </svg>
+                <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path></svg>
             </div>
-            <span id="sidebar-username">Гость</span>
+            <span id="sidebar-username" data-i18n="sb-guest">Гость</span>
             <svg style="margin-left:auto; stroke:var(--text-muted);" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
         </div>
     </div>
@@ -358,27 +355,31 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
                 </button>
                 <div class="logo">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:22px;">
-                        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
-                        <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
-                    </svg> DARYN AI
+                    <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:22px;"><polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon><path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path></svg> DARYN AI
                 </div>
             </div>
-            <div class="logout-btn" onclick="location.reload()">Выйти</div>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <div class="lang-switch">
+                    <button class="lang-btn active" onclick="setLanguage('ru')">RU</button>
+                    <button class="lang-btn" onclick="setLanguage('kk')">KK</button>
+                    <button class="lang-btn" onclick="setLanguage('en')">EN</button>
+                </div>
+                <div class="logout-btn" onclick="location.reload()" data-i18n="tb-logout">Выйти</div>
+            </div>
         </div>
 
         <div class="wrapper">
             <div class="panel">
                 <div class="chat" id="chat">
                     <div class="message ai">
-                        <div class="md-content">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
+                        <div class="md-content" data-i18n="init-msg">Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.</div>
                     </div>
                 </div>
 
                 <div class="tools-bar">
-                    <button class="tool-btn" onclick="useTool('code', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> Код</button>
-                    <button class="tool-btn" onclick="useTool('image', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> Фото</button>
-                    <button class="tool-btn" onclick="useTool('scan', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> Скан</button>
+                    <button class="tool-btn" onclick="useTool('code', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> <span data-i18n="tool-code">Код</span></button>
+                    <button class="tool-btn" onclick="useTool('image', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg> <span data-i18n="tool-img">Фото</span></button>
+                    <button class="tool-btn" onclick="useTool('scan', event)"><svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg> <span data-i18n="tool-scan">Скан</span></button>
                 </div>
 
                 <div id="file-preview">
@@ -392,7 +393,7 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
                     </button>
                     <input type="file" id="file-upload" style="display:none;" accept=".pdf,.txt,.js,.py,.html,.css,.json,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
                     
-                    <input type="text" id="user-input" class="chat-input" placeholder="Команда терминалу..." onkeypress="handleKeyPress(event)" autocomplete="off">
+                    <input type="text" id="user-input" class="chat-input" placeholder="Команда терминалу..." data-i18n="ph-input" onkeypress="handleKeyPress(event)" autocomplete="off">
                     <button class="send-btn" onclick="sendMessage()"><svg width="16" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg></button>
                 </div>
             </div>
@@ -410,30 +411,130 @@ let currentMode = "chat";
 let attachedFile = null; 
 let lastUserMessage = ""; 
 
+// === СЛОВАРЬ ПЕРЕВОДОВ ===
+const i18n = {
+    ru: {
+        "hero-reg": "Регистрация", "hero-login": "Войти", "hero-guest": "Гость", "hero-scroll": "Изучать ядро",
+        "core-llm-desc": "Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.",
+        "core-backend-desc": "Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.",
+        "core-db-desc": "Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.",
+        "core-net-desc": "Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).",
+        "specs-header": ">_ ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ", "spec-arch": "Вычислительная архитектура", "spec-arch-val": "Асинхронный Stateless API (FastAPI)",
+        "spec-speed": "Скорость генерации (LPU)", "spec-speed-val": "~800 токенов в секунду", "spec-ctx": "Контекстное окно", "spec-ctx-val": "131,072 токенов (Long Context)",
+        "spec-db": "Система хранения данных", "spec-db-val": "Реляционная СУБД (PostgreSQL)", "spec-sec": "Протоколы безопасности", "spec-sec-val": "Bcrypt Hashing / CORS / ENV Encryption",
+        "mission-1": "Проект основан в 2026 году разработчиком <strong>Daryn</strong>.",
+        "mission-2": "Главная цель — создать мощный, независимый и универсальный инструмент, который стирает границы между человеком и технологиями. Daryn AI призван автоматизировать рутину, ускорять решение сложнейших технических задач и помогать людям эффективно воплощать в жизнь самые масштабные проекты.",
+        "auth-login-title": "Вход в систему", "auth-login-sub": "Укажите данные для доступа", "auth-reg-title": "Регистрация", "auth-reg-sub": "Создайте новый профиль доступа",
+        "ph-email": "Email", "ph-pass": "Пароль", "ph-name": "Имя пользователя", "btn-login": "Авторизация", "btn-reg": "Создать",
+        "prof-title": "Ваш профиль", "ph-new-name": "Новое имя", "btn-save": "Сохранить имя", "btn-clear": "Очистить БД", "btn-close": "Закрыть настройки",
+        "sb-new": "Новая сессия", "sb-guest": "Гость", "tb-logout": "Выйти",
+        "init-msg": "Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.",
+        "tool-code": "Код", "tool-img": "Фото", "tool-scan": "Скан",
+        "ph-input": "Команда терминалу...", "ph-input-code": "Команда для парсинга кода...", "ph-input-scan": "IP или домен цели...", "ph-input-img": "Анализ изображения...",
+        "loading": "⏳ Обработка запроса ядром...", "sys-err": "[SYS_ERROR] Ошибка ответа сервера."
+    },
+    kk: {
+        "hero-reg": "Тіркелу", "hero-login": "Кіру", "hero-guest": "Қонақ", "hero-scroll": "Ядроны зерттеу",
+        "core-llm-desc": "Токендердің жоғары жылдамдықты стримингі (LPU). Кірістірілген мультимодальділік: Base64 суреттерін талдау және контекстті бірден өңдеу.",
+        "core-backend-desc": "Маршруттарды асинхронды өңдеу. Pydantic арқылы қатаң типтеу. io.BytesIO және PyPDF2 арқылы бинарлы файлдармен тікелей жұмыс.",
+        "core-db-desc": "Сессиялар мен пайдаланушыларды реляциялық сақтау. Тұзбен құпия сөздерді хэштеу. Параметрленген сұраныстар арқылы SQL-инъекциялардан қорғау.",
+        "core-net-desc": "Инженерлерге арналған кірістірілген скрипттер. Серверлерді жүйелік пингтеу және ашық порттарды (TCP/IP) асинхронды сканерлеу.",
+        "specs-header": ">_ ТЕХНИКАЛЫҚ СИПАТТАМАЛАР", "spec-arch": "Есептеу архитектурасы", "spec-arch-val": "Асинхронды Stateless API (FastAPI)",
+        "spec-speed": "Генерация жылдамдығы (LPU)", "spec-speed-val": "секундына ~800 токен", "spec-ctx": "Контексттік терезе", "spec-ctx-val": "131,072 токен (Long Context)",
+        "spec-db": "Деректерді сақтау жүйесі", "spec-db-val": "Реляциялық ДҚБЖ (PostgreSQL)", "spec-sec": "Қауіпсіздік хаттамалары", "spec-sec-val": "Bcrypt Hashing / CORS / ENV Encryption",
+        "mission-1": "Жобаның негізін 2026 жылы <strong>Daryn</strong> атты әзірлеуші қалаған.",
+        "mission-2": "Басты мақсат — адам мен технология арасындағы шекараны жоятын қуатты, тәуелсіз және әмбебап құрал жасау. Daryn AI күнделікті жұмысты автоматтандыруға, күрделі техникалық мәселелерді шешуді тездетуге және адамдарға ауқымды жобаларды тиімді жүзеге асыруға көмектесуге арналған.",
+        "auth-login-title": "Жүйеге кіру", "auth-login-sub": "Қол жеткізу үшін мәліметтерді енгізіңіз", "auth-reg-title": "Тіркелу", "auth-reg-sub": "Жаңа профиль жасаңыз",
+        "ph-email": "Электрондық пошта", "ph-pass": "Құпия сөз", "ph-name": "Пайдаланушы аты", "btn-login": "Авторизация", "btn-reg": "Жасау",
+        "prof-title": "Сіздің профиліңіз", "ph-new-name": "Жаңа есім", "btn-save": "Есімді сақтау", "btn-clear": "ДҚ тазарту", "btn-close": "Баптауларды жабу",
+        "sb-new": "Жаңа сессия", "sb-guest": "Қонақ", "tb-logout": "Шығу",
+        "init-msg": "Жүйе іске қосылды. Құралды таңдаңыз, сұрақ қойыңыз немесе файл тіркеңіз.",
+        "tool-code": "Код", "tool-img": "Сурет", "tool-scan": "Скан",
+        "ph-input": "Терминал командасы...", "ph-input-code": "Кодты талдау командасы...", "ph-input-scan": "IP немесе мақсатты домен...", "ph-input-img": "Суретті талдау...",
+        "loading": "⏳ Ядро сұранысты өңдеуде...", "sys-err": "[SYS_ERROR] Серверден жауап алу қатесі."
+    },
+    en: {
+        "hero-reg": "Sign Up", "hero-login": "Log In", "hero-guest": "Guest", "hero-scroll": "Explore Core",
+        "core-llm-desc": "High-speed token streaming (LPU). Built-in multimodality: Base64 image parsing and on-the-fly context analysis.",
+        "core-backend-desc": "Asynchronous route processing. Strict typing via Pydantic. Native binary handling using io.BytesIO and PyPDF2.",
+        "core-db-desc": "Relational session and user storage. Salted password hashing. SQL injection protection via parameterized queries.",
+        "core-net-desc": "Built-in scripts for engineers. System server pinging and asynchronous open port scanning (TCP/IP).",
+        "specs-header": ">_ TECHNICAL SPECIFICATIONS", "spec-arch": "Computing Architecture", "spec-arch-val": "Asynchronous Stateless API (FastAPI)",
+        "spec-speed": "Generation Speed (LPU)", "spec-speed-val": "~800 tokens per second", "spec-ctx": "Context Window", "spec-ctx-val": "131,072 tokens (Long Context)",
+        "spec-db": "Data Storage System", "spec-db-val": "Relational RDBMS (PostgreSQL)", "spec-sec": "Security Protocols", "spec-sec-val": "Bcrypt Hashing / CORS / ENV Encryption",
+        "mission-1": "The project was founded in 2026 by developer <strong>Daryn</strong>.",
+        "mission-2": "The main goal is to create a powerful, independent, and universal tool that blurs the lines between humans and technology. Daryn AI is designed to automate routine, accelerate solving complex technical tasks, and help people execute massive projects efficiently.",
+        "auth-login-title": "System Login", "auth-login-sub": "Enter your access credentials", "auth-reg-title": "Registration", "auth-reg-sub": "Create a new access profile",
+        "ph-email": "Email", "ph-pass": "Password", "ph-name": "Username", "btn-login": "Authorize", "btn-reg": "Create",
+        "prof-title": "Your Profile", "ph-new-name": "New name", "btn-save": "Save name", "btn-clear": "Clear DB", "btn-close": "Close settings",
+        "sb-new": "New Session", "sb-guest": "Guest", "tb-logout": "Log Out",
+        "init-msg": "System initialized. Select a tool, ask a question, or attach a file.",
+        "tool-code": "Code", "tool-img": "Image", "tool-scan": "Scan",
+        "ph-input": "Terminal command...", "ph-input-code": "Code parsing command...", "ph-input-scan": "Target IP or domain...", "ph-input-img": "Image analysis...",
+        "loading": "⏳ Core is processing the request...", "sys-err": "[SYS_ERROR] Server response error."
+    }
+};
+
+let currentLang = localStorage.getItem('daryn_lang') || 'ru';
+
+function setLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('daryn_lang', lang);
+    
+    // Подсвечиваем активную кнопку
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.toLowerCase() === lang);
+    });
+
+    // Переводим DOM элементы
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang] && i18n[lang][key]) {
+            if (el.tagName === 'INPUT') {
+                el.placeholder = i18n[lang][key];
+            } else {
+                el.innerHTML = i18n[lang][key];
+            }
+        }
+    });
+
+    // Обновляем плейсхолдер ввода в зависимости от выбранного режима
+    updatePlaceholder();
+}
+
+function updatePlaceholder() {
+    const input = document.getElementById("user-input");
+    if(currentMode === 'code') input.placeholder = i18n[currentLang]["ph-input-code"];
+    else if(currentMode === 'scan') input.placeholder = i18n[currentLang]["ph-input-scan"];
+    else if(currentMode === 'image') input.placeholder = i18n[currentLang]["ph-input-img"];
+    else input.placeholder = i18n[currentLang]["ph-input"];
+}
+
+// Запуск перевода при первой загрузке страницы
 document.addEventListener("DOMContentLoaded", () => {
+    setLanguage(currentLang);
+    
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('active');
-            }
+            if (entry.isIntersecting) entry.target.classList.add('active');
         });
     }, { threshold: 0.1 });
-
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 });
+// ===================================
 
 function openAuth(type) {
     document.getElementById('login-error').style.display = 'none';
     document.getElementById('reg-error').style.display = 'none';
     
     if(type === 'login') {
-        document.getElementById('auth-title').innerText = "Вход в систему";
-        document.getElementById('auth-subtitle').innerText = "Введите данные для доступа к ядру";
+        document.getElementById('auth-title').innerText = i18n[currentLang]["auth-login-title"];
+        document.getElementById('auth-subtitle').innerText = i18n[currentLang]["auth-login-sub"];
         document.getElementById('form-login').style.display = 'flex';
         document.getElementById('form-register').style.display = 'none';
     } else {
-        document.getElementById('auth-title').innerText = "Регистрация";
-        document.getElementById('auth-subtitle').innerText = "Создайте новый профиль доступа";
+        document.getElementById('auth-title').innerText = i18n[currentLang]["auth-reg-title"];
+        document.getElementById('auth-subtitle').innerText = i18n[currentLang]["auth-reg-sub"];
         document.getElementById('form-login').style.display = 'none';
         document.getElementById('form-register').style.display = 'flex';
     }
@@ -478,7 +579,7 @@ const getActionsHtml = () => `
 `;
 
 function openProfile() {
-    if (currentUserEmail === "guest") { alert("Профиль недоступен для гостя. Пожалуйста, войдите в аккаунт."); return; }
+    if (currentUserEmail === "guest") { return; }
     document.getElementById('profile-email').innerText = currentUserEmail;
     document.getElementById('profile-name-input').value = document.getElementById('sidebar-username').innerText;
     document.getElementById('profile-overlay').style.display = 'block';
@@ -498,7 +599,7 @@ async function saveProfile() {
     const err = document.getElementById('profile-error');
     const succ = document.getElementById('profile-success');
     
-    if (!newName) { err.innerText = "Имя не может быть пустым"; err.style.display = "block"; succ.style.display = "none"; return; }
+    if (!newName) { err.innerText = "Error"; err.style.display = "block"; succ.style.display = "none"; return; }
     
     try {
         const res = await fetch(`${BACKEND_URL}/update_profile`, {
@@ -509,15 +610,15 @@ async function saveProfile() {
         if (data.status === "success") {
             document.getElementById('sidebar-username').innerText = newName;
             err.style.display = "none";
-            succ.innerText = "Имя успешно обновлено!";
+            succ.innerText = "OK";
             succ.style.display = "block";
             setTimeout(closeProfile, 1500);
         } else { err.innerText = data.message; err.style.display = "block"; succ.style.display = "none"; }
-    } catch { err.innerText = "Ошибка соединения."; err.style.display = "block"; succ.style.display = "none"; }
+    } catch { err.innerText = "Network Error."; err.style.display = "block"; succ.style.display = "none"; }
 }
 
 async function clearUserHistory() {
-    if (!confirm("ВНИМАНИЕ: Вы уверены, что хотите навсегда удалить всю историю переписки? Это действие нельзя отменить.")) return;
+    if (!confirm("Delete DB?")) return;
     const err = document.getElementById('profile-error');
     const succ = document.getElementById('profile-success');
     
@@ -528,14 +629,14 @@ async function clearUserHistory() {
         });
         const data = await res.json();
         if (data.status === "success") {
-            document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">История вашей переписки была полностью удалена с сервера.</div></div>`;
+            document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">DB Cleared.</div></div>`;
             document.getElementById("sidebar-history").innerHTML = "";
             err.style.display = "none";
-            succ.innerText = "История очищена!";
+            succ.innerText = "OK!";
             succ.style.display = "block";
             setTimeout(closeProfile, 1500);
         } else { err.innerText = data.message; err.style.display = "block"; succ.style.display = "none"; }
-    } catch { err.innerText = "Ошибка соединения."; err.style.display = "block"; succ.style.display = "none"; }
+    } catch { err.innerText = "Network Error."; err.style.display = "block"; succ.style.display = "none"; }
 }
 
 function copyMessageText(btn) {
@@ -561,7 +662,7 @@ function regenerateMessage() {
 function handleFileSelect(event) {
     const file = event.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { alert("Файл слишком большой!"); event.target.value = ""; return; }
+    if (file.size > 5 * 1024 * 1024) { alert("File too large!"); event.target.value = ""; return; }
     const reader = new FileReader();
     reader.onload = function(e) {
         attachedFile = { name: file.name, type: file.type || "application/octet-stream", data: e.target.result.split(',')[1] };
@@ -575,27 +676,27 @@ function removeFile() { attachedFile = null; document.getElementById('file-uploa
 
 async function registerUser() {
     const name = document.getElementById('reg-name').value, email = document.getElementById('reg-email').value, pass = document.getElementById('reg-pass').value, err = document.getElementById('reg-error');
-    if (!name || !email || !pass) { err.innerText = "Заполните все поля!"; err.style.display = "block"; return; }
+    if (!name || !email || !pass) { err.innerText = "Fill all fields"; err.style.display = "block"; return; }
     try {
         const res = await fetch(`${BACKEND_URL}/register`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: name, email, password: pass }) });
         const data = await res.json();
         if (data.status === "success") { currentUserEmail = email; document.getElementById('sidebar-username').innerText = data.username; enterApp(); } 
         else { err.innerText = data.message; err.style.display = "block"; }
-    } catch { err.innerText = "Ошибка сервера."; err.style.display = "block"; }
+    } catch { err.innerText = "Server error"; err.style.display = "block"; }
 }
 
 async function loginUser() {
     const email = document.getElementById('login-email').value, pass = document.getElementById('login-pass').value, err = document.getElementById('login-error');
-    if (!email || !pass) { err.innerText = "Заполните все поля!"; err.style.display = "block"; return; }
+    if (!email || !pass) { err.innerText = "Fill all fields"; err.style.display = "block"; return; }
     try {
         const res = await fetch(`${BACKEND_URL}/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password: pass }) });
         const data = await res.json();
         if (data.status === "success") { currentUserEmail = email; document.getElementById('sidebar-username').innerText = data.username; enterApp(); } 
         else { err.innerText = data.message; err.style.display = "block"; }
-    } catch { err.innerText = "Ошибка сервера."; err.style.display = "block"; }
+    } catch { err.innerText = "Server error"; err.style.display = "block"; }
 }
 
-function loginAsGuest() { currentUserEmail = "guest"; document.getElementById('sidebar-username').innerText = "Гость"; enterApp(); }
+function loginAsGuest() { currentUserEmail = "guest"; document.getElementById('sidebar-username').innerText = i18n[currentLang]["sb-guest"]; enterApp(); }
 
 function toggleSidebar() { 
     const sb = document.getElementById('sidebar'), ov = document.getElementById('sidebar-overlay');
@@ -604,7 +705,7 @@ function toggleSidebar() {
 }
 
 async function loadHistory() {
-    if (currentUserEmail === "guest") { document.getElementById("sidebar-history").innerHTML = "<div class='history-item'>История недоступна для гостей</div>"; return; }
+    if (currentUserEmail === "guest") { document.getElementById("sidebar-history").innerHTML = `<div class='history-item'>${currentLang === 'ru' ? 'История недоступна' : 'No history'}</div>`; return; }
     try {
         const res = await fetch(`${BACKEND_URL}/history`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUserEmail }) });
         const data = await res.json();
@@ -624,15 +725,14 @@ async function loadHistory() {
     } catch (e) { console.error(e); }
 }
 
-function startNewChat() { document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">Сессия очищена.</div></div>`; if(window.innerWidth <= 768) toggleSidebar(); }
+function startNewChat() { document.getElementById("chat").innerHTML = `<div class="message ai"><div class="md-content">${i18n[currentLang]["init-msg"]}</div></div>`; if(window.innerWidth <= 768) toggleSidebar(); }
 
 function useTool(type, event) {
     currentMode = type;
-    const input = document.getElementById("user-input");
     document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
     event.currentTarget.classList.add('active');
-    input.placeholder = type === 'code' ? "Команда для парсинга кода..." : type === 'scan' ? "IP или домен цели..." : type === 'image' ? "Анализ изображения..." : "Команда терминалу...";
-    input.focus();
+    updatePlaceholder();
+    document.getElementById("user-input").focus();
 }
 
 function handleKeyPress(e) { if (e.key === 'Enter') sendMessage(); }
@@ -654,7 +754,7 @@ async function sendMessage() {
     if (currentUserEmail !== "guest") sbHist.innerHTML += `<div class="history-item">${text.substring(0, 25) || attachedFile.name}...</div>`;
 
     const loadingId = "ai-" + Date.now();
-    chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">⏳ Обработка запроса ядром...</div></div>`;
+    chat.innerHTML += `<div class="message ai" id="${loadingId}"><div class="md-content">${i18n[currentLang]["loading"]}</div></div>`;
     chat.scrollTop = chat.scrollHeight;
 
     const payload = { 
@@ -700,7 +800,7 @@ async function sendMessage() {
             charQueue.push(...decoder.decode(value, { stream: true }).split(''));
             if (!isAnimating) processQueue();
         }
-    } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = "<span style='color: #ef4444;'>[SYS_ERROR] Ошибка ответа сервера.</span>"; }
+    } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = `<span style='color: #ef4444;'>${i18n[currentLang]["sys-err"]}</span>`; }
 }
 </script>
 </body>
