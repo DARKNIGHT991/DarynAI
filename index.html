@@ -176,6 +176,50 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
 .action-btn.download-btn:hover { background: rgba(59, 130, 246, 0.1); border-color: rgba(59, 130, 246, 0.3); }
 .action-btn.download-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; }
 
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+/* === ГОЛОСОВОЙ ЧАТ === */
+.voice-btn {
+    position: absolute;
+    right: 46px;
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.voice-btn:hover { background: rgba(255,255,255,0.1); color: #fff; border-color: rgba(255,255,255,0.2); }
+.voice-btn.recording {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: #ef4444;
+    color: #ef4444;
+    animation: pulse-red 1.2s infinite;
+}
+.voice-btn.processing {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+    animation: pulse-blue 1s infinite;
+    cursor: not-allowed;
+}
+@keyframes pulse-red {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
+    50%       { box-shadow: 0 0 0 7px rgba(239,68,68,0); }
+}
+@keyframes pulse-blue {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(59,130,246,0.5); }
+    50%       { box-shadow: 0 0 0 7px rgba(59,130,246,0); }
+}
+/* Сдвигаем кнопку отправки чуть правее чтобы не перекрывалась */
+.send-btn { right: 6px; }
+
 @media (max-width: 768px) {
     .hero-title { font-size: 15vw; }
     #sidebar { position: fixed; height: 100%; z-index: 20; box-shadow: 5px 0 15px rgba(0,0,0,0.8); }
@@ -401,8 +445,28 @@ body { background: var(--bg-main); color: var(--text-main); height: 100dvh; over
                         <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
                     </button>
                     <input type="file" id="file-upload" style="display:none;" accept=".pdf,.txt,.js,.py,.html,.css,.json,.jpg,.jpeg,.png" onchange="handleFileSelect(event)">
-                    
-                    <input type="text" id="user-input" class="chat-input" placeholder="Команда терминалу..." data-i18n="ph-input" onkeypress="handleKeyPress(event)" autocomplete="off">
+
+                    <input type="text" id="user-input" class="chat-input" style="padding-right: 90px;" placeholder="Команда терминалу..." data-i18n="ph-input" onkeypress="handleKeyPress(event)" autocomplete="off">
+
+                    <!-- КНОПКА ГОЛОСОВОГО ВВОДА -->
+                    <button class="voice-btn" id="voice-btn" onclick="toggleVoiceRecording()" title="Голосовой ввод">
+                        <!-- иконка микрофона (состояние: ожидание) -->
+                        <svg id="voice-icon-mic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                        <!-- иконка стоп (состояние: запись) -->
+                        <svg id="voice-icon-stop" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="display:none;">
+                            <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+                        </svg>
+                        <!-- иконка спиннер (состояние: обработка) -->
+                        <svg id="voice-icon-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none; animation: spin 1s linear infinite;">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
+                        </svg>
+                    </button>
+
                     <button class="send-btn" onclick="sendMessage()"><svg width="16" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg></button>
                 </div>
             </div>
@@ -955,6 +1019,148 @@ async function sendMessage() {
         }
     } catch { document.getElementById(loadingId).querySelector('.md-content').innerHTML = `<span style='color: #ef4444;'>${i18n[currentLang]["sys-err"]}</span>`; }
 }
+
+// =====================================================
+// === ГОЛОСОВОЙ ЧАТ (Groq Whisper STT) ===
+// =====================================================
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
+
+function setVoiceState(state) {
+    // state: 'idle' | 'recording' | 'processing'
+    const btn = document.getElementById('voice-btn');
+    const iconMic  = document.getElementById('voice-icon-mic');
+    const iconStop = document.getElementById('voice-icon-stop');
+    const iconSpin = document.getElementById('voice-icon-spin');
+
+    btn.classList.remove('recording', 'processing');
+    iconMic.style.display  = 'none';
+    iconStop.style.display = 'none';
+    iconSpin.style.display = 'none';
+
+    if (state === 'idle') {
+        iconMic.style.display = 'block';
+        btn.disabled = false;
+        btn.title = currentLang === 'ru' ? 'Голосовой ввод' : (currentLang === 'kk' ? 'Дауыстық енгізу' : 'Voice input');
+    } else if (state === 'recording') {
+        btn.classList.add('recording');
+        iconStop.style.display = 'block';
+        btn.disabled = false;
+        btn.title = currentLang === 'ru' ? 'Остановить запись' : (currentLang === 'kk' ? 'Жазуды тоқтату' : 'Stop recording');
+    } else if (state === 'processing') {
+        btn.classList.add('processing');
+        iconSpin.style.display = 'block';
+        btn.disabled = true;
+        btn.title = currentLang === 'ru' ? 'Распознаю речь...' : (currentLang === 'kk' ? 'Сөйлеуді тану...' : 'Recognizing...');
+    }
+}
+
+async function toggleVoiceRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Выбираем поддерживаемый формат
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+            ? 'audio/webm;codecs=opus'
+            : MediaRecorder.isTypeSupported('audio/webm')
+            ? 'audio/webm'
+            : 'audio/ogg';
+
+        mediaRecorder = new MediaRecorder(stream, { mimeType });
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+            stream.getTracks().forEach(t => t.stop());
+            await sendAudioToServer(mimeType);
+        };
+
+        mediaRecorder.start(250); // чанки каждые 250ms
+        isRecording = true;
+        setVoiceState('recording');
+
+    } catch (e) {
+        const msg = {
+            ru: 'Нет доступа к микрофону. Разрешите доступ в настройках браузера.',
+            kk: 'Микрофонға қол жеткізу жоқ. Браузер баптауларында рұқсат беріңіз.',
+            en: 'Microphone access denied. Please allow access in browser settings.'
+        };
+        alert(msg[currentLang] || msg.ru);
+        setVoiceState('idle');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && isRecording) {
+        isRecording = false;
+        mediaRecorder.stop();
+        setVoiceState('processing');
+    }
+}
+
+async function sendAudioToServer(mimeType) {
+    const input = document.getElementById('user-input');
+
+    try {
+        const baseMime = mimeType.split(';')[0]; // убираем codecs=...
+        const blob = new Blob(audioChunks, { type: baseMime });
+
+        if (blob.size < 1000) {
+            setVoiceState('idle');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', blob, 'audio.webm');
+
+        const res = await fetch(`${BACKEND_URL}/transcribe`, {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await res.json();
+
+        if (data.status === 'success' && data.text && data.text.trim()) {
+            input.value = data.text.trim();
+            setVoiceState('idle');
+            // Автоматически отправляем
+            sendMessage();
+        } else {
+            // Показываем ошибку в плейсхолдере на 2 секунды
+            const errMsg = {
+                ru: '⚠ Не удалось распознать речь',
+                kk: '⚠ Сөйлеуді тану мүмкін болмады',
+                en: '⚠ Could not recognize speech'
+            };
+            input.placeholder = errMsg[currentLang] || errMsg.ru;
+            setVoiceState('idle');
+            setTimeout(() => updatePlaceholder(), 2500);
+        }
+
+    } catch (e) {
+        const errMsg = {
+            ru: '⚠ Ошибка подключения к серверу',
+            kk: '⚠ Серверге қосылу қатесі',
+            en: '⚠ Server connection error'
+        };
+        input.placeholder = errMsg[currentLang] || errMsg.ru;
+        setVoiceState('idle');
+        setTimeout(() => updatePlaceholder(), 2500);
+    }
+}
+// =====================================================
 
 async function downloadGeneratedImage(imageUrl, fileName) {
     try {
