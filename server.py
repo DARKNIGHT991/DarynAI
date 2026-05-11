@@ -8,10 +8,11 @@ import re
 import json
 import base64
 import io
+import tempfile
 import PyPDF2
 from datetime import datetime, timedelta
 from urllib.parse import urlparse, quote
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse, HTMLResponse 
@@ -55,16 +56,13 @@ def init_db():
         cursor.execute('''CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, username VARCHAR(255) NOT NULL, email VARCHAR(255) UNIQUE NOT NULL, password_hash VARCHAR(255) NOT NULL)''')
         cursor.execute('''CREATE TABLE IF NOT EXISTS messages (id SERIAL PRIMARY KEY, email VARCHAR(255) NOT NULL, role VARCHAR(50) NOT NULL, content TEXT NOT NULL)''')
         
-        # Автоматическое добавление системы кредитов (5 попыток)
         cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='credits'")
         if not cursor.fetchone():
             cursor.execute("ALTER TABLE users ADD COLUMN credits INTEGER DEFAULT 5")
             
-        # --- НОВОЕ: Колонка для отслеживания времени (24 часа) ---
         cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name='users' AND column_name='last_reset'")
         if not cursor.fetchone():
             cursor.execute("ALTER TABLE users ADD COLUMN last_reset TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-        # --------------------------------------------------------
         
         conn.commit()
         conn.close()
@@ -203,6 +201,57 @@ def clear_user_history(req: HistoryRequest):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+# ================================================================
+# === НОВЫЙ ENDPOINT: ГОЛОСОВОЙ ВВОД (Groq Whisper STT) ===
+# ================================================================
+@app.post("/transcribe")
+async def transcribe_audio(file: UploadFile = File(...)):
+    if not GROQ_API_KEY:
+        return {"status": "error", "message": "GROQ_API_KEY не найден"}
+
+    tmp_path = None
+    try:
+        audio_bytes = await file.read()
+
+        if len(audio_bytes) < 1000:
+            return {"status": "error", "message": "Аудио слишком короткое или пустое"}
+
+        # Определяем расширение по content-type
+        content_type = file.content_type or "audio/webm"
+        ext_map = {
+            "audio/webm": ".webm",
+            "audio/ogg": ".ogg",
+            "audio/mp4": ".mp4",
+            "audio/mpeg": ".mp3",
+            "audio/wav": ".wav",
+        }
+        ext = ext_map.get(content_type, ".webm")
+
+        # Сохраняем во временный файл (Groq требует файл)
+        with tempfile.NamedTemporaryFile(suffix=ext, delete=False) as tmp:
+            tmp.write(audio_bytes)
+            tmp_path = tmp.name
+
+        with open(tmp_path, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                model="whisper-large-v3",
+                file=(f"audio{ext}", audio_file, content_type),
+                response_format="text",
+                language=None,  # авто-определение: RU / KK / EN
+            )
+
+        text = transcription.strip() if isinstance(transcription, str) else str(transcription)
+        return {"status": "success", "text": text}
+
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка распознавания: {str(e)}"}
+    finally:
+        # Всегда чистим временный файл
+        if tmp_path and os.path.exists(tmp_path):
+            try: os.unlink(tmp_path)
+            except: pass
+# ================================================================
+
 @app.post("/chat")
 def chat_with_ai(req: ChatRequest):
     prompt_text = req.text.lower()
@@ -289,8 +338,6 @@ def chat_with_ai(req: ChatRequest):
                     yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[AUTH_REQUIRED] Гостевой доступ ограничен. Зарегистрируйтесь, чтобы получить 5 бесплатных генераций в день.</div>"
                     return
 
-                # --- НОВОЕ: Админская проверка и восстановление 24 часа ---
-                # Вставь сюда свой email (через который ты регистрировался на сайте)
                 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "daryn@daryn.ai") 
                 is_admin = (req.email == ADMIN_EMAIL)
                 credits_left = "∞"
@@ -307,7 +354,6 @@ def chat_with_ai(req: ChatRequest):
                             last_reset = row[1]
                             now = datetime.now()
                             
-                            # Проверяем, прошло ли 24 часа (86400 секунд)
                             if last_reset is None or (now - last_reset).total_seconds() >= 86400:
                                 credits_left = 5
                                 cursor.execute('UPDATE users SET credits = 5, last_reset = %s WHERE email = %s', (now, req.email))
@@ -318,7 +364,6 @@ def chat_with_ai(req: ChatRequest):
                                 yield "<div style='color: #ef4444; font-weight: 500; font-family: monospace;'>[LIMIT_EXCEEDED] Лимит исчерпан. Ваши 5 бесплатных попыток обновятся через 24 часа.</div>"
                                 return
                             
-                            # Списываем 1 токен
                             cursor.execute('UPDATE users SET credits = credits - 1 WHERE email = %s', (req.email,))
                             conn.commit()
                             credits_left -= 1
@@ -326,7 +371,6 @@ def chat_with_ai(req: ChatRequest):
                     except Exception as e:
                         yield f"<div style='color: #ef4444;'>[DB_ERROR] Ошибка проверки лимитов: {str(e)}</div>"
                         return
-                # -------------------------------------------------------------
 
                 eng_prompt = ask_ai_quick(f"Translate strictly to English for image prompt. Return only translation: '{req.text}'") or "landscape"
                 img_url = f"https://image.pollinations.ai/prompt/{quote(eng_prompt.strip())}?width=800&height=400&nologo=true"
