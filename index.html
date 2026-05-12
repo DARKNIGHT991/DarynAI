@@ -4,8 +4,41 @@
 <meta charset="UTF-8">
 <title>Daryn AI - Core</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#3b82f6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daryn AI">
+<meta name="application-name" content="Daryn AI">
+<meta name="msapplication-TileColor" content="#050505">
+<meta name="msapplication-TileImage" content="/icon-192.png">
+
+<!-- SEO -->
+<meta name="description" content="Daryn AI — высокоинтеллектуальный AI ассистент и Dev-платформа.">
+<meta name="keywords" content="AI, ассистент, Daryn AI, код, PDF, голос">
+<meta name="author" content="Daryn">
+
+<!-- Open Graph -->
+<meta property="og:title"       content="Daryn AI">
+<meta property="og:description" content="Высокоинтеллектуальный AI ассистент и Dev-платформа">
+<meta property="og:type"        content="website">
+<meta property="og:image"       content="/icon-512.png">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- Apple Touch Icons -->
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png">
+<link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png">
+
+<!-- Favicon SVG -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polygon points='7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2'></polygon><path d='M9 8h3.5a4 4 0 1 1 0 8H9v-8z'></path></svg>">
+
+<!-- Fonts & Libraries -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -15,24 +48,24 @@
    CSS ПЕРЕМЕННЫЕ
 ================================================================ */
 :root {
-  --bg-main:      #050505;
-  --bg-panel:     #111111;
-  --border:       rgba(255,255,255,0.08);
-  --text-main:    #ffffff;
-  --text-muted:   #888888;
-  --accent-blue:  #3b82f6;
-  --user-bubble:  #1a1a1a;
+  --bg-main:       #050505;
+  --bg-panel:      #111111;
+  --border:        rgba(255,255,255,0.08);
+  --text-main:     #ffffff;
+  --text-muted:    #888888;
+  --accent-blue:   #3b82f6;
+  --user-bubble:   #1a1a1a;
   --sidebar-width: 280px;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',sans-serif; }
 
 body {
-  background: var(--bg-main);
-  color: var(--text-main);
-  height: 100dvh;
-  overflow: hidden;
-  display: flex;
+  background:var(--bg-main);
+  color:var(--text-main);
+  height:100dvh;
+  overflow:hidden;
+  display:flex;
 }
 
 .chat::-webkit-scrollbar,
@@ -43,7 +76,7 @@ body {
 .history-list::-webkit-scrollbar-thumb { background:#333; border-radius:10px; }
 
 /* ================================================================
-   ПЕРЕКЛЮЧАТЕЛЬ ЯЗЫКОВ
+   LANG SWITCH
 ================================================================ */
 .lang-switch {
   display:flex; gap:4px;
@@ -95,6 +128,35 @@ body {
   50%  { filter:drop-shadow(0 0 30px rgba(59,130,246,0.9)); }
   100% { filter:drop-shadow(0 0 10px rgba(59,130,246,0.5)); }
 }
+@keyframes slideUp {
+  from { opacity:0; transform:translate(-50%,20px); }
+  to   { opacity:1; transform:translate(-50%,0); }
+}
+@keyframes slideDown {
+  from { opacity:1; transform:translate(-50%,0); }
+  to   { opacity:0; transform:translate(-50%,20px); }
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+@keyframes bounce {
+  0%,20%,50%,80%,100% { transform:translateY(0); }
+  40% { transform:translateY(-10px); }
+  60% { transform:translateY(-5px); }
+}
+@keyframes spin {
+  from { transform:rotate(0deg); }
+  to   { transform:rotate(360deg); }
+}
+@keyframes pulse-red {
+  0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,0.5); }
+  50%     { box-shadow:0 0 0 7px rgba(239,68,68,0); }
+}
+@keyframes pulse-blue {
+  0%,100% { box-shadow:0 0 0 0 rgba(59,130,246,0.5); }
+  50%     { box-shadow:0 0 0 7px rgba(59,130,246,0); }
+}
 
 .hero-icon {
   opacity:0;
@@ -129,10 +191,7 @@ body {
   box-shadow:0 10px 20px rgba(0,0,0,0.5);
 }
 .hero-btn.primary { background:var(--accent-blue); border-color:var(--accent-blue); }
-.hero-btn.primary:hover {
-  background:#2563eb;
-  box-shadow:0 10px 25px rgba(59,130,246,0.4);
-}
+.hero-btn.primary:hover { background:#2563eb; box-shadow:0 10px 25px rgba(59,130,246,0.4); }
 
 .scroll-indicator {
   position:absolute; bottom:40px; opacity:0;
@@ -143,16 +202,9 @@ body {
   cursor:pointer; transition:color 0.3s;
 }
 .scroll-indicator:hover { color:var(--text-main); }
-
 .arrow-down {
-  width:20px; height:20px;
-  animation:bounce 2s infinite;
+  width:20px; height:20px; animation:bounce 2s infinite;
   stroke:currentColor; stroke-width:2; fill:none;
-}
-@keyframes bounce {
-  0%,20%,50%,80%,100% { transform:translateY(0); }
-  40% { transform:translateY(-10px); }
-  60% { transform:translateY(-5px); }
 }
 
 .reveal {
@@ -166,7 +218,7 @@ body {
 .delay-4 { transition-delay:0.4s; }
 
 /* ================================================================
-   СЕКЦИЯ ЯДРО
+   CORE SECTION
 ================================================================ */
 .core-section {
   padding:100px 20px 40px; max-width:1200px;
@@ -174,10 +226,8 @@ body {
   position:relative; z-index:2001;
 }
 .core-header {
-  font-size:42px; font-weight:800;
-  margin-bottom:60px;
-  border-bottom:2px solid var(--border);
-  padding-bottom:20px;
+  font-size:42px; font-weight:800; margin-bottom:60px;
+  border-bottom:2px solid var(--border); padding-bottom:20px;
 }
 .core-grid {
   display:grid;
@@ -200,25 +250,19 @@ body {
 .core-card h3 { font-size:20px; color:#fff; margin-bottom:15px; font-family:'Inter',sans-serif; }
 .core-card p  { font-size:14px; color:#a1a1aa; line-height:1.6; margin-bottom:15px; }
 .core-code {
-  background:#000; border:1px solid #222;
-  padding:10px; border-radius:6px;
-  font-size:12px; color:#4ade80; overflow-x:auto;
+  background:#000; border:1px solid #222; padding:10px;
+  border-radius:6px; font-size:12px; color:#4ade80; overflow-x:auto;
 }
 
-/* Технические спецификации */
 .specs-section { margin-bottom:80px; }
 .specs-header {
   font-size:28px; font-weight:800; margin-bottom:40px;
   color:#fff; font-family:'JetBrains Mono',monospace;
 }
-.specs-list {
-  display:flex; flex-direction:column;
-  border-top:1px solid var(--border);
-}
+.specs-list { display:flex; flex-direction:column; border-top:1px solid var(--border); }
 .spec-item {
-  display:flex; justify-content:space-between;
-  align-items:center; padding:20px 0;
-  border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  padding:20px 0; border-bottom:1px solid var(--border);
   flex-wrap:wrap; gap:10px;
 }
 .spec-key {
@@ -227,16 +271,12 @@ body {
 }
 .spec-value { color:#fff; font-weight:600; font-size:16px; text-align:right; }
 
-/* Подвал миссии */
 .mission-footer {
   padding-top:40px; text-align:center;
   color:var(--text-muted); font-family:'Inter',sans-serif;
   border-top:1px solid var(--border); margin-top:auto;
 }
-.mission-footer p {
-  max-width:800px; margin:0 auto 15px auto;
-  line-height:1.6; font-size:15px;
-}
+.mission-footer p { max-width:800px; margin:0 auto 15px; line-height:1.6; font-size:15px; }
 .mission-footer strong { color:var(--text-main); }
 
 /* ================================================================
@@ -247,14 +287,8 @@ body {
   padding:80px 20px;
   max-width:1200px; margin:0 auto;
 }
-.pricing-title {
-  font-size:42px; font-weight:800;
-  text-align:center; margin-bottom:16px;
-}
-.pricing-subtitle {
-  color:#888; text-align:center;
-  margin-bottom:60px; font-size:16px;
-}
+.pricing-title { font-size:42px; font-weight:800; text-align:center; margin-bottom:16px; }
+.pricing-subtitle { color:#888; text-align:center; margin-bottom:60px; font-size:16px; }
 .pricing-grid {
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
@@ -262,78 +296,48 @@ body {
 }
 
 .plan-card {
-  background:rgba(10,10,10,0.8);
-  backdrop-filter:blur(10px);
-  border:1px solid var(--border);
-  border-radius:16px; padding:32px 28px;
-  display:flex; flex-direction:column; gap:8px;
-  position:relative; transition:transform 0.3s, border-color 0.3s;
+  background:rgba(10,10,10,0.8); backdrop-filter:blur(10px);
+  border:1px solid var(--border); border-radius:16px;
+  padding:32px 28px; display:flex; flex-direction:column;
+  gap:8px; position:relative;
+  transition:transform 0.3s, border-color 0.3s;
 }
-.plan-card:hover {
-  transform:translateY(-6px);
-  border-color:rgba(255,255,255,0.15);
-}
-.plan-card--featured {
-  border-color:rgba(59,130,246,0.4);
-  background:rgba(59,130,246,0.05);
-}
-.plan-card--premium {
-  border-color:rgba(245,158,11,0.3);
-  background:rgba(245,158,11,0.03);
-}
+.plan-card:hover { transform:translateY(-6px); border-color:rgba(255,255,255,0.15); }
+.plan-card--featured { border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.05); }
+.plan-card--premium  { border-color:rgba(245,158,11,0.3);  background:rgba(245,158,11,0.03); }
+
 .plan-popular {
-  position:absolute; top:-14px; left:50%;
-  transform:translateX(-50%);
+  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
   background:var(--accent-blue); color:#fff;
-  font-size:11px; font-weight:700;
-  padding:4px 16px; border-radius:20px;
-  white-space:nowrap; letter-spacing:1px;
+  font-size:11px; font-weight:700; padding:4px 16px;
+  border-radius:20px; white-space:nowrap; letter-spacing:1px;
 }
 .plan-badge {
   display:inline-block; font-size:11px; font-weight:700;
-  padding:4px 10px; border-radius:6px;
-  letter-spacing:1px; width:fit-content;
+  padding:4px 10px; border-radius:6px; letter-spacing:1px; width:fit-content;
 }
-.plan-price {
-  font-size:40px; font-weight:900;
-  color:#fff; line-height:1; margin:8px 0;
-}
+.plan-price { font-size:40px; font-weight:900; color:#fff; line-height:1; margin:8px 0; }
 .plan-price span { font-size:16px; font-weight:400; color:#888; }
 .plan-name { font-size:20px; font-weight:700; color:#fff; margin-bottom:8px; }
-.plan-features {
-  list-style:none; padding:0; margin:12px 0; flex:1;
-}
+.plan-features { list-style:none; padding:0; margin:12px 0; flex:1; }
 .plan-features li {
-  font-size:13px; color:#a1a1aa;
-  padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);
-  line-height:1.4;
+  font-size:13px; color:#a1a1aa; padding:6px 0;
+  border-bottom:1px solid rgba(255,255,255,0.04); line-height:1.4;
 }
 .plan-btn {
-  background:rgba(255,255,255,0.06);
-  border:1px solid var(--border);
-  color:#fff; padding:14px; border-radius:12px;
-  font-size:14px; font-weight:600; cursor:pointer;
-  transition:all 0.2s; margin-top:16px; width:100%;
+  background:rgba(255,255,255,0.06); border:1px solid var(--border);
+  color:#fff; padding:14px; border-radius:12px; font-size:14px;
+  font-weight:600; cursor:pointer; transition:all 0.2s;
+  margin-top:16px; width:100%;
 }
 .plan-btn:hover { background:rgba(255,255,255,0.1); }
-.plan-btn--pro {
-  background:var(--accent-blue);
-  border-color:var(--accent-blue);
-}
-.plan-btn--pro:hover {
-  background:#2563eb;
-  box-shadow:0 8px 20px rgba(59,130,246,0.4);
-}
-.plan-btn--premium {
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  border-color:#f59e0b;
-}
-.plan-btn--premium:hover {
-  box-shadow:0 8px 20px rgba(245,158,11,0.4);
-}
+.plan-btn--pro { background:var(--accent-blue); border-color:var(--accent-blue); }
+.plan-btn--pro:hover { background:#2563eb; box-shadow:0 8px 20px rgba(59,130,246,0.4); }
+.plan-btn--premium { background:linear-gradient(135deg,#f59e0b,#d97706); border-color:#f59e0b; }
+.plan-btn--premium:hover { box-shadow:0 8px 20px rgba(245,158,11,0.4); }
 
 /* ================================================================
-   ОКНА OVERLAY
+   OVERLAY WINDOWS
 ================================================================ */
 #auth-screen,
 #profile-overlay {
@@ -344,17 +348,14 @@ body {
 #auth-screen { align-items:center; justify-content:center; padding:20px; }
 
 .auth-card {
-  background:rgba(15,15,15,0.95);
-  border:1px solid var(--border);
-  padding:40px 30px; border-radius:24px;
-  width:100%; max-width:380px; text-align:center;
-  box-shadow:0 25px 50px -12px rgba(0,0,0,1);
-  position:relative;
+  background:rgba(15,15,15,0.95); border:1px solid var(--border);
+  padding:40px 30px; border-radius:24px; width:100%; max-width:380px;
+  text-align:center; box-shadow:0 25px 50px -12px rgba(0,0,0,1); position:relative;
 }
 .close-auth {
   position:absolute; top:15px; right:15px;
-  background:none; border:none;
-  color:var(--text-muted); cursor:pointer; transition:color 0.2s;
+  background:none; border:none; color:var(--text-muted);
+  cursor:pointer; transition:color 0.2s;
 }
 .close-auth:hover { color:#fff; }
 .auth-card h2 { font-size:24px; font-weight:600; margin-bottom:8px; }
@@ -363,25 +364,22 @@ body {
 .auth-input {
   width:100%; background:rgba(0,0,0,0.5);
   border:1px solid var(--border); color:var(--text-main);
-  padding:14px 16px; border-radius:12px;
-  font-size:16px; margin-bottom:12px;
-  outline:none; transition:border-color 0.2s;
+  padding:14px 16px; border-radius:12px; font-size:16px;
+  margin-bottom:12px; outline:none; transition:border-color 0.2s;
 }
 .auth-input:focus { border-color:var(--accent-blue); }
 
 .btn-primary {
   background:var(--accent-blue); color:#fff; border:none;
-  padding:14px; border-radius:12px; font-size:14px;
-  font-weight:600; cursor:pointer; width:100%;
-  margin-bottom:12px; transition:background 0.2s;
+  padding:14px; border-radius:12px; font-size:14px; font-weight:600;
+  cursor:pointer; width:100%; margin-bottom:12px; transition:background 0.2s;
 }
 .btn-primary:hover { background:#2563eb; }
 .btn-secondary {
   background:transparent; color:var(--text-main);
-  border:1px solid var(--border); padding:14px;
-  border-radius:12px; font-size:14px; font-weight:500;
-  cursor:pointer; width:100%; margin-bottom:12px;
-  transition:background 0.2s;
+  border:1px solid var(--border); padding:14px; border-radius:12px;
+  font-size:14px; font-weight:500; cursor:pointer; width:100%;
+  margin-bottom:12px; transition:background 0.2s;
 }
 .btn-secondary:hover { background:rgba(255,255,255,0.05); }
 .btn-text {
@@ -410,30 +408,25 @@ body {
 #upgrade-modal {
   display:none; position:fixed; inset:0;
   background:rgba(0,0,0,0.85); backdrop-filter:blur(10px);
-  z-index:4000; align-items:center; justify-content:center;
-  padding:20px;
+  z-index:4000; align-items:center; justify-content:center; padding:20px;
 }
 .upgrade-card {
-  background:rgba(15,15,15,0.95);
-  border:1px solid var(--border);
-  padding:36px 30px; border-radius:24px;
-  width:100%; max-width:440px;
+  background:rgba(15,15,15,0.95); border:1px solid var(--border);
+  padding:36px 30px; border-radius:24px; width:100%; max-width:440px;
   text-align:left; position:relative;
   box-shadow:0 25px 50px -12px rgba(0,0,0,1);
 }
 .upgrade-info-box {
-  background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);
   border-radius:12px; padding:16px; margin-bottom:16px;
 }
 .upgrade-payment-box {
-  background:rgba(59,130,246,0.08);
-  border:1px solid rgba(59,130,246,0.2);
+  background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.2);
   border-radius:12px; padding:16px; margin-bottom:16px;
 }
 
 /* ================================================================
-   ГЛАВНЫЙ ИНТЕРФЕЙС ЧАТА
+   APP CONTAINER
 ================================================================ */
 #app-container {
   display:none; width:100%; height:100%;
@@ -443,13 +436,10 @@ body {
   position:absolute; inset:0; z-index:0; pointer-events:none;
   background-size:40px 40px;
   background-image:
-    linear-gradient(to right, rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(to bottom,rgba(255,255,255,0.015) 1px, transparent 1px);
+    linear-gradient(to right,rgba(255,255,255,0.015) 1px,transparent 1px),
+    linear-gradient(to bottom,rgba(255,255,255,0.015) 1px,transparent 1px);
 }
-.chat-orb {
-  position:absolute; border-radius:50%;
-  filter:blur(160px); z-index:0; pointer-events:none;
-}
+.chat-orb { position:absolute; border-radius:50%; filter:blur(160px); z-index:0; pointer-events:none; }
 .chat-orb-1 {
   top:-10%; left:-10%; width:50vw; height:50vw;
   background:rgba(16,185,129,0.15);
@@ -483,8 +473,7 @@ body {
   display:flex; flex-direction:column;
   transition:transform 0.4s cubic-bezier(0.4,0,0.2,1),
              margin-left 0.4s cubic-bezier(0.4,0,0.2,1);
-  flex-shrink:0; z-index:20;
-  position:absolute; left:0; top:0;
+  flex-shrink:0; z-index:20; position:absolute; left:0; top:0;
   transform:translateX(-100%);
 }
 #sidebar.open { transform:translateX(0); }
@@ -492,9 +481,8 @@ body {
 .sidebar-header { padding:20px; border-bottom:1px solid var(--border); }
 .new-chat-btn {
   background:transparent; color:var(--text-main);
-  border:1px solid var(--border);
-  width:100%; padding:12px; border-radius:12px;
-  font-size:14px; font-weight:500; cursor:pointer;
+  border:1px solid var(--border); width:100%; padding:12px;
+  border-radius:12px; font-size:14px; font-weight:500; cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   gap:8px; transition:background 0.2s;
 }
@@ -506,87 +494,67 @@ body {
   -webkit-overflow-scrolling:touch;
 }
 .history-item {
-  padding:12px; border-radius:8px;
-  font-size:13px; color:var(--text-muted);
-  cursor:pointer; white-space:nowrap;
-  overflow:hidden; text-overflow:ellipsis;
+  padding:12px; border-radius:8px; font-size:13px;
+  color:var(--text-muted); cursor:pointer;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   transition:background 0.2s, color 0.2s;
 }
 .history-item:hover { background:rgba(255,255,255,0.05); color:var(--text-main); }
+
+/* Лимиты плана в sidebar */
+#plan-limits-bar {
+  padding:10px 15px; border-top:1px solid var(--border);
+  font-size:11px; color:#888;
+  font-family:'JetBrains Mono',monospace;
+  display:none; flex-direction:column; gap:6px;
+}
+.limit-row { display:flex; justify-content:space-between; align-items:center; }
+.upgrade-mini-btn {
+  background:none; border:1px solid rgba(59,130,246,0.3);
+  color:#3b82f6; font-size:10px; padding:4px 10px; border-radius:6px;
+  cursor:pointer; font-family:'JetBrains Mono',monospace;
+  transition:all 0.2s; width:100%; margin-top:4px;
+}
+.upgrade-mini-btn:hover { background:rgba(59,130,246,0.1); border-color:rgba(59,130,246,0.6); }
 
 .sidebar-footer {
   padding:15px; border-top:1px solid var(--border);
   display:flex; align-items:center; gap:12px;
   font-size:14px; font-weight:500; cursor:pointer;
-  transition:background 0.2s; margin:10px;
-  border-radius:12px;
+  transition:background 0.2s; margin:10px; border-radius:12px;
 }
 .sidebar-footer:hover { background:rgba(255,255,255,0.05); }
-
 .user-avatar {
   width:32px; height:32px; border-radius:8px;
-  display:flex; align-items:center; justify-content:center;
-  flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
 }
 
-/* Индикатор плана в sidebar */
 .plan-indicator {
   display:inline-flex; align-items:center; gap:4px;
-  font-size:10px; font-weight:700;
-  padding:2px 8px; border-radius:4px;
-  letter-spacing:1px; vertical-align:middle;
-}
-
-/* Лимиты в sidebar */
-#plan-limits-bar {
-  padding:10px 15px;
-  border-top:1px solid var(--border);
-  font-size:11px; color:#888;
-  font-family:'JetBrains Mono',monospace;
-  display:flex; flex-direction:column; gap:6px;
-}
-.limit-row {
-  display:flex; justify-content:space-between; align-items:center;
-}
-.upgrade-mini-btn {
-  background:none;
-  border:1px solid rgba(59,130,246,0.3);
-  color:#3b82f6; font-size:10px;
-  padding:4px 10px; border-radius:6px;
-  cursor:pointer; font-family:'JetBrains Mono',monospace;
-  transition:all 0.2s; width:100%; margin-top:4px;
-}
-.upgrade-mini-btn:hover {
-  background:rgba(59,130,246,0.1);
-  border-color:rgba(59,130,246,0.6);
+  font-size:10px; font-weight:700; padding:2px 8px;
+  border-radius:4px; letter-spacing:1px; vertical-align:middle;
 }
 
 #main-content {
   flex:1; display:flex; flex-direction:column;
-  height:100%; width:100%; position:relative;
-  z-index:5; background:transparent;
+  height:100%; width:100%; position:relative; z-index:5; background:transparent;
 }
 .topbar {
-  height:60px; display:flex; align-items:center;
-  justify-content:space-between; padding:0 15px;
-  border-bottom:1px solid var(--border);
+  height:60px; display:flex; align-items:center; justify-content:space-between;
+  padding:0 15px; border-bottom:1px solid var(--border);
   background:rgba(5,5,5,0.4); backdrop-filter:blur(10px); z-index:10;
 }
 .topbar-left { display:flex; align-items:center; gap:12px; }
 .menu-btn {
-  background:transparent; border:none;
-  color:var(--text-muted); cursor:pointer;
-  padding:8px; border-radius:8px; transition:color 0.2s;
+  background:transparent; border:none; color:var(--text-muted);
+  cursor:pointer; padding:8px; border-radius:8px; transition:color 0.2s;
 }
 .menu-btn:hover { color:#fff; }
 .logo {
   font-size:16px; font-weight:700; color:var(--text-main);
   display:flex; align-items:center; gap:8px;
 }
-.logout-btn {
-  font-size:13px; color:#ef4444;
-  cursor:pointer; transition:opacity 0.2s;
-}
+.logout-btn { font-size:13px; color:#ef4444; cursor:pointer; transition:opacity 0.2s; }
 .logout-btn:hover { opacity:0.8; }
 
 .wrapper {
@@ -606,42 +574,31 @@ body {
   gap:16px; scroll-behavior:smooth; margin-bottom:15px;
 }
 .message {
-  max-width:85%; padding:12px 16px;
-  font-size:14px; line-height:1.5;
-  animation:fadeIn 0.3s ease; position:relative;
-}
-@keyframes fadeIn {
-  from { opacity:0; transform:translateY(10px); }
-  to   { opacity:1; transform:translateY(0); }
+  max-width:85%; padding:12px 16px; font-size:14px;
+  line-height:1.5; animation:fadeIn 0.3s ease; position:relative;
 }
 .ai {
-  align-self:flex-start;
-  border-left:3px solid var(--accent-blue);
+  align-self:flex-start; border-left:3px solid var(--accent-blue);
   padding-left:12px; width:100%; word-break:break-word;
 }
 .user {
-  align-self:flex-end;
-  background:rgba(255,255,255,0.05);
-  border:1px solid var(--border);
-  border-radius:16px 16px 4px 16px;
+  align-self:flex-end; background:rgba(255,255,255,0.05);
+  border:1px solid var(--border); border-radius:16px 16px 4px 16px;
 }
 .ai pre {
-  background-color:rgba(0,0,0,0.5) !important;
-  padding:12px; border-radius:10px;
-  overflow-x:auto; margin:12px 0;
+  background-color:rgba(0,0,0,0.5) !important; padding:12px;
+  border-radius:10px; overflow-x:auto; margin:12px 0;
   border:1px solid var(--border); font-size:13px;
 }
 
 .message-actions {
-  display:flex; gap:4px; margin-top:8px;
-  opacity:0.3; transition:opacity 0.2s;
+  display:flex; gap:4px; margin-top:8px; opacity:0.3; transition:opacity 0.2s;
 }
 .message.ai:hover .message-actions { opacity:1; }
 .action-btn {
-  background:none; border:none; color:var(--text-muted);
-  cursor:pointer; padding:6px; border-radius:6px;
-  display:flex; align-items:center; justify-content:center;
-  transition:all 0.2s;
+  background:none; border:none; color:var(--text-muted); cursor:pointer;
+  padding:6px; border-radius:6px;
+  display:flex; align-items:center; justify-content:center; transition:all 0.2s;
 }
 .action-btn:hover { background:rgba(255,255,255,0.1); color:var(--text-main); }
 .action-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
@@ -677,30 +634,24 @@ body {
 .input-wrapper { position:relative; display:flex; align-items:center; }
 .attach-btn {
   position:absolute; left:6px; width:34px; height:34px;
-  background:none; border:none; color:var(--text-muted);
-  cursor:pointer; display:flex; align-items:center;
-  justify-content:center; transition:color 0.2s;
+  background:none; border:none; color:var(--text-muted); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:color 0.2s;
 }
 .attach-btn:hover { color:var(--text-main); }
-
 .chat-input {
-  width:100%; padding:14px 90px 14px 45px;
-  border-radius:14px; border:1px solid var(--border);
-  background:rgba(0,0,0,0.5); color:var(--text-main);
-  font-size:16px; outline:none; transition:border-color 0.2s;
+  width:100%; padding:14px 90px 14px 45px; border-radius:14px;
+  border:1px solid var(--border); background:rgba(0,0,0,0.5);
+  color:var(--text-main); font-size:16px; outline:none; transition:border-color 0.2s;
 }
 .chat-input:focus { border-color:var(--accent-blue); }
-
 .send-btn {
   position:absolute; right:6px; width:34px; height:34px;
-  border-radius:10px; border:none;
-  background:var(--accent-blue); color:#fff;
-  cursor:pointer; display:flex; align-items:center;
-  justify-content:center; transition:background 0.2s;
+  border-radius:10px; border:none; background:var(--accent-blue);
+  color:#fff; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:background 0.2s;
 }
 .send-btn:hover { background:#2563eb; }
 
-/* Стили карточки изображения */
 .generated-image-card {
   background:rgba(0,0,0,0.3); border:1px solid var(--border);
   border-radius:12px; overflow:hidden; margin-top:10px;
@@ -712,27 +663,20 @@ body {
   gap:8px; background:rgba(255,255,255,0.02);
 }
 .action-btn.download-btn {
-  background:none; border:1px solid transparent;
-  color:var(--accent-blue); cursor:pointer;
-  padding:6px 12px; border-radius:6px;
+  background:none; border:1px solid transparent; color:var(--accent-blue);
+  cursor:pointer; padding:6px 12px; border-radius:6px;
   font-size:13px; font-weight:500;
   display:flex; align-items:center; gap:6px; transition:all 0.2s;
 }
-.action-btn.download-btn:hover {
-  background:rgba(59,130,246,0.1);
-  border-color:rgba(59,130,246,0.3);
-}
+.action-btn.download-btn:hover { background:rgba(59,130,246,0.1); border-color:rgba(59,130,246,0.3); }
 .action-btn.download-btn svg { width:16px; height:16px; stroke:currentColor; fill:none; stroke-width:2; }
 
-@keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-
-/* Голосовой чат */
 .voice-btn {
   position:absolute; right:46px; width:34px; height:34px;
   border-radius:10px; border:1px solid var(--border);
   background:rgba(255,255,255,0.04); color:var(--text-muted);
-  cursor:pointer; display:flex; align-items:center;
-  justify-content:center; transition:all 0.2s; flex-shrink:0;
+  cursor:pointer; display:flex; align-items:center; justify-content:center;
+  transition:all 0.2s; flex-shrink:0;
 }
 .voice-btn:hover { background:rgba(255,255,255,0.1); color:#fff; border-color:rgba(255,255,255,0.2); }
 .voice-btn.recording {
@@ -743,13 +687,14 @@ body {
   background:rgba(59,130,246,0.15); border-color:var(--accent-blue);
   color:var(--accent-blue); animation:pulse-blue 1s infinite; cursor:not-allowed;
 }
-@keyframes pulse-red {
-  0%,100% { box-shadow:0 0 0 0 rgba(239,68,68,0.5); }
-  50%      { box-shadow:0 0 0 7px rgba(239,68,68,0); }
+
+/* PWA Safe Area */
+@media(display-mode:standalone) {
+  .topbar { padding-top:env(safe-area-inset-top); height:calc(60px + env(safe-area-inset-top)); }
+  body { padding-bottom:env(safe-area-inset-bottom); }
 }
-@keyframes pulse-blue {
-  0%,100% { box-shadow:0 0 0 0 rgba(59,130,246,0.5); }
-  50%      { box-shadow:0 0 0 7px rgba(59,130,246,0); }
+@supports(padding-top:env(safe-area-inset-top)) {
+  #app-container { padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
 }
 
 /* Адаптив */
@@ -763,6 +708,7 @@ body {
   .spec-item  { flex-direction:column; align-items:flex-start; }
   .spec-value { text-align:left; }
   .pricing-grid { grid-template-columns:1fr; }
+  .upgrade-card { padding:24px 20px; }
 }
 @media(min-width:769px) {
   #sidebar { position:relative; transform:translateX(0); margin-left:calc(-1 * var(--sidebar-width)); }
@@ -780,7 +726,6 @@ body {
 ================================================================ -->
 <div id="landing-screen">
 
-  <!-- Переключатель языка -->
   <div class="landing-top-right">
     <div class="lang-switch">
       <button class="lang-btn active" onclick="setLanguage('ru')">RU</button>
@@ -829,13 +774,13 @@ body {
       <div class="core-card reveal delay-3">
         <span class="core-tag">DATABASE</span>
         <h3>PostgreSQL + Bcrypt</h3>
-        <p data-i18n="core-db-desc">Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.</p>
+        <p data-i18n="core-db-desc">Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций.</p>
         <div class="core-code">cursor.execute('INSERT INTO messages...', ...)</div>
       </div>
       <div class="core-card reveal delay-4">
         <span class="core-tag">NETWORK UTILS</span>
         <h3>Subprocess & Sockets</h3>
-        <p data-i18n="core-net-desc">Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).</p>
+        <p data-i18n="core-net-desc">Встроенные скрипты для инженеров. Системные пинги и асинхронное сканирование портов (TCP/IP).</p>
         <div class="core-code">sock.connect_ex((ip, port)) == 0</div>
       </div>
     </div>
@@ -864,6 +809,10 @@ body {
           <span class="spec-key" data-i18n="spec-sec">Протоколы безопасности</span>
           <span class="spec-value" data-i18n="spec-sec-val">Bcrypt Hashing / CORS / ENV Encryption</span>
         </div>
+        <div class="spec-item reveal delay-2">
+          <span class="spec-key">PWA</span>
+          <span class="spec-value">Offline Ready / Install Prompt / Push</span>
+        </div>
       </div>
     </div>
 
@@ -874,16 +823,12 @@ body {
     </div>
   </div>
 
-  <!-- ============================================================
-       PRICING SECTION
-  ============================================================ -->
-  <div id="pricing-section" style="position:relative; z-index:2001;">
+  <!-- Pricing -->
+  <div id="pricing-section" style="position:relative;z-index:2001;">
     <div class="pricing-section">
       <h2 class="pricing-title reveal" data-i18n="pricing-title">ТАРИФЫ</h2>
       <p class="pricing-subtitle reveal" data-i18n="pricing-subtitle">Выберите план под ваши задачи</p>
-
       <div class="pricing-grid">
-
         <!-- FREE -->
         <div class="plan-card reveal delay-1">
           <div class="plan-badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;">FREE</div>
@@ -896,14 +841,11 @@ body {
             <li data-i18n="plan-free-4">✅ Голосовой ввод</li>
             <li data-i18n="plan-free-5">✅ Код и сканирование</li>
             <li data-i18n="plan-free-6">✅ RU / KK / EN</li>
-            <li data-i18n="plan-free-7">❌ Голосовой ответ AI</li>
-            <li data-i18n="plan-free-8">❌ Длинный контекст</li>
+            <li data-i18n="plan-free-7">✅ PWA приложение</li>
+            <li data-i18n="plan-free-8">❌ Голосовой ответ AI</li>
           </ul>
-          <button class="plan-btn" onclick="openAuth('register')" data-i18n="plan-free-btn">
-            Начать бесплатно
-          </button>
+          <button class="plan-btn" onclick="openAuth('register')" data-i18n="plan-free-btn">Начать бесплатно</button>
         </div>
-
         <!-- PRO -->
         <div class="plan-card plan-card--featured reveal delay-2">
           <div class="plan-popular" data-i18n="plan-popular">★ ПОПУЛЯРНЫЙ</div>
@@ -920,11 +862,8 @@ body {
             <li data-i18n="plan-pro-7">✅ Голосовой ответ AI</li>
             <li data-i18n="plan-pro-8">✅ Контекст 32K токенов</li>
           </ul>
-          <button class="plan-btn plan-btn--pro" onclick="showUpgradeModal('pro')" data-i18n="plan-pro-btn">
-            Получить Pro
-          </button>
+          <button class="plan-btn plan-btn--pro" onclick="showUpgradeModal('pro')" data-i18n="plan-pro-btn">Получить Pro</button>
         </div>
-
         <!-- PREMIUM -->
         <div class="plan-card plan-card--premium reveal delay-3">
           <div class="plan-badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;">PREMIUM</div>
@@ -940,75 +879,57 @@ body {
             <li data-i18n="plan-prem-7">✅ Голосовой ответ AI</li>
             <li data-i18n="plan-prem-8">✅ Контекст 131K токенов</li>
           </ul>
-          <button class="plan-btn plan-btn--premium" onclick="showUpgradeModal('premium')" data-i18n="plan-prem-btn">
-            Получить Premium
-          </button>
+          <button class="plan-btn plan-btn--premium" onclick="showUpgradeModal('premium')" data-i18n="plan-prem-btn">Получить Premium</button>
         </div>
-
       </div>
     </div>
   </div>
 
 </div><!-- /landing-screen -->
 
-<!-- ================================================================
-     AUTH MODAL
-================================================================ -->
+<!-- AUTH MODAL -->
 <div id="auth-screen">
   <div class="auth-card">
     <button class="close-auth" onclick="closeAuth()">
       <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
     </button>
     <h2 id="auth-title" data-i18n="auth-login-title">Вход в систему</h2>
     <p id="auth-subtitle" data-i18n="auth-login-sub">Укажите данные для доступа</p>
-
-    <!-- Login form -->
     <div id="form-login">
       <p id="login-error" class="error-msg"></p>
       <input type="email"    class="auth-input" id="login-email" placeholder="Email" data-i18n="ph-email">
       <input type="password" class="auth-input" id="login-pass"  placeholder="Пароль" data-i18n="ph-pass">
       <button class="btn-primary" onclick="loginUser()" data-i18n="btn-login">Авторизация</button>
     </div>
-
-    <!-- Register form -->
     <div id="form-register">
       <p id="reg-error" class="error-msg"></p>
-      <input type="text"     class="auth-input" id="reg-name"  placeholder="Имя пользователя" data-i18n="ph-name">
+      <input type="text"     class="auth-input" id="reg-name"  placeholder="Имя" data-i18n="ph-name">
       <input type="email"    class="auth-input" id="reg-email" placeholder="Email" data-i18n="ph-email">
-      <input type="password" class="auth-input" id="reg-pass"  placeholder="Придумайте пароль" data-i18n="ph-pass">
+      <input type="password" class="auth-input" id="reg-pass"  placeholder="Пароль" data-i18n="ph-pass">
       <button class="btn-primary" onclick="registerUser()" data-i18n="btn-reg">Создать</button>
     </div>
   </div>
 </div>
 
-<!-- ================================================================
-     PROFILE MODAL
-================================================================ -->
+<!-- PROFILE MODAL -->
 <div id="profile-overlay" onclick="closeProfile()"></div>
 <div id="profile-modal" class="auth-card">
   <h2 style="margin-bottom:5px;" data-i18n="prof-title">Ваш профиль</h2>
-
-  <!-- План пользователя -->
   <div id="profile-plan-badge" style="margin-bottom:12px;"></div>
-
   <div class="profile-info" id="profile-email">email@example.com</div>
   <p id="profile-error"   class="error-msg"></p>
   <p id="profile-success" style="color:#10b981;font-size:13px;margin-bottom:12px;display:none;"></p>
-
   <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя" data-i18n="ph-new-name">
   <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить имя</button>
-
-  <!-- Кнопка апгрейда в профиле -->
-  <button class="btn-secondary" id="profile-upgrade-btn" onclick="closeProfile(); showUpgradeModal('pro')"
-    style="border-color:rgba(59,130,246,0.4); color:#3b82f6; display:none;">
+  <button class="btn-secondary" id="profile-upgrade-btn"
+    onclick="closeProfile();showUpgradeModal('pro')"
+    style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
     ⬆ Upgrade плана
   </button>
-
   <button class="btn-secondary"
-    style="color:#ef4444; border-color:rgba(239,68,68,0.3);"
+    style="color:#ef4444;border-color:rgba(239,68,68,0.3);"
     onclick="clearUserHistory()">
     <svg style="vertical-align:middle;margin-right:5px;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24">
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1018,22 +939,17 @@ body {
   <button class="btn-text" onclick="closeProfile()" data-i18n="btn-close">Закрыть настройки</button>
 </div>
 
-<!-- ================================================================
-     UPGRADE MODAL
-================================================================ -->
+<!-- UPGRADE MODAL -->
 <div id="upgrade-modal">
   <div class="upgrade-card">
     <button class="close-auth" onclick="closeUpgradeModal()">
       <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"></line>
-        <line x1="6" y1="6" x2="18" y2="18"></line>
+        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
       </svg>
     </button>
-
     <div id="upgrade-badge" style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;margin-bottom:12px;"></div>
     <h2 id="upgrade-title" style="font-size:22px;margin-bottom:8px;"></h2>
-    <p  id="upgrade-price" style="font-size:28px;font-weight:800;margin-bottom:20px;color:#3b82f6;"></p>
-
+    <p  id="upgrade-price" style="font-size:28px;font-weight:800;margin-bottom:20px;"></p>
     <div class="upgrade-info-box">
       <p style="color:#888;font-size:13px;margin-bottom:12px;">📌 Как оформить подписку:</p>
       <ol style="color:#ccc;font-size:13px;line-height:2.2;padding-left:16px;">
@@ -1043,38 +959,26 @@ body {
         <li data-i18n="upg-step4">Ожидайте подтверждения до 24 часов</li>
       </ol>
     </div>
-
     <div class="upgrade-payment-box">
       <p style="color:#3b82f6;font-size:13px;font-weight:600;margin-bottom:8px;">💳 Реквизиты для оплаты:</p>
       <p style="color:#ccc;font-size:13px;font-family:monospace;line-height:1.8;">
         USDT (TRC-20):<br>
-        <span id="wallet-address" style="color:#fff;font-size:11px;word-break:break-all;">
-          TXXXXXXXXXXYourWalletAddressHere
-        </span>
+        <span id="wallet-address" style="color:#fff;font-size:11px;word-break:break-all;">TXXXXXXXXXXYourWalletAddressHere</span>
       </p>
     </div>
-
-    <input type="text" class="auth-input" id="tx-id-input"
-      placeholder="ID транзакции (TX Hash)" style="margin-bottom:12px;">
-
+    <input type="text" class="auth-input" id="tx-id-input" placeholder="ID транзакции (TX Hash)" style="margin-bottom:12px;">
     <p id="upgrade-error"   class="error-msg"></p>
     <p id="upgrade-success" style="color:#10b981;font-size:13px;margin-bottom:12px;display:none;"></p>
-
-    <button class="btn-primary" id="upgrade-confirm-btn" onclick="confirmUpgrade()" data-i18n="upg-btn">
-      ✅ Я оплатил — отправить заявку
-    </button>
+    <button class="btn-primary" id="upgrade-confirm-btn" onclick="confirmUpgrade()" data-i18n="upg-btn">✅ Я оплатил — отправить заявку</button>
     <button class="btn-text" onclick="closeUpgradeModal()" data-i18n="btn-close">Отмена</button>
   </div>
 </div>
 
-<!-- ================================================================
-     APP CONTAINER
-================================================================ -->
+<!-- APP CONTAINER -->
 <div id="app-container">
   <div class="chat-bg-grid"></div>
   <div class="chat-orb chat-orb-1"></div>
   <div class="chat-orb chat-orb-2"></div>
-
   <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
   <div id="sidebar">
@@ -1087,12 +991,8 @@ body {
         <span data-i18n="sb-new">Новая сессия</span>
       </button>
     </div>
-
     <div class="history-list" id="sidebar-history"></div>
-
-    <!-- Лимиты плана -->
-    <div id="plan-limits-bar" style="display:none;"></div>
-
+    <div id="plan-limits-bar"></div>
     <div class="sidebar-footer" onclick="openProfile()" title="Настройки профиля">
       <div class="user-avatar" id="sidebar-avatar">
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;">
@@ -1113,7 +1013,6 @@ body {
     </div>
   </div>
 
-  <!-- Main content -->
   <div id="main-content">
     <div class="topbar">
       <div class="topbar-left">
@@ -1150,12 +1049,10 @@ body {
           </div>
         </div>
 
-        <!-- Tools -->
         <div class="tools-bar">
           <button class="tool-btn" onclick="useTool('code',event)">
             <svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="16 18 22 12 16 6"></polyline>
-              <polyline points="8 6 2 12 8 18"></polyline>
+              <polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline>
             </svg>
             <span data-i18n="tool-code">Код</span>
           </button>
@@ -1171,16 +1068,17 @@ body {
             <svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8"  x2="12.01" y2="8"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
             </svg>
             <span data-i18n="tool-scan">Скан</span>
           </button>
-          <button class="tool-btn" id="upgrade-tool-btn" onclick="showUpgradeModal('pro')" style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
+          <button class="tool-btn" id="upgrade-tool-btn"
+            onclick="showUpgradeModal('pro')"
+            style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
             ⬆ Upgrade
           </button>
         </div>
 
-        <!-- File preview -->
         <div id="file-preview">
           <span id="file-name-display" style="display:flex;align-items:center;gap:6px;">
             <svg width="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1192,7 +1090,6 @@ body {
           <button onclick="removeFile()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">✖</button>
         </div>
 
-        <!-- Input -->
         <div class="input-wrapper">
           <button class="attach-btn" onclick="document.getElementById('file-upload').click()">
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1205,8 +1102,6 @@ body {
           <input type="text" id="user-input" class="chat-input"
             placeholder="Команда терминалу..." data-i18n="ph-input"
             onkeypress="handleKeyPress(event)" autocomplete="off">
-
-          <!-- Voice button -->
           <button class="voice-btn" id="voice-btn" onclick="toggleVoiceRecording()" title="Голосовой ввод">
             <svg id="voice-icon-mic" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
@@ -1221,14 +1116,10 @@ body {
               <path d="M21 12a9 9 0 1 1-6.219-8.56"></path>
             </svg>
           </button>
-
           <button class="send-btn" onclick="sendMessage()">
-            <svg width="16" viewBox="0 0 24 24">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/>
-            </svg>
+            <svg width="16" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" fill="currentColor"/></svg>
           </button>
         </div>
-
       </div>
     </div>
   </div>
@@ -1239,21 +1130,19 @@ const BACKEND_URL = "";
 
 marked.setOptions({
   highlight: function(code, lang) {
-    return hljs.highlight(code, {
-      language: hljs.getLanguage(lang) ? lang : "plaintext"
-    }).value;
+    return hljs.highlight(code, { language: hljs.getLanguage(lang) ? lang : "plaintext" }).value;
   }
 });
 
-let currentUserEmail  = "guest";
-let currentMode       = "chat";
-let attachedFile      = null;
-let lastUserMessage   = "";
+let currentUserEmail    = "guest";
+let currentMode         = "chat";
+let attachedFile        = null;
+let lastUserMessage     = "";
 let selectedUpgradePlan = null;
-let userPlanData      = null;
+let userPlanData        = null;
 
 // ================================================================
-// АНИМАЦИЯ ЧАСТИЦ
+// ЧАСТИЦЫ
 // ================================================================
 (function(){
   const canvas = document.getElementById("particles-canvas");
@@ -1261,96 +1150,220 @@ let userPlanData      = null;
   let W, H, particles = [];
   let mouse = { x:-9999, y:-9999 };
   let isLandingVisible = true;
-
   const COLORS = ["#3b82f6","#0ea5e9","#10b981","#6366f1","#38bdf8"];
   const COUNT  = window.innerWidth < 768 ? 70 : 130;
 
-  function rand(min,max){ return Math.random()*(max-min)+min; }
-
-  function createParticle(forceY){
+  function rand(a,b){ return Math.random()*(b-a)+a; }
+  function createParticle(fy){
     return {
-      x: rand(0,W),
-      y: forceY !== undefined ? forceY : rand(0,H),
-      vx: rand(-0.25,0.25), vy: rand(-0.5,-0.15),
-      size: rand(1,2.8),
-      alpha: rand(0.3,1.0), baseAlpha: rand(0.3,1.0),
-      color: COLORS[Math.floor(Math.random()*COLORS.length)],
-      twinkleSpeed: rand(0.006,0.022),
-      twinkleDir: Math.random()>0.5?1:-1,
-      pulse: rand(0,Math.PI*2)
+      x:rand(0,W), y:fy!==undefined?fy:rand(0,H),
+      vx:rand(-0.25,0.25), vy:rand(-0.5,-0.15),
+      size:rand(1,2.8), alpha:rand(0.3,1), baseAlpha:rand(0.3,1),
+      color:COLORS[Math.floor(Math.random()*COLORS.length)],
+      twinkleSpeed:rand(0.006,0.022),
+      pulse:rand(0,Math.PI*2)
     };
   }
   function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
   function init(){ resize(); particles=Array.from({length:COUNT},()=>createParticle()); }
-  function hexToRgb(hex){
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return `${r},${g},${b}`;
-  }
+  function hexToRgb(h){ const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b=parseInt(h.slice(5,7),16); return `${r},${g},${b}`; }
   function drawConnections(){
     for(let i=0;i<particles.length;i++){
       for(let j=i+1;j<particles.length;j++){
         const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
-        const dist=Math.sqrt(dx*dx+dy*dy);
-        if(dist<110){
-          ctx.beginPath();
-          ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-dist/110)})`;
-          ctx.lineWidth=0.6;
-          ctx.moveTo(particles[i].x,particles[i].y);
-          ctx.lineTo(particles[j].x,particles[j].y);
-          ctx.stroke();
-        }
+        const d=Math.sqrt(dx*dx+dy*dy);
+        if(d<110){ ctx.beginPath(); ctx.strokeStyle=`rgba(59,130,246,${0.15*(1-d/110)})`; ctx.lineWidth=0.6; ctx.moveTo(particles[i].x,particles[i].y); ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke(); }
       }
     }
   }
   function animate(){
     if(!isLandingVisible){ requestAnimationFrame(animate); return; }
     ctx.clearRect(0,0,W,H);
-    const bg=ctx.createRadialGradient(W*0.5,H*0.4,0,W*0.5,H*0.5,W*0.85);
-    bg.addColorStop(0,"#0b0b18"); bg.addColorStop(0.5,"#070710"); bg.addColorStop(1,"#050505");
+    const bg=ctx.createRadialGradient(W*.5,H*.4,0,W*.5,H*.5,W*.85);
+    bg.addColorStop(0,"#0b0b18"); bg.addColorStop(.5,"#070710"); bg.addColorStop(1,"#050505");
     ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
-    const cg=ctx.createRadialGradient(W*0.5,H*0.5,0,W*0.5,H*0.5,W*0.4);
+    const cg=ctx.createRadialGradient(W*.5,H*.5,0,W*.5,H*.5,W*.4);
     cg.addColorStop(0,"rgba(59,130,246,0.04)"); cg.addColorStop(1,"rgba(0,0,0,0)");
     ctx.fillStyle=cg; ctx.fillRect(0,0,W,H);
     drawConnections();
     particles.forEach(p=>{
       p.pulse+=p.twinkleSpeed;
       p.alpha=p.baseAlpha*(0.6+0.4*Math.sin(p.pulse));
-      const dx=p.x-mouse.x, dy=p.y-mouse.y;
-      const dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<90&&dist>0){ const f=(90-dist)/90; p.x+=(dx/dist)*f*1.2; p.y+=(dy/dist)*f*1.2; }
+      const dx=p.x-mouse.x, dy=p.y-mouse.y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<90&&d>0){ const f=(90-d)/90; p.x+=(dx/d)*f*1.2; p.y+=(dy/d)*f*1.2; }
       p.x+=p.vx; p.y+=p.vy;
       if(p.y<-8){ p.y=H+8; p.x=rand(0,W); }
-      if(p.x<-8) p.x=W+8;
-      if(p.x>W+8) p.x=-8;
+      if(p.x<-8) p.x=W+8; if(p.x>W+8) p.x=-8;
       const rgb=hexToRgb(p.color);
-      ctx.save(); ctx.globalAlpha=p.alpha*0.35;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.size*3,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${rgb},0.15)`; ctx.fill(); ctx.restore();
-      ctx.save(); ctx.globalAlpha=p.alpha; ctx.shadowBlur=10; ctx.shadowColor=p.color;
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
-      ctx.fillStyle=`rgba(${rgb},1)`; ctx.fill(); ctx.restore();
+      ctx.save(); ctx.globalAlpha=p.alpha*0.35; ctx.beginPath(); ctx.arc(p.x,p.y,p.size*3,0,Math.PI*2); ctx.fillStyle=`rgba(${rgb},0.15)`; ctx.fill(); ctx.restore();
+      ctx.save(); ctx.globalAlpha=p.alpha; ctx.shadowBlur=10; ctx.shadowColor=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fillStyle=`rgba(${rgb},1)`; ctx.fill(); ctx.restore();
     });
     requestAnimationFrame(animate);
   }
-  window.addEventListener("resize", resize);
-  window.addEventListener("mousemove", e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
+  window.addEventListener("resize",resize);
+  window.addEventListener("mousemove",e=>{ mouse.x=e.clientX; mouse.y=e.clientY; });
   window.addEventListener("mouseleave",()=>{ mouse.x=-9999; mouse.y=-9999; });
-  window._stopParticles  = function(){ isLandingVisible=false; canvas.style.display="none"; };
-  window._showParticles  = function(){ isLandingVisible=true;  canvas.style.display="block"; };
+  window._stopParticles=function(){ isLandingVisible=false; canvas.style.display="none"; };
+  window._showParticles=function(){ isLandingVisible=true;  canvas.style.display="block"; };
   init(); animate();
 })();
 
 // ================================================================
-// СЛОВАРЬ ПЕРЕВОДОВ
+// PWA — SERVICE WORKER
+// ================================================================
+if("serviceWorker" in navigator){
+  window.addEventListener("load", async()=>{
+    try{
+      const reg = await navigator.serviceWorker.register("/sw.js");
+      console.log("[PWA] SW зарегистрирован:", reg.scope);
+      setInterval(()=>reg.update(), 60000);
+      reg.addEventListener("updatefound",()=>{
+        const nw = reg.installing;
+        nw.addEventListener("statechange",()=>{
+          if(nw.state==="installed" && navigator.serviceWorker.controller) showUpdateBanner();
+        });
+      });
+    } catch(e){ console.warn("[PWA] SW ошибка:", e); }
+  });
+}
+
+function showUpdateBanner(){
+  if(document.getElementById("update-banner")) return;
+  const b = document.createElement("div");
+  b.id = "update-banner";
+  b.style.cssText = `
+    position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+    background:rgba(15,15,15,0.95); border:1px solid rgba(59,130,246,0.4);
+    color:#fff; padding:12px 20px; border-radius:12px; font-size:13px;
+    z-index:9999; display:flex; align-items:center; gap:12px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.5); backdrop-filter:blur(10px);
+    font-family:'Inter',sans-serif; white-space:nowrap;
+  `;
+  b.innerHTML = `
+    <span>🔄 Обновление доступно</span>
+    <button onclick="location.reload()" style="background:#3b82f6;border:none;color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Обновить</button>
+    <button onclick="this.parentElement.remove()" style="background:none;border:none;color:#888;cursor:pointer;font-size:16px;">✕</button>
+  `;
+  document.body.appendChild(b);
+  setTimeout(()=>b?.remove(), 10000);
+}
+
+// PWA Install Banner
+let deferredPrompt = null;
+
+window.addEventListener("beforeinstallprompt", event=>{
+  event.preventDefault();
+  deferredPrompt = event;
+  // Показываем через 3 сек чтобы не мешать загрузке
+  setTimeout(showInstallBanner, 3000);
+});
+
+window.addEventListener("appinstalled",()=>{
+  console.log("[PWA] Установлен!");
+  hideInstallBanner();
+  deferredPrompt = null;
+  showToast("✅ Daryn AI установлен!");
+});
+
+function showInstallBanner(){
+  if(document.getElementById("install-banner")) return;
+  if(window.matchMedia("(display-mode:standalone)").matches) return;
+  const dismissed = localStorage.getItem("pwa_dismissed");
+  if(dismissed && Date.now()-parseInt(dismissed) < 3*24*60*60*1000) return;
+
+  const lang = localStorage.getItem("daryn_lang") || "ru";
+  const T = {
+    ru:{ title:"Установить Daryn AI", desc:"Добавьте на главный экран для быстрого доступа", btn:"Установить", later:"Позже" },
+    kk:{ title:"Daryn AI орнату", desc:"Жылдам қол жеткізу үшін негізгі экранға қосыңыз", btn:"Орнату", later:"Кейінірек" },
+    en:{ title:"Install Daryn AI", desc:"Add to home screen for quick access", btn:"Install", later:"Later" },
+  };
+  const t = T[lang] || T.ru;
+
+  const b = document.createElement("div");
+  b.id = "install-banner";
+  b.style.cssText = `
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
+    background:rgba(15,15,15,0.97); border:1px solid rgba(59,130,246,0.5);
+    border-radius:16px; padding:16px 20px; z-index:5000;
+    width:calc(100% - 40px); max-width:400px;
+    box-shadow:0 8px 40px rgba(0,0,0,0.6); backdrop-filter:blur(20px);
+    font-family:'Inter',sans-serif; animation:slideUp 0.4s cubic-bezier(0.4,0,0.2,1);
+  `;
+  b.innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+      <div style="width:48px;height:48px;border-radius:12px;background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" style="width:28px;">
+          <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+          <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
+        </svg>
+      </div>
+      <div>
+        <div style="font-weight:700;font-size:15px;margin-bottom:4px;">${t.title}</div>
+        <div style="color:#888;font-size:12px;line-height:1.4;">${t.desc}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button id="pwa-install-btn" style="flex:1;background:#3b82f6;border:none;color:#fff;padding:12px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">${t.btn}</button>
+      <button id="pwa-later-btn"   style="flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#888;padding:12px;border-radius:10px;font-size:14px;cursor:pointer;">${t.later}</button>
+    </div>
+  `;
+  document.body.appendChild(b);
+
+  document.getElementById("pwa-install-btn").addEventListener("click", async()=>{
+    if(!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    hideInstallBanner();
+  });
+  document.getElementById("pwa-later-btn").addEventListener("click",()=>{
+    localStorage.setItem("pwa_dismissed", Date.now().toString());
+    hideInstallBanner();
+  });
+}
+
+function hideInstallBanner(){
+  const b = document.getElementById("install-banner");
+  if(b){ b.style.animation="slideDown 0.3s ease forwards"; setTimeout(()=>b?.remove(),300); }
+}
+
+// Toast
+function showToast(msg, dur=3000){
+  const t = document.createElement("div");
+  t.style.cssText = `
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    background:rgba(16,185,129,0.15); border:1px solid rgba(16,185,129,0.4);
+    color:#10b981; padding:10px 20px; border-radius:10px;
+    font-size:13px; font-weight:500; z-index:9999;
+    backdrop-filter:blur(10px); font-family:'Inter',sans-serif;
+    animation:fadeIn 0.3s ease; white-space:nowrap;
+  `;
+  t.innerText = msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t?.remove(), dur);
+}
+
+// Online / Offline
+window.addEventListener("online",()=>{
+  const l = localStorage.getItem("daryn_lang")||"ru";
+  showToast(l==="en"?"✅ Connection restored":l==="kk"?"✅ Байланыс қалпына келді":"✅ Соединение восстановлено");
+});
+window.addEventListener("offline",()=>{
+  const l = localStorage.getItem("daryn_lang")||"ru";
+  showToast(l==="en"?"⚠ No internet":l==="kk"?"⚠ Интернет жоқ":"⚠ Нет интернета", 5000);
+});
+
+// ================================================================
+// i18n
 // ================================================================
 const i18n = {
-  ru: {
+  ru:{
     "hero-reg":"Регистрация","hero-login":"Войти","hero-guest":"Гость",
     "hero-pricing":"💎 Тарифы","hero-scroll":"Изучать ядро",
     "core-llm-desc":"Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.",
     "core-backend-desc":"Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.",
-    "core-db-desc":"Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций через параметризованные запросы.",
-    "core-net-desc":"Встроенные скрипты для инженеров. Выполнение системных пингов сервера и асинхронное сканирование открытых портов (TCP/IP).",
+    "core-db-desc":"Реляционное хранение сессий и юзеров. Хэширование паролей с солью. Защита от SQL-инъекций.",
+    "core-net-desc":"Встроенные скрипты для инженеров. Системные пинги и асинхронное сканирование портов (TCP/IP).",
     "specs-header":">_ ТЕХНИЧЕСКИЕ СПЕЦИФИКАЦИИ",
     "spec-arch":"Вычислительная архитектура","spec-arch-val":"Асинхронный Stateless API (FastAPI)",
     "spec-speed":"Скорость генерации (LPU)","spec-speed-val":"~800 токенов в секунду",
@@ -1364,7 +1377,7 @@ const i18n = {
     "plan-free-1":"✅ 20 сообщений / день","plan-free-2":"✅ 5 генераций фото / день",
     "plan-free-3":"✅ Анализ PDF (до 5 MB)","plan-free-4":"✅ Голосовой ввод",
     "plan-free-5":"✅ Код и сканирование","plan-free-6":"✅ RU / KK / EN",
-    "plan-free-7":"❌ Голосовой ответ AI","plan-free-8":"❌ Длинный контекст",
+    "plan-free-7":"✅ PWA приложение","plan-free-8":"❌ Голосовой ответ AI",
     "plan-free-btn":"Начать бесплатно",
     "plan-pro-1":"✅ 500 сообщений / день","plan-pro-2":"✅ 50 генераций фото / день",
     "plan-pro-3":"✅ Анализ PDF (до 25 MB)","plan-pro-4":"✅ Голосовой ввод",
@@ -1394,13 +1407,13 @@ const i18n = {
     "ph-input-scan":"IP или домен цели...","ph-input-img":"Анализ изображения...",
     "loading":"⏳ Обработка запроса ядром...","sys-err":"[SYS_ERROR] Ошибка ответа сервера."
   },
-  kk: {
+  kk:{
     "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ",
     "hero-pricing":"💎 Тарифтер","hero-scroll":"Ядроны зерттеу",
-    "core-llm-desc":"Токендердің жоғары жылдамдықты стримингі (LPU). Кірістірілген мультимодальділік: Base64 суреттерін талдау және контекстті бірден өңдеу.",
-    "core-backend-desc":"Маршруттарды асинхронды өңдеу. Pydantic арқылы қатаң типтеу. io.BytesIO және PyPDF2 арқылы бинарлы файлдармен тікелей жұмыс.",
-    "core-db-desc":"Сессиялар мен пайдаланушыларды реляциялық сақтау. Тұзбен құпия сөздерді хэштеу. Параметрленген сұраныстар арқылы SQL-инъекциялардан қорғау.",
-    "core-net-desc":"Инженерлерге арналған кірістірілген скрипттер. Серверлерді жүйелік пингтеу және ашық порттарды (TCP/IP) асинхронды сканерлеу.",
+    "core-llm-desc":"Токендердің жоғары жылдамдықты стримингі (LPU). Base64 суреттерін талдау және контекстті бірден өңдеу.",
+    "core-backend-desc":"Маршруттарды асинхронды өңдеу. Pydantic арқылы қатаң типтеу. io.BytesIO және PyPDF2 қолдауы.",
+    "core-db-desc":"Сессиялар мен пайдаланушыларды реляциялық сақтау. Тұзбен хэштеу. SQL-инъекциялардан қорғау.",
+    "core-net-desc":"Инженерлерге арналған скрипттер. Серверлерді пингтеу және порттарды сканерлеу (TCP/IP).",
     "specs-header":">_ ТЕХНИКАЛЫҚ СИПАТТАМАЛАР",
     "spec-arch":"Есептеу архитектурасы","spec-arch-val":"Асинхронды Stateless API (FastAPI)",
     "spec-speed":"Генерация жылдамдығы (LPU)","spec-speed-val":"секундына ~800 токен",
@@ -1411,27 +1424,27 @@ const i18n = {
     "mission-2":"Басты мақсат — адам мен технология арасындағы шекараны жоятын қуатты, тәуелсіз және әмбебап құрал жасау.",
     "pricing-title":"ТАРИФТЕР","pricing-subtitle":"Міндеттеріңізге сай жоспарды таңдаңыз",
     "plan-popular":"★ ТАНЫМАЛ",
-    "plan-free-1":"✅ 20 хабарлама / күн","plan-free-2":"✅ 5 сурет генерациясы / күн",
-    "plan-free-3":"✅ PDF талдауы (5 MB дейін)","plan-free-4":"✅ Дауыстық енгізу",
+    "plan-free-1":"✅ 20 хабарлама / күн","plan-free-2":"✅ 5 сурет / күн",
+    "plan-free-3":"✅ PDF (5 MB дейін)","plan-free-4":"✅ Дауыстық енгізу",
     "plan-free-5":"✅ Код және сканерлеу","plan-free-6":"✅ RU / KK / EN",
-    "plan-free-7":"❌ AI дауыстық жауабы","plan-free-8":"❌ Ұзын контекст",
+    "plan-free-7":"✅ PWA қолданбасы","plan-free-8":"❌ AI дауыстық жауабы",
     "plan-free-btn":"Тегін бастау",
-    "plan-pro-1":"✅ 500 хабарлама / күн","plan-pro-2":"✅ 50 сурет генерациясы / күн",
-    "plan-pro-3":"✅ PDF талдауы (25 MB дейін)","plan-pro-4":"✅ Дауыстық енгізу",
+    "plan-pro-1":"✅ 500 хабарлама / күн","plan-pro-2":"✅ 50 сурет / күн",
+    "plan-pro-3":"✅ PDF (25 MB дейін)","plan-pro-4":"✅ Дауыстық енгізу",
     "plan-pro-5":"✅ Код және сканерлеу","plan-pro-6":"✅ RU / KK / EN",
     "plan-pro-7":"✅ AI дауыстық жауабы","plan-pro-8":"✅ 32K токен контексті",
     "plan-pro-btn":"Pro алу",
-    "plan-prem-1":"✅ Шексіз хабарламалар","plan-prem-2":"✅ 200 сурет генерациясы / күн",
-    "plan-prem-3":"✅ PDF талдауы (100 MB дейін)","plan-prem-4":"✅ Дауыстық енгізу + жауап",
+    "plan-prem-1":"✅ Шексіз хабарламалар","plan-prem-2":"✅ 200 сурет / күн",
+    "plan-prem-3":"✅ PDF (100 MB дейін)","plan-prem-4":"✅ Дауыстық енгізу + жауап",
     "plan-prem-5":"✅ Код және сканерлеу","plan-prem-6":"✅ RU / KK / EN",
     "plan-prem-7":"✅ AI дауыстық жауабы","plan-prem-8":"✅ 131K токен контексті",
     "plan-prem-btn":"Premium алу",
     "upg-step1":"Көрсетілген деректемелерге төлем жіберіңіз",
     "upg-step2":"Пікірде Email-іңізді көрсетіңіз",
-    "upg-step3":"«Төледім» батырмасын басып, транзакция ID-ін енгізіңіз",
+    "upg-step3":"«Төледім» басып, транзакция ID-ін енгізіңіз",
     "upg-step4":"24 сағатқа дейін растауды күтіңіз",
     "upg-btn":"✅ Төледім — өтінім жіберу",
-    "auth-login-title":"Жүйеге кіру","auth-login-sub":"Қол жеткізу үшін мәліметтерді енгізіңіз",
+    "auth-login-title":"Жүйеге кіру","auth-login-sub":"Мәліметтерді енгізіңіз",
     "auth-reg-title":"Тіркелу","auth-reg-sub":"Жаңа профиль жасаңыз",
     "ph-email":"Электрондық пошта","ph-pass":"Құпия сөз","ph-name":"Пайдаланушы аты",
     "btn-login":"Авторизация","btn-reg":"Жасау",
@@ -1441,18 +1454,18 @@ const i18n = {
     "init-msg":"Жүйе іске қосылды. Құралды таңдаңыз, сұрақ қойыңыз немесе файл тіркеңіз.",
     "tool-code":"Код","tool-img":"Сурет","tool-scan":"Скан",
     "ph-input":"Терминал командасы...","ph-input-code":"Кодты талдау командасы...",
-    "ph-input-scan":"IP немесе мақсатты домен...","ph-input-img":"Суретті талдау...",
-    "loading":"⏳ Ядро сұранысты өңдеуде...","sys-err":"[SYS_ERROR] Серверден жауап алу қатесі."
+    "ph-input-scan":"IP немесе домен...","ph-input-img":"Суретті талдау...",
+    "loading":"⏳ Ядро өңдеуде...","sys-err":"[SYS_ERROR] Сервер қатесі."
   },
-  en: {
+  en:{
     "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest",
     "hero-pricing":"💎 Pricing","hero-scroll":"Explore Core",
     "core-llm-desc":"High-speed token streaming (LPU). Built-in multimodality: Base64 image parsing and on-the-fly context analysis.",
-    "core-backend-desc":"Asynchronous route processing. Strict typing via Pydantic. Native binary handling using io.BytesIO and PyPDF2.",
-    "core-db-desc":"Relational session and user storage. Salted password hashing. SQL injection protection via parameterized queries.",
-    "core-net-desc":"Built-in scripts for engineers. System server pinging and asynchronous open port scanning (TCP/IP).",
+    "core-backend-desc":"Async route processing. Strict typing via Pydantic. Native binary handling using io.BytesIO and PyPDF2.",
+    "core-db-desc":"Relational session and user storage. Salted password hashing. SQL injection protection.",
+    "core-net-desc":"Built-in scripts for engineers. System pinging and async port scanning (TCP/IP).",
     "specs-header":">_ TECHNICAL SPECIFICATIONS",
-    "spec-arch":"Computing Architecture","spec-arch-val":"Asynchronous Stateless API (FastAPI)",
+    "spec-arch":"Computing Architecture","spec-arch-val":"Async Stateless API (FastAPI)",
     "spec-speed":"Generation Speed (LPU)","spec-speed-val":"~800 tokens per second",
     "spec-ctx":"Context Window","spec-ctx-val":"131,072 tokens (Long Context)",
     "spec-db":"Data Storage System","spec-db-val":"Relational RDBMS (PostgreSQL)",
@@ -1464,7 +1477,7 @@ const i18n = {
     "plan-free-1":"✅ 20 messages / day","plan-free-2":"✅ 5 image generations / day",
     "plan-free-3":"✅ PDF analysis (up to 5 MB)","plan-free-4":"✅ Voice input",
     "plan-free-5":"✅ Code & scanning","plan-free-6":"✅ RU / KK / EN",
-    "plan-free-7":"❌ AI voice response","plan-free-8":"❌ Long context",
+    "plan-free-7":"✅ PWA app","plan-free-8":"❌ AI voice response",
     "plan-free-btn":"Start for free",
     "plan-pro-1":"✅ 500 messages / day","plan-pro-2":"✅ 50 image generations / day",
     "plan-pro-3":"✅ PDF analysis (up to 25 MB)","plan-pro-4":"✅ Voice input",
@@ -1481,8 +1494,8 @@ const i18n = {
     "upg-step3":"Click 'I paid' and enter the transaction ID",
     "upg-step4":"Wait for confirmation within 24 hours",
     "upg-btn":"✅ I paid — send request",
-    "auth-login-title":"System Login","auth-login-sub":"Enter your access credentials",
-    "auth-reg-title":"Registration","auth-reg-sub":"Create a new access profile",
+    "auth-login-title":"System Login","auth-login-sub":"Enter your credentials",
+    "auth-reg-title":"Registration","auth-reg-sub":"Create a new profile",
     "ph-email":"Email","ph-pass":"Password","ph-name":"Username",
     "btn-login":"Authorize","btn-reg":"Create",
     "prof-title":"Your Profile","ph-new-name":"New name",
@@ -1492,7 +1505,7 @@ const i18n = {
     "tool-code":"Code","tool-img":"Image","tool-scan":"Scan",
     "ph-input":"Terminal command...","ph-input-code":"Code parsing command...",
     "ph-input-scan":"Target IP or domain...","ph-input-img":"Image analysis...",
-    "loading":"⏳ Core is processing the request...","sys-err":"[SYS_ERROR] Server response error."
+    "loading":"⏳ Core processing...","sys-err":"[SYS_ERROR] Server error."
   }
 };
 
@@ -1501,34 +1514,32 @@ let currentLang = localStorage.getItem("daryn_lang") || "ru";
 function setLanguage(lang){
   currentLang = lang;
   localStorage.setItem("daryn_lang", lang);
-  document.querySelectorAll(".lang-btn").forEach(btn=>{
-    btn.classList.toggle("active", btn.innerText.toLowerCase()===lang);
-  });
+  document.querySelectorAll(".lang-btn").forEach(b=>b.classList.toggle("active",b.innerText.toLowerCase()===lang));
   document.querySelectorAll("[data-i18n]").forEach(el=>{
-    const key = el.getAttribute("data-i18n");
-    if(i18n[lang]&&i18n[lang][key]){
-      if(el.tagName==="INPUT") el.placeholder=i18n[lang][key];
-      else el.innerHTML=i18n[lang][key];
+    const k = el.getAttribute("data-i18n");
+    if(i18n[lang]&&i18n[lang][k]){
+      if(el.tagName==="INPUT") el.placeholder=i18n[lang][k];
+      else el.innerHTML=i18n[lang][k];
     }
   });
   updatePlaceholder();
 }
 
 function updatePlaceholder(){
-  const input = document.getElementById("user-input");
-  if(!input) return;
-  if(currentMode==="code")       input.placeholder=i18n[currentLang]["ph-input-code"];
-  else if(currentMode==="scan")  input.placeholder=i18n[currentLang]["ph-input-scan"];
-  else if(currentMode==="image") input.placeholder=i18n[currentLang]["ph-input-img"];
-  else                           input.placeholder=i18n[currentLang]["ph-input"];
+  const inp = document.getElementById("user-input");
+  if(!inp) return;
+  if(currentMode==="code")       inp.placeholder=i18n[currentLang]["ph-input-code"];
+  else if(currentMode==="scan")  inp.placeholder=i18n[currentLang]["ph-input-scan"];
+  else if(currentMode==="image") inp.placeholder=i18n[currentLang]["ph-input-img"];
+  else                           inp.placeholder=i18n[currentLang]["ph-input"];
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
   setLanguage(currentLang);
-  const observer = new IntersectionObserver(entries=>{
+  const obs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add("active"); });
   },{ threshold:0.1 });
-  document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
+  document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
 });
 
 // ================================================================
@@ -1550,13 +1561,13 @@ function openAuth(type){
   }
   const s=document.getElementById("auth-screen");
   s.style.display="flex";
-  setTimeout(()=>{ s.style.opacity="1"; },10);
+  setTimeout(()=>s.style.opacity="1",10);
 }
 
 function closeAuth(){
   const s=document.getElementById("auth-screen");
   s.style.opacity="0";
-  setTimeout(()=>{ s.style.display="none"; },300);
+  setTimeout(()=>s.style.display="none",300);
 }
 
 async function enterApp(){
@@ -1572,191 +1583,147 @@ async function enterApp(){
   await loadUserPlan();
 }
 
+async function registerUser(){
+  const name=document.getElementById("reg-name").value;
+  const email=document.getElementById("reg-email").value;
+  const pass=document.getElementById("reg-pass").value;
+  const err=document.getElementById("reg-error");
+  if(!name||!email||!pass){ err.innerText="Fill all fields"; err.style.display="block"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/register`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:name,email,password:pass}) });
+    const d=await res.json();
+    if(d.status==="success"){ currentUserEmail=email; document.getElementById("sidebar-username").innerText=d.username; enterApp(); }
+    else { err.innerText=d.message; err.style.display="block"; }
+  } catch { err.innerText="Server error"; err.style.display="block"; }
+}
+
+async function loginUser(){
+  const email=document.getElementById("login-email").value;
+  const pass=document.getElementById("login-pass").value;
+  const err=document.getElementById("login-error");
+  if(!email||!pass){ err.innerText="Fill all fields"; err.style.display="block"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/login`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password:pass}) });
+    const d=await res.json();
+    if(d.status==="success"){ currentUserEmail=email; document.getElementById("sidebar-username").innerText=d.username; enterApp(); }
+    else { err.innerText=d.message; err.style.display="block"; }
+  } catch { err.innerText="Server error"; err.style.display="block"; }
+}
+
+function loginAsGuest(){
+  currentUserEmail="guest";
+  document.getElementById("sidebar-username").innerText=i18n[currentLang]["sb-guest"];
+  enterApp();
+}
+
 // ================================================================
 // ПЛАНЫ
 // ================================================================
 async function loadUserPlan(){
-  if(currentUserEmail==="guest"){
-    showPlanBadge({ badge:"FREE", color:"#6b7280" });
-    return;
-  }
+  if(currentUserEmail==="guest"){ showPlanBadge({badge:"FREE",color:"#6b7280"}); return; }
   try{
-    const res  = await fetch(`${BACKEND_URL}/my_plan`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email:currentUserEmail })
-    });
-    const data = await res.json();
-    if(data.status==="success"){
-      userPlanData = data;
-      showPlanBadge(data);
-      updateLimitIndicators(data);
-      updateUpgradeButtons(data);
-    }
+    const res=await fetch(`${BACKEND_URL}/my_plan`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail}) });
+    const d=await res.json();
+    if(d.status==="success"){ userPlanData=d; showPlanBadge(d); updateLimitIndicators(d); updateUpgradeButtons(d); }
   } catch(e){ console.error("loadUserPlan:",e); }
 }
 
-function showPlanBadge(data){
-  const badge = data.badge || "FREE";
-  const color = data.color || "#6b7280";
-  const el    = document.getElementById("plan-badge-sidebar");
+function showPlanBadge(d){
+  const el=document.getElementById("plan-badge-sidebar");
   if(!el) return;
-  el.className = "plan-indicator";
-  el.style.background = color+"22";
-  el.style.color       = color;
-  el.style.border      = `1px solid ${color}44`;
-  el.innerText = badge;
+  const badge=d.badge||"FREE", color=d.color||"#6b7280";
+  el.className="plan-indicator";
+  el.style.background=color+"22"; el.style.color=color; el.style.border=`1px solid ${color}44`;
+  el.innerText=badge;
 }
 
-function updateLimitIndicators(data){
-  if(!data||!data.usage) return;
-  const bar = document.getElementById("plan-limits-bar");
+function updateLimitIndicators(d){
+  if(!d||!d.usage) return;
+  const bar=document.getElementById("plan-limits-bar");
   if(!bar) return;
-
-  const msgLeft = data.limits.msg_per_day - data.usage.msg_count;
-  const imgLeft = data.usage.credits_left;
-  const msgColor = msgLeft<5?"#ef4444":msgLeft<20?"#f59e0b":"#10b981";
-  const imgColor = imgLeft<2?"#ef4444":imgLeft<5?"#f59e0b":"#10b981";
-
-  const showUpgrade = !["premium","admin"].includes(data.plan);
-
-  bar.style.display = "flex";
-  bar.innerHTML = `
+  const msgLeft=d.limits.msg_per_day-d.usage.msg_count;
+  const imgLeft=d.usage.credits_left;
+  const mc=msgLeft<5?"#ef4444":msgLeft<20?"#f59e0b":"#10b981";
+  const ic=imgLeft<2?"#ef4444":imgLeft<5?"#f59e0b":"#10b981";
+  const showUpg=!["premium","admin"].includes(d.plan);
+  bar.style.display="flex";
+  bar.innerHTML=`
     <div class="limit-row">
       <span>💬 ${currentLang==="kk"?"Хабарламалар":currentLang==="en"?"Messages":"Сообщения"}</span>
-      <span style="color:${msgColor};font-weight:700;">${Math.max(0,msgLeft)}/${data.limits.msg_per_day}</span>
+      <span style="color:${mc};font-weight:700;">${Math.max(0,msgLeft)}/${d.limits.msg_per_day}</span>
     </div>
     <div class="limit-row">
       <span>🖼 ${currentLang==="kk"?"Суреттер":currentLang==="en"?"Images":"Изображения"}</span>
-      <span style="color:${imgColor};font-weight:700;">${imgLeft}/${data.limits.images_per_day}</span>
+      <span style="color:${ic};font-weight:700;">${imgLeft}/${d.limits.images_per_day}</span>
     </div>
-    ${data.expires?`<div style="color:#555;font-size:10px;">
-      ${currentLang==="en"?"Expires":"Истекает"}: ${data.expires}</div>`:""}
-    ${showUpgrade?`<button class="upgrade-mini-btn" onclick="showUpgradeModal('pro')">
-      ⬆ ${currentLang==="kk"?"Жоспарды арттыру":currentLang==="en"?"Upgrade plan":"Upgrade план"}
-    </button>`:""}
+    ${d.expires?`<div style="color:#555;font-size:10px;">${currentLang==="en"?"Expires":"Истекает"}: ${d.expires}</div>`:""}
+    ${showUpg?`<button class="upgrade-mini-btn" onclick="showUpgradeModal('pro')">⬆ ${currentLang==="kk"?"Жоспарды арттыру":currentLang==="en"?"Upgrade plan":"Upgrade план"}</button>`:""}
   `;
 }
 
-function updateUpgradeButtons(data){
-  if(!data) return;
-  const showUpgrade = !["premium","admin"].includes(data.plan);
-
-  // Кнопка в профиле
-  const profBtn = document.getElementById("profile-upgrade-btn");
-  if(profBtn) profBtn.style.display = showUpgrade?"block":"none";
-
-  // Кнопка в тулбаре чата
-  const toolBtn = document.getElementById("upgrade-tool-btn");
-  if(toolBtn) toolBtn.style.display = showUpgrade?"flex":"none";
-
-  // Бейдж плана в профиле
-  const planBadgeEl = document.getElementById("profile-plan-badge");
-  if(planBadgeEl && data.badge){
-    planBadgeEl.innerHTML = `
-      <span style="
-        display:inline-block; padding:4px 12px; border-radius:6px;
-        font-size:12px; font-weight:700; letter-spacing:1px;
-        background:${data.color}22; color:${data.color};
-        border:1px solid ${data.color}44;
-      ">${data.badge} — ${data.name}</span>
-      ${data.expires?`<span style="color:#555;font-size:12px;margin-left:8px;">до ${data.expires}</span>`:""}
+function updateUpgradeButtons(d){
+  if(!d) return;
+  const show=!["premium","admin"].includes(d.plan);
+  const pb=document.getElementById("profile-upgrade-btn");
+  if(pb) pb.style.display=show?"block":"none";
+  const tb=document.getElementById("upgrade-tool-btn");
+  if(tb) tb.style.display=show?"flex":"none";
+  const planEl=document.getElementById("profile-plan-badge");
+  if(planEl&&d.badge){
+    planEl.innerHTML=`
+      <span style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:1px;background:${d.color}22;color:${d.color};border:1px solid ${d.color}44;">${d.badge} — ${d.name}</span>
+      ${d.expires?`<span style="color:#555;font-size:12px;margin-left:8px;">до ${d.expires}</span>`:""}
     `;
   }
 }
 
 function showUpgradeModal(plan){
-  selectedUpgradePlan = plan;
-  const INFO = {
-    pro: {
-      badge:"PRO", badgeBg:"rgba(59,130,246,0.2)", badgeColor:"#3b82f6",
-      title:"Daryn AI Pro", price:"$9.99 / мес"
-    },
-    premium: {
-      badge:"PREMIUM", badgeBg:"rgba(245,158,11,0.2)", badgeColor:"#f59e0b",
-      title:"Daryn AI Premium", price:"$24.99 / мес"
-    }
+  selectedUpgradePlan=plan;
+  const INFO={
+    pro:{ badge:"PRO", bg:"rgba(59,130,246,0.2)", color:"#3b82f6", title:"Daryn AI Pro", price:"$9.99 / мес" },
+    premium:{ badge:"PREMIUM", bg:"rgba(245,158,11,0.2)", color:"#f59e0b", title:"Daryn AI Premium", price:"$24.99 / мес" }
   };
-  const d = INFO[plan];
-  if(!d) return;
-
-  const badgeEl = document.getElementById("upgrade-badge");
-  badgeEl.innerText       = d.badge;
-  badgeEl.style.background = d.badgeBg;
-  badgeEl.style.color      = d.badgeColor;
-
-  document.getElementById("upgrade-title").innerText = d.title;
-  document.getElementById("upgrade-price").innerText = d.price;
-  document.getElementById("upgrade-price").style.color = d.badgeColor;
-  document.getElementById("upgrade-error").style.display   = "none";
-  document.getElementById("upgrade-success").style.display = "none";
-  document.getElementById("tx-id-input").value = "";
-
-  // Замените на ваш реальный адрес кошелька
-  document.getElementById("wallet-address").innerText = "TXXXXXXXXXXYourWalletAddressHere";
-
-  const modal = document.getElementById("upgrade-modal");
-  modal.style.display = "flex";
+  const d=INFO[plan]; if(!d) return;
+  const be=document.getElementById("upgrade-badge");
+  be.innerText=d.badge; be.style.background=d.bg; be.style.color=d.color;
+  document.getElementById("upgrade-title").innerText=d.title;
+  const pe=document.getElementById("upgrade-price");
+  pe.innerText=d.price; pe.style.color=d.color;
+  document.getElementById("upgrade-error").style.display="none";
+  document.getElementById("upgrade-success").style.display="none";
+  document.getElementById("tx-id-input").value="";
+  document.getElementById("wallet-address").innerText="TXXXXXXXXXXYourWalletAddressHere";
+  document.getElementById("upgrade-modal").style.display="flex";
 }
 
 function closeUpgradeModal(){
   document.getElementById("upgrade-modal").style.display="none";
-  selectedUpgradePlan = null;
+  selectedUpgradePlan=null;
 }
 
 async function confirmUpgrade(){
   if(!selectedUpgradePlan) return;
   if(currentUserEmail==="guest"){
-    document.getElementById("upgrade-error").innerText =
-      currentLang==="en"?"Please log in to subscribe":
-      currentLang==="kk"?"Жазылу үшін жүйеге кіріңіз":
-      "Войдите в систему чтобы оформить подписку";
-    document.getElementById("upgrade-error").style.display="block";
-    return;
+    document.getElementById("upgrade-error").innerText=currentLang==="en"?"Please log in":currentLang==="kk"?"Жүйеге кіріңіз":"Войдите в систему";
+    document.getElementById("upgrade-error").style.display="block"; return;
   }
-  const txId = document.getElementById("tx-id-input").value.trim();
-  const err  = document.getElementById("upgrade-error");
-  const succ = document.getElementById("upgrade-success");
-  const btn  = document.getElementById("upgrade-confirm-btn");
-
-  if(!txId){
-    err.innerText =
-      currentLang==="en"?"Enter transaction ID":
-      currentLang==="kk"?"Транзакция ID-ін енгізіңіз":
-      "Введите ID транзакции";
-    err.style.display="block";
-    return;
-  }
-  btn.innerText = "⏳...";
-  btn.disabled  = true;
+  const txId=document.getElementById("tx-id-input").value.trim();
+  const err=document.getElementById("upgrade-error");
+  const succ=document.getElementById("upgrade-success");
+  const btn=document.getElementById("upgrade-confirm-btn");
+  if(!txId){ err.innerText=currentLang==="en"?"Enter TX ID":currentLang==="kk"?"TX ID енгізіңіз":"Введите ID транзакции"; err.style.display="block"; return; }
+  btn.innerText="⏳..."; btn.disabled=true;
   try{
-    const res  = await fetch(`${BACKEND_URL}/upgrade_plan`,{
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email:currentUserEmail, plan:selectedUpgradePlan, tx_id:txId })
-    });
-    const data = await res.json();
-    if(data.status==="success"){
+    const res=await fetch(`${BACKEND_URL}/upgrade_plan`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail,plan:selectedUpgradePlan,tx_id:txId}) });
+    const d=await res.json();
+    if(d.status==="success"){
       err.style.display="none";
-      succ.innerText =
-        currentLang==="en"?"✅ Request sent! Please wait up to 24 hours for confirmation.":
-        currentLang==="kk"?"✅ Өтінім жіберілді! 24 сағатқа дейін растауды күтіңіз.":
-        "✅ Заявка отправлена! Ожидайте подтверждения в течение 24 часов.";
+      succ.innerText=currentLang==="en"?"✅ Request sent! Wait up to 24h.":currentLang==="kk"?"✅ Өтінім жіберілді! 24 сағат күтіңіз.":"✅ Заявка отправлена! Ожидайте до 24 часов.";
       succ.style.display="block";
-      setTimeout(closeUpgradeModal, 3000);
-    } else {
-      err.innerText=data.message; err.style.display="block";
-    }
-  } catch {
-    err.innerText =
-      currentLang==="en"?"Connection error":
-      currentLang==="kk"?"Қосылу қатесі":
-      "Ошибка подключения";
-    err.style.display="block";
-  } finally {
-    btn.innerText = i18n[currentLang]["upg-btn"];
-    btn.disabled  = false;
-  }
+      setTimeout(closeUpgradeModal,3000);
+    } else { err.innerText=d.message; err.style.display="block"; }
+  } catch { err.innerText=currentLang==="en"?"Connection error":currentLang==="kk"?"Қосылу қатесі":"Ошибка подключения"; err.style.display="block"; }
+  finally { btn.innerText=i18n[currentLang]["upg-btn"]; btn.disabled=false; }
 }
 
 // ================================================================
@@ -1764,63 +1731,54 @@ async function confirmUpgrade(){
 // ================================================================
 function openProfile(){
   if(currentUserEmail==="guest") return;
-  document.getElementById("profile-email").innerText     = currentUserEmail;
-  document.getElementById("profile-name-input").value   = document.getElementById("sidebar-username").innerText;
-  document.getElementById("profile-overlay").style.display = "block";
-  document.getElementById("profile-modal").style.display   = "block";
-  document.getElementById("profile-error").style.display   = "none";
-  document.getElementById("profile-success").style.display = "none";
+  document.getElementById("profile-email").innerText=currentUserEmail;
+  document.getElementById("profile-name-input").value=document.getElementById("sidebar-username").innerText;
+  document.getElementById("profile-overlay").style.display="block";
+  document.getElementById("profile-modal").style.display="block";
+  document.getElementById("profile-error").style.display="none";
+  document.getElementById("profile-success").style.display="none";
   if(userPlanData) updateUpgradeButtons(userPlanData);
   if(window.innerWidth<=768) toggleSidebar();
 }
 
 function closeProfile(){
-  document.getElementById("profile-overlay").style.display = "none";
-  document.getElementById("profile-modal").style.display   = "none";
+  document.getElementById("profile-overlay").style.display="none";
+  document.getElementById("profile-modal").style.display="none";
 }
 
 async function saveProfile(){
-  const newName = document.getElementById("profile-name-input").value.trim();
-  const err  = document.getElementById("profile-error");
-  const succ = document.getElementById("profile-success");
-  if(!newName){ err.innerText="Error"; err.style.display="block"; succ.style.display="none"; return; }
+  const n=document.getElementById("profile-name-input").value.trim();
+  const err=document.getElementById("profile-error");
+  const succ=document.getElementById("profile-success");
+  if(!n){ err.innerText="Error"; err.style.display="block"; succ.style.display="none"; return; }
   try{
-    const res  = await fetch(`${BACKEND_URL}/update_profile`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email:currentUserEmail, new_username:newName })
-    });
-    const data = await res.json();
-    if(data.status==="success"){
-      document.getElementById("sidebar-username").innerText=newName;
-      err.style.display="none"; succ.innerText="✅ OK"; succ.style.display="block";
-      setTimeout(closeProfile,1500);
-    } else { err.innerText=data.message; err.style.display="block"; succ.style.display="none"; }
+    const res=await fetch(`${BACKEND_URL}/update_profile`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail,new_username:n}) });
+    const d=await res.json();
+    if(d.status==="success"){ document.getElementById("sidebar-username").innerText=n; err.style.display="none"; succ.innerText="✅ OK"; succ.style.display="block"; setTimeout(closeProfile,1500); }
+    else { err.innerText=d.message; err.style.display="block"; succ.style.display="none"; }
   } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
 }
 
 async function clearUserHistory(){
   if(!confirm("Delete DB?")) return;
-  const err  = document.getElementById("profile-error");
-  const succ = document.getElementById("profile-success");
+  const err=document.getElementById("profile-error");
+  const succ=document.getElementById("profile-success");
   try{
-    const res  = await fetch(`${BACKEND_URL}/clear_history`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email:currentUserEmail })
-    });
-    const data = await res.json();
-    if(data.status==="success"){
+    const res=await fetch(`${BACKEND_URL}/clear_history`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail}) });
+    const d=await res.json();
+    if(d.status==="success"){
       document.getElementById("chat").innerHTML=`<div class="message ai"><div class="md-content">DB Cleared.</div></div>`;
       document.getElementById("sidebar-history").innerHTML="";
       err.style.display="none"; succ.innerText="✅ OK!"; succ.style.display="block";
       setTimeout(closeProfile,1500);
-    } else { err.innerText=data.message; err.style.display="block"; succ.style.display="none"; }
+    } else { err.innerText=d.message; err.style.display="block"; succ.style.display="none"; }
   } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
 }
 
 // ================================================================
 // MESSAGE ACTIONS
 // ================================================================
-const getActionsHtml = ()=>`
+const getActionsHtml=()=>`
   <div class="message-actions">
     <button class="action-btn" onclick="copyMessageText(this)" title="Копировать">
       <svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
@@ -1846,9 +1804,7 @@ function copyMessageText(btn){
 }
 
 function rateMessage(btn,type){
-  btn.parentElement.querySelectorAll(".action-btn").forEach(b=>{
-    b.classList.remove("active-good","active-bad");
-  });
+  btn.parentElement.querySelectorAll(".action-btn").forEach(b=>{ b.classList.remove("active-good","active-bad"); });
   btn.classList.add(type==="good"?"active-good":"active-bad");
 }
 
@@ -1881,107 +1837,46 @@ function removeFile(){
 }
 
 // ================================================================
-// AUTH ACTIONS
-// ================================================================
-async function registerUser(){
-  const name=document.getElementById("reg-name").value;
-  const email=document.getElementById("reg-email").value;
-  const pass=document.getElementById("reg-pass").value;
-  const err=document.getElementById("reg-error");
-  if(!name||!email||!pass){ err.innerText="Fill all fields"; err.style.display="block"; return; }
-  try{
-    const res=await fetch(`${BACKEND_URL}/register`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ username:name, email, password:pass })
-    });
-    const data=await res.json();
-    if(data.status==="success"){
-      currentUserEmail=email;
-      document.getElementById("sidebar-username").innerText=data.username;
-      enterApp();
-    } else { err.innerText=data.message; err.style.display="block"; }
-  } catch { err.innerText="Server error"; err.style.display="block"; }
-}
-
-async function loginUser(){
-  const email=document.getElementById("login-email").value;
-  const pass=document.getElementById("login-pass").value;
-  const err=document.getElementById("login-error");
-  if(!email||!pass){ err.innerText="Fill all fields"; err.style.display="block"; return; }
-  try{
-    const res=await fetch(`${BACKEND_URL}/login`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email, password:pass })
-    });
-    const data=await res.json();
-    if(data.status==="success"){
-      currentUserEmail=email;
-      document.getElementById("sidebar-username").innerText=data.username;
-      enterApp();
-    } else { err.innerText=data.message; err.style.display="block"; }
-  } catch { err.innerText="Server error"; err.style.display="block"; }
-}
-
-function loginAsGuest(){
-  currentUserEmail="guest";
-  document.getElementById("sidebar-username").innerText=i18n[currentLang]["sb-guest"];
-  enterApp();
-}
-
-// ================================================================
 // SIDEBAR
 // ================================================================
 function toggleSidebar(){
-  const sb=document.getElementById("sidebar");
-  const ov=document.getElementById("sidebar-overlay");
+  const sb=document.getElementById("sidebar"), ov=document.getElementById("sidebar-overlay");
   sb.classList.toggle("open");
   if(window.innerWidth<=768) ov.classList.toggle("active",sb.classList.contains("open"));
 }
 
 async function loadHistory(){
   if(currentUserEmail==="guest"){
-    document.getElementById("sidebar-history").innerHTML=
-      `<div class='history-item'>${currentLang==="ru"?"История недоступна":"No history"}</div>`;
+    document.getElementById("sidebar-history").innerHTML=`<div class='history-item'>${currentLang==="ru"?"История недоступна":"No history"}</div>`;
     return;
   }
   try{
-    const res=await fetch(`${BACKEND_URL}/history`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({ email:currentUserEmail })
-    });
-    const data=await res.json();
-    if(data.status==="success"&&data.history.length>0){
-      const chatBox=document.getElementById("chat");
-      const sbHist=document.getElementById("sidebar-history");
-      chatBox.innerHTML=""; sbHist.innerHTML="";
-      data.history.forEach(msg=>{
+    const res=await fetch(`${BACKEND_URL}/history`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail}) });
+    const d=await res.json();
+    if(d.status==="success"&&d.history.length>0){
+      const cb=document.getElementById("chat"), sh=document.getElementById("sidebar-history");
+      cb.innerHTML=""; sh.innerHTML="";
+      d.history.forEach(msg=>{
         if(msg.role==="user"){
-          chatBox.innerHTML+=`<div class="message user">${msg.content}</div>`;
-          sbHist.innerHTML+=`<div class="history-item">${msg.content.substring(0,25)}...</div>`;
+          cb.innerHTML+=`<div class="message user">${msg.content}</div>`;
+          sh.innerHTML+=`<div class="history-item">${msg.content.substring(0,25)}...</div>`;
         } else {
-          chatBox.innerHTML+=`<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div>${getActionsHtml()}</div>`;
+          cb.innerHTML+=`<div class="message ai"><div class="md-content">${marked.parse(msg.content)}</div>${getActionsHtml()}</div>`;
         }
       });
-      chatBox.scrollTop=chatBox.scrollHeight;
+      cb.scrollTop=cb.scrollHeight;
     }
   } catch(e){ console.error(e); }
 }
 
 function startNewChat(){
-  document.getElementById("chat").innerHTML=
-    `<div class="message ai"><div class="md-content">${i18n[currentLang]["init-msg"]}</div></div>`;
+  document.getElementById("chat").innerHTML=`<div class="message ai"><div class="md-content">${i18n[currentLang]["init-msg"]}</div></div>`;
   if(window.innerWidth<=768) toggleSidebar();
 }
 
 function useTool(type,event){
-  if(currentMode===type){
-    currentMode="chat";
-    event.currentTarget.classList.remove("active");
-  } else {
-    currentMode=type;
-    document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
-    event.currentTarget.classList.add("active");
-  }
+  if(currentMode===type){ currentMode="chat"; event.currentTarget.classList.remove("active"); }
+  else { currentMode=type; document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active")); event.currentTarget.classList.add("active"); }
   updatePlaceholder();
   document.getElementById("user-input").focus();
 }
@@ -1992,86 +1887,51 @@ function handleKeyPress(e){ if(e.key==="Enter") sendMessage(); }
 // SEND MESSAGE
 // ================================================================
 async function sendMessage(){
-  const input  = document.getElementById("user-input");
-  const chat   = document.getElementById("chat");
-  const sbHist = document.getElementById("sidebar-history");
-  const text   = input.value.trim();
+  const input=document.getElementById("user-input");
+  const chat=document.getElementById("chat");
+  const sbHist=document.getElementById("sidebar-history");
+  const text=input.value.trim();
   if(text===""&&!attachedFile) return;
-
   lastUserMessage=text;
-  let displayMsg=text;
-  if(attachedFile) displayMsg=`📎 [${attachedFile.name}]<br>`+text;
-
-  chat.innerHTML+=`<div class="message user">${displayMsg}</div>`;
+  let dm=text;
+  if(attachedFile) dm=`📎 [${attachedFile.name}]<br>`+text;
+  chat.innerHTML+=`<div class="message user">${dm}</div>`;
   input.value="";
   chat.scrollTop=chat.scrollHeight;
-
-  if(currentUserEmail!=="guest")
-    sbHist.innerHTML+=`<div class="history-item">${(text.substring(0,25)||attachedFile?.name)||"..."}...</div>`;
-
-  const loadingId="ai-"+Date.now();
-  chat.innerHTML+=`<div class="message ai" id="${loadingId}"><div class="md-content">${i18n[currentLang]["loading"]}</div></div>`;
+  if(currentUserEmail!=="guest") sbHist.innerHTML+=`<div class="history-item">${(text.substring(0,25)||attachedFile?.name)||"..."}...</div>`;
+  const lid="ai-"+Date.now();
+  chat.innerHTML+=`<div class="message ai" id="${lid}"><div class="md-content">${i18n[currentLang]["loading"]}</div></div>`;
   chat.scrollTop=chat.scrollHeight;
-
-  const payload={
-    text, email:currentUserEmail, mode:currentMode,
-    file_name: attachedFile?attachedFile.name:null,
-    file_type: attachedFile?attachedFile.type:null,
-    file_data: attachedFile?attachedFile.data:null
-  };
+  const payload={ text, email:currentUserEmail, mode:currentMode, file_name:attachedFile?attachedFile.name:null, file_type:attachedFile?attachedFile.type:null, file_data:attachedFile?attachedFile.data:null };
   removeFile();
-
   try{
-    const response=await fetch(`${BACKEND_URL}/chat`,{
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify(payload)
-    });
-    const msgEl    = document.getElementById(loadingId);
-    const mdContainer = msgEl.querySelector(".md-content");
-
+    const response=await fetch(`${BACKEND_URL}/chat`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
+    const msgEl=document.getElementById(lid);
+    const mdC=msgEl.querySelector(".md-content");
     if(currentMode==="image"){
-      mdContainer.innerHTML=await response.text();
+      mdC.innerHTML=await response.text();
       chat.scrollTop=chat.scrollHeight;
-      // Обновляем лимиты после генерации
       if(currentUserEmail!=="guest") await loadUserPlan();
       return;
     }
-
-    const reader  = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    mdContainer.innerHTML="";
-    let charQueue=[], isAnimating=false, currentAiMarkdown="";
-
-    function processQueue(){
-      if(charQueue.length>0){
-        isAnimating=true;
-        currentAiMarkdown+=charQueue.shift();
-        mdContainer.innerHTML=marked.parse(currentAiMarkdown);
-        chat.scrollTop=chat.scrollHeight;
-        setTimeout(processQueue,15);
-      } else { isAnimating=false; }
+    const reader=response.body.getReader(), decoder=new TextDecoder("utf-8");
+    mdC.innerHTML="";
+    let cq=[], ia=false, cam="";
+    function pq(){
+      if(cq.length>0){ ia=true; cam+=cq.shift(); mdC.innerHTML=marked.parse(cam); chat.scrollTop=chat.scrollHeight; setTimeout(pq,15); }
+      else { ia=false; }
     }
-
     while(true){
-      const { done, value }=await reader.read();
+      const {done,value}=await reader.read();
       if(done){
-        const check=setInterval(()=>{
-          if(!isAnimating){
-            clearInterval(check);
-            msgEl.innerHTML+=getActionsHtml();
-            chat.scrollTop=chat.scrollHeight;
-            // Обновляем лимиты после ответа
-            if(currentUserEmail!=="guest") loadUserPlan();
-          }
-        },50);
+        const ck=setInterval(()=>{ if(!ia){ clearInterval(ck); msgEl.innerHTML+=getActionsHtml(); chat.scrollTop=chat.scrollHeight; if(currentUserEmail!=="guest") loadUserPlan(); } },50);
         break;
       }
-      charQueue.push(...decoder.decode(value,{stream:true}).split(""));
-      if(!isAnimating) processQueue();
+      cq.push(...decoder.decode(value,{stream:true}).split(""));
+      if(!ia) pq();
     }
   } catch {
-    document.getElementById(loadingId).querySelector(".md-content").innerHTML=
-      `<span style="color:#ef4444;">${i18n[currentLang]["sys-err"]}</span>`;
+    document.getElementById(lid).querySelector(".md-content").innerHTML=`<span style="color:#ef4444;">${i18n[currentLang]["sys-err"]}</span>`;
   }
 }
 
@@ -2081,95 +1941,62 @@ async function sendMessage(){
 let mediaRecorder=null, audioChunks=[], isRecording=false;
 
 function setVoiceState(state){
-  const btn      = document.getElementById("voice-btn");
-  const iconMic  = document.getElementById("voice-icon-mic");
-  const iconStop = document.getElementById("voice-icon-stop");
-  const iconSpin = document.getElementById("voice-icon-spin");
+  const btn=document.getElementById("voice-btn");
+  const iM=document.getElementById("voice-icon-mic");
+  const iS=document.getElementById("voice-icon-stop");
+  const iSp=document.getElementById("voice-icon-spin");
   btn.classList.remove("recording","processing");
-  iconMic.style.display=iconStop.style.display=iconSpin.style.display="none";
-  if(state==="idle"){
-    iconMic.style.display="block"; btn.disabled=false;
-  } else if(state==="recording"){
-    btn.classList.add("recording"); iconStop.style.display="block"; btn.disabled=false;
-  } else if(state==="processing"){
-    btn.classList.add("processing"); iconSpin.style.display="block"; btn.disabled=true;
-  }
+  iM.style.display=iS.style.display=iSp.style.display="none";
+  if(state==="idle"){ iM.style.display="block"; btn.disabled=false; }
+  else if(state==="recording"){ btn.classList.add("recording"); iS.style.display="block"; btn.disabled=false; }
+  else if(state==="processing"){ btn.classList.add("processing"); iSp.style.display="block"; btn.disabled=true; }
 }
 
-async function toggleVoiceRecording(){
-  if(isRecording) stopRecording();
-  else await startRecording();
-}
+async function toggleVoiceRecording(){ if(isRecording) stopRecording(); else await startRecording(); }
 
 async function startRecording(){
   try{
-    const stream=await navigator.mediaDevices.getUserMedia({ audio:true });
-    const mimeType=
-      MediaRecorder.isTypeSupported("audio/webm;codecs=opus")?"audio/webm;codecs=opus":
-      MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/ogg";
-    mediaRecorder=new MediaRecorder(stream,{ mimeType });
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    const mt=MediaRecorder.isTypeSupported("audio/webm;codecs=opus")?"audio/webm;codecs=opus":MediaRecorder.isTypeSupported("audio/webm")?"audio/webm":"audio/ogg";
+    mediaRecorder=new MediaRecorder(stream,{mimeType:mt});
     audioChunks=[];
     mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data); };
-    mediaRecorder.onstop=async()=>{ stream.getTracks().forEach(t=>t.stop()); await sendAudioToServer(mimeType); };
+    mediaRecorder.onstop=async()=>{ stream.getTracks().forEach(t=>t.stop()); await sendAudioToServer(mt); };
     mediaRecorder.start(250);
     isRecording=true; setVoiceState("recording");
   } catch {
-    alert(currentLang==="kk"?"Микрофонға қол жеткізу жоқ.":
-          currentLang==="en"?"Microphone access denied.":
-          "Нет доступа к микрофону.");
+    alert(currentLang==="kk"?"Микрофонға қол жоқ.":currentLang==="en"?"Microphone access denied.":"Нет доступа к микрофону.");
     setVoiceState("idle");
   }
 }
 
-function stopRecording(){
-  if(mediaRecorder&&isRecording){ isRecording=false; mediaRecorder.stop(); setVoiceState("processing"); }
-}
+function stopRecording(){ if(mediaRecorder&&isRecording){ isRecording=false; mediaRecorder.stop(); setVoiceState("processing"); } }
 
-async function sendAudioToServer(mimeType){
+async function sendAudioToServer(mt){
   const input=document.getElementById("user-input");
   try{
-    const baseMime=mimeType.split(";")[0];
-    const blob=new Blob(audioChunks,{ type:baseMime });
+    const bm=mt.split(";")[0];
+    const blob=new Blob(audioChunks,{type:bm});
     if(blob.size<1000){ setVoiceState("idle"); return; }
-    const formData=new FormData();
-    formData.append("file",blob,"audio.webm");
-    const res=await fetch(`${BACKEND_URL}/transcribe`,{ method:"POST", body:formData });
-    const data=await res.json();
-    if(data.status==="success"&&data.text&&data.text.trim()){
-      input.value=data.text.trim(); setVoiceState("idle"); sendMessage();
-    } else {
-      input.placeholder=
-        currentLang==="kk"?"⚠ Сөйлеуді тану мүмкін болмады":
-        currentLang==="en"?"⚠ Could not recognize speech":
-        "⚠ Не удалось распознать речь";
-      setVoiceState("idle"); setTimeout(()=>updatePlaceholder(),2500);
-    }
-  } catch {
-    input.placeholder=
-      currentLang==="kk"?"⚠ Серверге қосылу қатесі":
-      currentLang==="en"?"⚠ Server connection error":
-      "⚠ Ошибка подключения к серверу";
-    setVoiceState("idle"); setTimeout(()=>updatePlaceholder(),2500);
-  }
+    const fd=new FormData(); fd.append("file",blob,"audio.webm");
+    const res=await fetch(`${BACKEND_URL}/transcribe`,{method:"POST",body:fd});
+    const d=await res.json();
+    if(d.status==="success"&&d.text&&d.text.trim()){ input.value=d.text.trim(); setVoiceState("idle"); sendMessage(); }
+    else { input.placeholder=currentLang==="kk"?"⚠ Тану мүмкін болмады":currentLang==="en"?"⚠ Could not recognize":"⚠ Не удалось распознать"; setVoiceState("idle"); setTimeout(()=>updatePlaceholder(),2500); }
+  } catch { input.placeholder=currentLang==="kk"?"⚠ Сервер қатесі":currentLang==="en"?"⚠ Server error":"⚠ Ошибка сервера"; setVoiceState("idle"); setTimeout(()=>updatePlaceholder(),2500); }
 }
 
 // ================================================================
 // СКАЧАТЬ ИЗОБРАЖЕНИЕ
 // ================================================================
-async function downloadGeneratedImage(imageUrl, fileName){
+async function downloadGeneratedImage(url,name){
   try{
-    const response=await fetch(imageUrl);
-    const blob=await response.blob();
-    const blobUrl=URL.createObjectURL(blob);
-    const link=document.createElement("a");
-    link.href=blobUrl; link.download=fileName;
-    document.body.appendChild(link); link.click();
-    document.body.removeChild(link); URL.revokeObjectURL(blobUrl);
-  } catch {
-    alert(currentLang==="kk"?"Суретті жүктеу мүмкін болмады.":
-          currentLang==="en"?"Failed to download image.":
-          "Не удалось скачать изображение.");
-  }
+    const r=await fetch(url), b=await r.blob();
+    const bu=URL.createObjectURL(b);
+    const a=document.createElement("a"); a.href=bu; a.download=name;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(bu);
+  } catch { alert(currentLang==="kk"?"Жүктеу мүмкін болмады.":currentLang==="en"?"Failed to download.":"Не удалось скачать."); }
 }
 </script>
 </body>
