@@ -14,8 +14,8 @@ from datetime import datetime, timedelta
 from urllib.parse import urlparse, quote
 from fastapi import FastAPI, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse, HTMLResponse, FileResponse
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse, HTMLResponse
 from duckduckgo_search import DDGS
 from dotenv import load_dotenv
 from groq import Groq
@@ -65,7 +65,6 @@ def init_db():
         conn   = get_db_connection()
         cursor = conn.cursor()
 
-        # ── Таблица пользователей ──────────────────────────────
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS users (
                 id            SERIAL PRIMARY KEY,
@@ -81,7 +80,6 @@ def init_db():
             )
         ''')
 
-        # ── Таблица сообщений ──────────────────────────────────
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS messages (
                 id         SERIAL PRIMARY KEY,
@@ -92,7 +90,6 @@ def init_db():
             )
         ''')
 
-        # ── Таблица платежей ───────────────────────────────────
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS payments (
                 id         SERIAL PRIMARY KEY,
@@ -106,7 +103,6 @@ def init_db():
             )
         ''')
 
-        # ── Миграции: добавляем колонки если их нет ───────────
         migrations = [
             ("users", "plan",         "VARCHAR(20) DEFAULT 'free'"),
             ("users", "credits",      "INTEGER DEFAULT 5"),
@@ -117,14 +113,12 @@ def init_db():
         ]
         for table, col, col_type in migrations:
             cursor.execute(
-                f"""SELECT column_name FROM information_schema.columns
-                    WHERE table_name=%s AND column_name=%s""",
+                """SELECT column_name FROM information_schema.columns
+                   WHERE table_name=%s AND column_name=%s""",
                 (table, col)
             )
             if not cursor.fetchone():
-                cursor.execute(
-                    f"ALTER TABLE {table} ADD COLUMN {col} {col_type}"
-                )
+                cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
 
         conn.commit()
         conn.close()
@@ -196,7 +190,6 @@ PLANS = {
 
 
 def get_user_plan(email: str) -> dict:
-    """Вернуть словарь плана для пользователя."""
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
 
     if email == ADMIN_EMAIL and ADMIN_EMAIL:
@@ -205,8 +198,8 @@ def get_user_plan(email: str) -> dict:
     if email == "guest":
         return {
             **PLANS["free"],
-            "plan_key":    "free",
-            "msg_per_day": 5,
+            "plan_key":       "free",
+            "msg_per_day":    5,
             "images_per_day": 0,
         }
 
@@ -226,7 +219,6 @@ def get_user_plan(email: str) -> dict:
         plan_key     = row[0] or "free"
         plan_expires = row[1]
 
-        # Проверяем срок действия платного плана
         if plan_key in ("pro", "premium") and plan_expires:
             if datetime.now() > plan_expires:
                 conn   = get_db_connection()
@@ -247,7 +239,6 @@ def get_user_plan(email: str) -> dict:
 
 
 def check_and_reset_daily_limits(email: str) -> dict:
-    """Сбросить счётчики раз в сутки; вернуть текущие значения."""
     try:
         conn   = get_db_connection()
         cursor = conn.cursor()
@@ -266,9 +257,8 @@ def check_and_reset_daily_limits(email: str) -> dict:
         last_reset = row[2]
         now        = datetime.now()
 
-        # Сброс раз в 24 часа
         if last_reset is None or (now - last_reset).total_seconds() >= 86400:
-            plan    = get_user_plan(email)
+            plan      = get_user_plan(email)
             credits   = plan["images_per_day"]
             msg_count = 0
             cursor.execute(
@@ -408,6 +398,38 @@ class AdminPlanChange(BaseModel):
 
 
 # ================================================================
+# === PWA STATIC FILES ===
+# ================================================================
+
+@app.get("/sw.js")
+def serve_sw():
+    if os.path.exists("sw.js"):
+        return FileResponse("sw.js", media_type="application/javascript")
+    return HTMLResponse("// SW not found", status_code=404)
+
+
+@app.get("/manifest.json")
+def serve_manifest():
+    if os.path.exists("manifest.json"):
+        return FileResponse("manifest.json", media_type="application/manifest+json")
+    return HTMLResponse("{}", status_code=404)
+
+
+@app.get("/icon-192.png")
+def serve_icon_192():
+    if os.path.exists("icon-192.png"):
+        return FileResponse("icon-192.png", media_type="image/png")
+    return HTMLResponse("", status_code=404)
+
+
+@app.get("/icon-512.png")
+def serve_icon_512():
+    if os.path.exists("icon-512.png"):
+        return FileResponse("icon-512.png", media_type="image/png")
+    return HTMLResponse("", status_code=404)
+
+
+# ================================================================
 # === ЭНДПОИНТЫ — ФРОНТЕНД ===
 # ================================================================
 
@@ -541,7 +563,6 @@ def clear_user_history(req: HistoryRequest):
 
 @app.get("/plans")
 def get_plans():
-    """Публичный список планов (без admin)."""
     return {
         "status": "success",
         "plans": {
@@ -564,7 +585,6 @@ def get_plans():
 
 @app.post("/my_plan")
 def get_my_plan(req: HistoryRequest):
-    """Текущий план + использование лимитов."""
     if req.email == "guest":
         return {
             "status": "success",
@@ -624,7 +644,6 @@ def get_my_plan(req: HistoryRequest):
 
 @app.post("/upgrade_plan")
 def upgrade_plan(req: PlanUpgrade):
-    """Создать pending-заявку на апгрейд плана."""
     if req.email == "guest":
         return {"status": "error", "message": "Гости не могут изменить план"}
     if req.plan not in ("free", "pro", "premium"):
@@ -656,7 +675,6 @@ def upgrade_plan(req: PlanUpgrade):
 
 @app.post("/admin/set_plan")
 def admin_set_plan(req: AdminPlanChange):
-    """Администратор вручную устанавливает план пользователю."""
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
     if not ADMIN_EMAIL or req.admin_email != ADMIN_EMAIL:
         return {"status": "error", "message": "Доступ запрещён"}
@@ -674,7 +692,6 @@ def admin_set_plan(req: AdminPlanChange):
                WHERE email = %s""",
             (req.plan, plan_data["images_per_day"], expires, req.target_email)
         )
-        # Подтверждаем последний pending-платёж
         cursor.execute(
             """UPDATE payments SET status = 'confirmed'
                WHERE email = %s AND plan = %s AND status = 'pending'
@@ -694,7 +711,6 @@ def admin_set_plan(req: AdminPlanChange):
 
 @app.get("/admin/payments")
 def admin_get_payments(admin_email: str):
-    """Список всех платежей (только для администратора)."""
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
     if not ADMIN_EMAIL or admin_email != ADMIN_EMAIL:
         return {"status": "error", "message": "Доступ запрещён"}
@@ -728,7 +744,6 @@ def admin_get_payments(admin_email: str):
 
 @app.get("/admin/users")
 def admin_get_users(admin_email: str):
-    """Список всех пользователей (только для администратора)."""
     ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
     if not ADMIN_EMAIL or admin_email != ADMIN_EMAIL:
         return {"status": "error", "message": "Доступ запрещён"}
@@ -746,15 +761,15 @@ def admin_get_users(admin_email: str):
             "status": "success",
             "users": [
                 {
-                    "id":          r[0],
-                    "username":    r[1],
-                    "email":       r[2],
-                    "plan":        r[3],
-                    "credits":     r[4],
-                    "msg_count":   r[5],
-                    "last_reset":  str(r[6]),
+                    "id":           r[0],
+                    "username":     r[1],
+                    "email":        r[2],
+                    "plan":         r[3],
+                    "credits":      r[4],
+                    "msg_count":    r[5],
+                    "last_reset":   str(r[6]),
                     "plan_expires": str(r[7]) if r[7] else None,
-                    "created_at":  str(r[8]),
+                    "created_at":   str(r[8]),
                 }
                 for r in rows
             ],
@@ -829,16 +844,13 @@ def chat_with_ai(req: ChatRequest):
         SECRET_ADMIN_COMMAND and req.text.strip() == SECRET_ADMIN_COMMAND
     )
 
-    # ── Получаем план пользователя ─────────────────────────────
     user_plan = get_user_plan(req.email)
 
-    # ── Сохраняем сообщение пользователя ──────────────────────
     history_save_text = req.text
     if req.file_name:
         history_save_text = f"📎 [{req.file_name}]\n" + req.text
 
     if req.email != "guest" and not is_admin_command:
-        # Проверка дневных лимитов сообщений
         limits = check_and_reset_daily_limits(req.email)
 
         if req.mode in ("chat", "code"):
@@ -859,7 +871,6 @@ def chat_with_ai(req: ChatRequest):
 
                 return StreamingResponse(_limit_stream(), media_type="text/plain")
 
-        # Увеличиваем счётчик сообщений
         try:
             conn   = get_db_connection()
             cursor = conn.cursor()
@@ -872,7 +883,6 @@ def chat_with_ai(req: ChatRequest):
         except:
             pass
 
-        # Сохраняем сообщение пользователя в историю
         try:
             conn   = get_db_connection()
             cursor = conn.cursor()
@@ -885,13 +895,11 @@ def chat_with_ai(req: ChatRequest):
         except:
             pass
 
-    # ── Генератор стримингового ответа ────────────────────────
     def generate_stream():
         if not GROQ_API_KEY:
             yield "Ошибка сервера: Отсутствует GROQ_API_KEY."
             return
 
-        # ── Секретная админ-панель ─────────────────────────────
         if is_admin_command:
             try:
                 conn   = get_db_connection()
@@ -920,10 +928,7 @@ def chat_with_ai(req: ChatRequest):
                 yield f"Ошибка доступа к БД: {e}"
             return
 
-        # ── Основная логика ────────────────────────────────────
         full_ai_response = ""
-
-        # Выбираем модель по плану (для файлов-изображений переопределим позже)
         current_model = user_plan.get("model", GROQ_MODEL)
 
         system_instruction = (
@@ -946,7 +951,6 @@ def chat_with_ai(req: ChatRequest):
         final_prompt = req.text
         messages     = []
 
-        # ── Обработка вложенного файла ─────────────────────────
         if req.file_data:
             try:
                 if req.file_type and req.file_type.startswith("image/"):
@@ -976,7 +980,6 @@ def chat_with_ai(req: ChatRequest):
                     else:
                         file_content = base64.b64decode(req.file_data).decode("utf-8")
 
-                    # Лимит по плану
                     max_chars    = user_plan.get("max_file_mb", 5) * 1024 * 100
                     file_content = file_content[:max_chars]
 
@@ -994,7 +997,6 @@ def chat_with_ai(req: ChatRequest):
                 return
 
         else:
-            # ── Режим генерации изображения ───────────────────
             if req.mode == "image":
                 if req.email == "guest":
                     yield (
@@ -1061,7 +1063,6 @@ def chat_with_ai(req: ChatRequest):
                         )
                         return
 
-                # Генерируем изображение
                 eng_prompt = (
                     ask_ai_quick(
                         f"Translate strictly to English for image prompt. "
@@ -1074,7 +1075,6 @@ def chat_with_ai(req: ChatRequest):
                     f"?width=800&height=400&nologo=true"
                 )
 
-                # Показываем лимит по плану
                 plan_limit = user_plan["images_per_day"]
                 limit_label = (
                     f"∞" if is_admin
@@ -1106,7 +1106,6 @@ def chat_with_ai(req: ChatRequest):
                 )
                 yield html_resp
 
-                # Сохраняем в историю
                 if req.email != "guest":
                     try:
                         conn   = get_db_connection()
@@ -1121,7 +1120,6 @@ def chat_with_ai(req: ChatRequest):
                         pass
                 return
 
-            # ── Остальные режимы ───────────────────────────────
             elif req.mode == "code":
                 final_prompt = f"Напиши профессиональный код для: {req.text}"
 
@@ -1132,7 +1130,7 @@ def chat_with_ai(req: ChatRequest):
                     f"Проанализируй."
                 )
 
-            else:  # chat
+            else:
                 if "пинг" in prompt_text:
                     final_prompt = f"Пинг:\n{ping_host(req.text)}\nОтветь."
                 elif "погод" in prompt_text:
@@ -1159,7 +1157,6 @@ def chat_with_ai(req: ChatRequest):
                 {"role": "user",   "content": final_prompt},
             ]
 
-        # ── Стриминг от Groq ───────────────────────────────────
         try:
             stream = client.chat.completions.create(
                 model=current_model,
@@ -1174,7 +1171,6 @@ def chat_with_ai(req: ChatRequest):
         except Exception as e:
             yield f"Ошибка облака: {e}"
 
-        # ── Сохраняем ответ AI в историю ──────────────────────
         if req.email != "guest" and full_ai_response:
             try:
                 conn   = get_db_connection()
