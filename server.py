@@ -1,4 +1,11 @@
 import os
+import sqlite3
+import bcrypt
+import requests
+import socket
+import subprocess
+import platform
+import os
 import bcrypt
 import requests
 import socket
@@ -91,6 +98,16 @@ def init_db():
         ''')
 
         cursor.execute('''
+            CREATE TABLE IF NOT EXISTS chats (
+                id         SERIAL PRIMARY KEY,
+                email      VARCHAR(255) NOT NULL,
+                title      VARCHAR(255) DEFAULT 'Новый чат',
+                created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS payments (
                 id         SERIAL PRIMARY KEY,
                 email      VARCHAR(255)   NOT NULL,
@@ -104,12 +121,13 @@ def init_db():
         ''')
 
         migrations = [
-            ("users", "plan",         "VARCHAR(20) DEFAULT 'free'"),
-            ("users", "credits",      "INTEGER DEFAULT 5"),
-            ("users", "msg_count",    "INTEGER DEFAULT 0"),
-            ("users", "last_reset",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
-            ("users", "plan_expires", "TIMESTAMP"),
-            ("users", "created_at",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("users",    "plan",         "VARCHAR(20) DEFAULT 'free'"),
+            ("users",    "credits",      "INTEGER DEFAULT 5"),
+            ("users",    "msg_count",    "INTEGER DEFAULT 0"),
+            ("users",    "last_reset",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("users",    "plan_expires", "TIMESTAMP"),
+            ("users",    "created_at",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("messages", "chat_id",      "INTEGER DEFAULT NULL"),
         ]
         for table, col, col_type in migrations:
             cursor.execute(
@@ -377,6 +395,7 @@ class ChatRequest(BaseModel):
     text:      str
     email:     str
     mode:      str       = "chat"
+    chat_id:   int | None = None
     file_name: str | None = None
     file_type: str | None = None
     file_data: str | None = None
@@ -395,6 +414,167 @@ class AdminPlanChange(BaseModel):
     target_email: str
     plan:         str
     days:         int = 30
+
+class ChatCreate(BaseModel):
+    email: str
+    title: str = "Новый чат"
+
+class ChatRename(BaseModel):
+    email:   str
+    chat_id: int
+    title:   str
+
+class ChatDelete(BaseModel):
+    email:   str
+    chat_id: int
+
+class ChatHistoryRequest(BaseModel):
+    email:   str
+    chat_id: int
+
+
+# ================================================================
+# === ЭНДПОИНТЫ — УПРАВЛЕНИЕ ЧАТАМИ ===
+# ================================================================
+
+@app.get("/chats")
+def get_chats(email: str):
+    if email == "guest":
+        return {"status": "success", "chats": []}
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT id, title, created_at, updated_at
+               FROM chats WHERE email = %s
+               ORDER BY updated_at DESC""",
+            (email,)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {
+            "status": "success",
+            "chats": [
+                {
+                    "id":         r[0],
+                    "title":      r[1],
+                    "created_at": str(r[2]),
+                    "updated_at": str(r[3]),
+                }
+                for r in rows
+            ],
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/chats/create")
+def create_chat(req: ChatCreate):
+    if req.email == "guest":
+        return {"status": "error", "message": "Гости не могут создавать чаты"}
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO chats (email, title) VALUES (%s, %s) RETURNING id",
+            (req.email, req.title)
+        )
+        chat_id = cursor.fetchone()[0]
+        conn.commit()
+        conn.close()
+        return {"status": "success", "chat_id": chat_id}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/chats/rename")
+def rename_chat(req: ChatRename):
+    if req.email == "guest":
+        return {"status": "error", "message": "Доступ запрещён"}
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE chats SET title = %s WHERE id = %s AND email = %s",
+            (req.title, req.chat_id, req.email)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/chats/delete")
+def delete_chat(req: ChatDelete):
+    if req.email == "guest":
+        return {"status": "error", "message": "Доступ запрещён"}
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM messages WHERE chat_id = %s AND email = %s",
+            (req.chat_id, req.email)
+        )
+        cursor.execute(
+            "DELETE FROM chats WHERE id = %s AND email = %s",
+            (req.chat_id, req.email)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.post("/chats/history")
+def get_chat_history(req: ChatHistoryRequest):
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT role, content FROM messages WHERE email = %s AND chat_id = %s ORDER BY id ASC",
+            (req.email, req.chat_id)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        return {
+            "status":  "success",
+            "history": [{"role": r[0], "content": r[1]} for r in rows]
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@app.get("/chats/export")
+def export_chat(email: str, chat_id: int):
+    try:
+        conn   = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT title FROM chats WHERE id = %s AND email = %s",
+            (chat_id, email)
+        )
+        row = cursor.fetchone()
+        title = row[0] if row else "chat"
+        cursor.execute(
+            "SELECT role, content, created_at FROM messages WHERE email = %s AND chat_id = %s ORDER BY id ASC",
+            (email, chat_id)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        lines = [f"# {title}\n"]
+        for r in rows:
+            role = "👤 Пользователь" if r[0] == "user" else "🤖 Daryn AI"
+            lines.append(f"\n**{role}** ({str(r[2])[:16]})\n\n{r[1]}\n\n---")
+        content = "\n".join(lines)
+        return StreamingResponse(
+            iter([content]),
+            media_type="text/markdown",
+            headers={"Content-Disposition": f'attachment; filename="chat_{chat_id}.md"'}
+        )
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 
 # ================================================================
@@ -887,8 +1067,8 @@ def chat_with_ai(req: ChatRequest):
             conn   = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)",
-                (req.email, "user", history_save_text)
+                "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
+                (req.email, "user", history_save_text, req.chat_id)
             )
             conn.commit()
             conn.close()
@@ -1111,9 +1291,14 @@ def chat_with_ai(req: ChatRequest):
                         conn   = get_db_connection()
                         cursor = conn.cursor()
                         cursor.execute(
-                            "INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)",
-                            (req.email, "ai", html_resp)
+                            "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
+                            (req.email, "ai", html_resp, req.chat_id)
                         )
+                        if req.chat_id:
+                            cursor.execute(
+                                "UPDATE chats SET updated_at = NOW() WHERE id = %s",
+                                (req.chat_id,)
+                            )
                         conn.commit()
                         conn.close()
                     except:
@@ -1176,9 +1361,32 @@ def chat_with_ai(req: ChatRequest):
                 conn   = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
-                    "INSERT INTO messages (email, role, content) VALUES (%s, %s, %s)",
-                    (req.email, "ai", full_ai_response)
+                    "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
+                    (req.email, "ai", full_ai_response, req.chat_id)
                 )
+                # Auto-name chat on first AI response if title is still default
+                if req.chat_id:
+                    cursor.execute(
+                        "SELECT title FROM chats WHERE id = %s AND email = %s",
+                        (req.chat_id, req.email)
+                    )
+                    row = cursor.fetchone()
+                    if row and row[0] in ("Новый чат", "New Chat", "Жаңа чат"):
+                        auto_title = ask_ai_quick(
+                            f"Generate a short chat title (max 5 words, no quotes) "
+                            f"based on this user message: '{req.text[:200]}'. "
+                            f"Respond ONLY with the title, same language as the message."
+                        ) or req.text[:40]
+                        auto_title = auto_title.strip('"\'').strip()[:60]
+                        cursor.execute(
+                            "UPDATE chats SET title = %s, updated_at = NOW() WHERE id = %s",
+                            (auto_title, req.chat_id)
+                        )
+                    else:
+                        cursor.execute(
+                            "UPDATE chats SET updated_at = NOW() WHERE id = %s",
+                            (req.chat_id,)
+                        )
                 conn.commit()
                 conn.close()
             except:
