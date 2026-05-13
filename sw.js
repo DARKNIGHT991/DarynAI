@@ -2,13 +2,17 @@
 // Daryn AI — Service Worker (PWA)
 // ================================================================
 
-const CACHE_NAME    = "daryn-ai-v1";
+const CACHE_NAME    = "daryn-ai-v2";
 const OFFLINE_URL   = "/";
 
 // Ресурсы для кэширования при установке
 const STATIC_ASSETS = [
   "/",
   "/manifest.json",
+  "/static/css/main.css",
+  "/static/js/app.js",
+  "/icon-192.png",
+  "/icon-512.png",
   "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap",
   "https://cdn.jsdelivr.net/npm/marked/marked.min.js",
   "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css",
@@ -65,7 +69,7 @@ self.addEventListener("fetch", event => {
 
   // API запросы — только сеть, без кэша
   const apiPaths = [
-    "/chat", "/login", "/register", "/history",
+    "/chat", "/chats", "/login", "/register", "/history",
     "/my_plan", "/plans", "/upgrade_plan",
     "/transcribe", "/update_profile", "/clear_history",
     "/admin"
