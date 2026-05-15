@@ -11,6 +11,7 @@ from ..config import ADMIN_COMMAND, ADMIN_EMAIL, GROQ_API_KEY, GROQ_MODEL, clien
 from ..db import get_db_connection
 from ..schemas import ChatRequest
 from ..services.ai import ask_ai_quick, search_web
+from ..services.memory import format_user_memories, remember_from_message
 from ..services.network import get_weather, ping_host, scan_ports
 from ..services.plans import check_and_reset_daily_limits, get_user_plan
 
@@ -126,6 +127,13 @@ def chat_with_ai(req: ChatRequest):
             "5) Машинное зрение: детальный анализ фотографий и скриншотов. "
             "Опирайся только на достоверные факты."
         )
+
+        if req.email != "guest":
+            try:
+                remember_from_message(req.email, history_save_text)
+                system_instruction += format_user_memories(req.email)
+            except Exception:
+                pass
 
         final_prompt = req.text
         messages     = []

@@ -74,9 +74,10 @@
     </div>
     <h1 class="hero-title">DARYN AI</h1>
     <div class="hero-buttons">
-      <button class="hero-btn primary" onclick="openAuth('register')" data-i18n="hero-reg">Регистрация</button>
-      <button class="hero-btn" onclick="openAuth('login')" data-i18n="hero-login">Войти</button>
-      <button class="hero-btn" onclick="loginAsGuest()" data-i18n="hero-guest">Гость</button>
+      <button class="hero-btn primary landing-auth-btn" onclick="openAuth('register')" data-i18n="hero-reg">Регистрация</button>
+      <button class="hero-btn landing-auth-btn" onclick="openAuth('login')" data-i18n="hero-login">Войти</button>
+      <button class="hero-btn landing-auth-btn" onclick="loginAsGuest()" data-i18n="hero-guest">Гость</button>
+      <button id="hero-continue-btn" class="hero-btn primary" onclick="returnToChat()" data-i18n="hero-continue" style="display:none;">Вернуться в чат</button>
       <button class="hero-btn" onclick="document.getElementById('pricing-section').scrollIntoView({behavior:'smooth'})" data-i18n="hero-pricing">💎 Тарифы</button>
     </div>
     <div class="scroll-indicator" onclick="document.getElementById('core').scrollIntoView()">
@@ -258,6 +259,15 @@
   <p id="profile-success" style="color:#10b981;font-size:13px;margin-bottom:12px;display:none;"></p>
   <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя" data-i18n="ph-new-name">
   <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить имя</button>
+  <div class="memory-panel">
+    <div class="memory-panel-title" data-i18n="memory-title">Память Daryn AI</div>
+    <div id="memory-list" class="memory-list">Память пуста</div>
+  </div>
+  <button class="btn-secondary"
+    style="color:#f59e0b;border-color:rgba(245,158,11,0.35);"
+    onclick="clearUserMemory()">
+    🧠 <span data-i18n="btn-clear-memory">Очистить память</span>
+  </button>
   <button class="btn-secondary" id="profile-upgrade-btn"
     onclick="closeProfile();showUpgradeModal('pro')"
     style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
@@ -269,7 +279,7 @@
     <svg style="vertical-align:middle;margin-right:5px;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;" viewBox="0 0 24 24">
       <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
     </svg>
-    <span data-i18n="btn-clear">Очистить БД</span>
+    <span data-i18n="btn-clear">Очистить историю</span>
   </button>
   <button class="btn-text" onclick="closeProfile()" data-i18n="btn-close">Закрыть настройки</button>
 </div>
@@ -361,13 +371,13 @@
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <div class="logo">
+        <button class="logo home-logo" onclick="goHome()" title="На главную" aria-label="На главную">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:22px;">
             <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
             <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
           </svg>
           DARYN AI
-        </div>
+        </button>
       </div>
       <div style="display:flex;align-items:center;gap:15px;">
         <div class="lang-switch">

@@ -228,7 +228,7 @@ window.addEventListener("offline",()=>{
 // ================================================================
 const i18n = {
   ru:{
-    "hero-reg":"Регистрация","hero-login":"Войти","hero-guest":"Гость",
+    "hero-reg":"Регистрация","hero-login":"Войти","hero-guest":"Гость","hero-continue":"Вернуться в чат",
     "hero-pricing":"💎 Тарифы","hero-scroll":"Изучать ядро",
     "core-llm-desc":"Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.",
     "core-backend-desc":"Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.",
@@ -270,7 +270,7 @@ const i18n = {
     "pass-hint":"Минимум 8 символов, буква и цифра","auth-or":"или",
     "btn-login":"Авторизация","btn-reg":"Создать",
     "prof-title":"Ваш профиль","ph-new-name":"Новое имя",
-    "btn-save":"Сохранить имя","btn-clear":"Очистить БД","btn-close":"Закрыть настройки",
+    "btn-save":"Сохранить имя","btn-clear":"Очистить историю","btn-clear-memory":"Очистить память","memory-title":"Память Daryn AI","memory-empty":"Память пуста","btn-close":"Закрыть настройки",
     "sb-new":"Новая сессия","sb-guest":"Гость","tb-logout":"Выйти",
     "init-msg":"Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.",
     "tool-code":"Код","tool-img":"Фото","tool-scan":"Скан","tool-export":"Экспорт",
@@ -279,7 +279,7 @@ const i18n = {
     "loading":"⏳ Обработка запроса ядром...","sys-err":"[SYS_ERROR] Ошибка ответа сервера."
   },
   kk:{
-    "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ",
+    "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ","hero-continue":"Чатқа оралу",
     "hero-pricing":"💎 Тарифтер","hero-scroll":"Ядроны зерттеу",
     "core-llm-desc":"Токендердің жоғары жылдамдықты стримингі (LPU). Base64 суреттерін талдау және контекстті бірден өңдеу.",
     "core-backend-desc":"Маршруттарды асинхронды өңдеу. Pydantic арқылы қатаң типтеу. io.BytesIO және PyPDF2 қолдауы.",
@@ -321,7 +321,7 @@ const i18n = {
     "pass-hint":"Кемінде 8 таңба, әріп және сан","auth-or":"немесе",
     "btn-login":"Авторизация","btn-reg":"Жасау",
     "prof-title":"Сіздің профиліңіз","ph-new-name":"Жаңа есім",
-    "btn-save":"Есімді сақтау","btn-clear":"ДҚ тазарту","btn-close":"Баптауларды жабу",
+    "btn-save":"Есімді сақтау","btn-clear":"Тарихты тазарту","btn-clear-memory":"Жадты тазарту","memory-title":"Daryn AI жады","memory-empty":"Жад бос","btn-close":"Баптауларды жабу",
     "sb-new":"Жаңа сессия","sb-guest":"Қонақ","tb-logout":"Шығу",
     "init-msg":"Жүйе іске қосылды. Құралды таңдаңыз, сұрақ қойыңыз немесе файл тіркеңіз.",
     "tool-code":"Код","tool-img":"Сурет","tool-scan":"Скан","tool-export":"Экспорт",
@@ -330,7 +330,7 @@ const i18n = {
     "loading":"⏳ Ядро өңдеуде...","sys-err":"[SYS_ERROR] Сервер қатесі."
   },
   en:{
-    "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest",
+    "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest","hero-continue":"Back to chat",
     "hero-pricing":"💎 Pricing","hero-scroll":"Explore Core",
     "core-llm-desc":"High-speed token streaming (LPU). Built-in multimodality: Base64 image parsing and on-the-fly context analysis.",
     "core-backend-desc":"Async route processing. Strict typing via Pydantic. Native binary handling using io.BytesIO and PyPDF2.",
@@ -372,7 +372,7 @@ const i18n = {
     "pass-hint":"At least 8 characters, a letter and a number","auth-or":"or",
     "btn-login":"Authorize","btn-reg":"Create",
     "prof-title":"Your Profile","ph-new-name":"New name",
-    "btn-save":"Save name","btn-clear":"Clear DB","btn-close":"Close settings",
+    "btn-save":"Save name","btn-clear":"Clear history","btn-clear-memory":"Clear memory","memory-title":"Daryn AI Memory","memory-empty":"Memory is empty","btn-close":"Close settings",
     "sb-new":"New Session","sb-guest":"Guest","tb-logout":"Log Out",
     "init-msg":"System initialized. Select a tool, ask a question, or attach a file.",
     "tool-code":"Code","tool-img":"Image","tool-scan":"Scan","tool-export":"Export",
@@ -409,6 +409,7 @@ function updatePlaceholder(){
 
 document.addEventListener("DOMContentLoaded",()=>{
   setLanguage(currentLang);
+  updateLandingAuthState();
   loadGoogleAuthConfig();
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add("active"); });
@@ -444,6 +445,47 @@ function closeAuth(){
   setTimeout(()=>s.style.display="none",300);
 }
 
+
+function updateLandingAuthState(){
+  const isSignedIn = currentUserEmail !== "guest";
+  const continueBtn = document.getElementById("hero-continue-btn");
+  if(continueBtn) continueBtn.style.display = isSignedIn ? "inline-flex" : "none";
+  document.querySelectorAll(".landing-auth-btn").forEach(btn=>{
+    btn.style.display = isSignedIn ? "none" : "inline-flex";
+  });
+}
+
+function goHome(){
+  stopGeneration();
+  closeProfile();
+  const sidebar=document.getElementById("sidebar");
+  const sidebarOverlay=document.getElementById("sidebar-overlay");
+  if(sidebar) sidebar.classList.remove("open");
+  if(sidebarOverlay) sidebarOverlay.classList.remove("active");
+
+  const app=document.getElementById("app-container");
+  const landing=document.getElementById("landing-screen");
+  if(app) app.style.display="none";
+  if(landing){
+    landing.style.display="block";
+    landing.style.opacity="1";
+    landing.scrollTo({top:0,behavior:"smooth"});
+  }
+  updateLandingAuthState();
+  if(window._showParticles) window._showParticles();
+}
+
+function returnToChat(){
+  const landing=document.getElementById("landing-screen");
+  const app=document.getElementById("app-container");
+  if(landing) landing.style.opacity="0";
+  setTimeout(()=>{
+    if(landing) landing.style.display="none";
+    if(app) app.style.display="flex";
+    if(window._stopParticles) window._stopParticles();
+  },300);
+}
+
 async function enterApp(){
   document.getElementById("auth-screen").style.opacity="0";
   document.getElementById("landing-screen").style.opacity="0";
@@ -455,6 +497,7 @@ async function enterApp(){
   },500);
   await loadChats();
   await loadUserPlan();
+  updateLandingAuthState();
 }
 
 
@@ -871,6 +914,7 @@ function openProfile(){
   document.getElementById("profile-error").style.display="none";
   document.getElementById("profile-success").style.display="none";
   if(userPlanData) updateUpgradeButtons(userPlanData);
+  loadUserMemory();
   if(window.innerWidth<=768) toggleSidebar();
 }
 
@@ -892,8 +936,43 @@ async function saveProfile(){
   } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
 }
 
+
+async function loadUserMemory(){
+  const box=document.getElementById("memory-list");
+  if(!box||currentUserEmail==="guest") return;
+  box.innerHTML="⏳...";
+  try{
+    const res=await fetch(`${BACKEND_URL}/memory?email=${encodeURIComponent(currentUserEmail)}`);
+    const d=await res.json();
+    if(d.status==="success"){
+      if(!d.memory.length){ box.innerHTML=i18n[currentLang]["memory-empty"]; return; }
+      box.innerHTML=d.memory.map(item=>`<div class="memory-item">${escHtml(item.value)}</div>`).join("");
+    } else {
+      box.innerHTML=escHtml(d.message||"Error");
+    }
+  } catch { box.innerHTML="Network Error."; }
+}
+
+async function clearUserMemory(){
+  const l=currentLang;
+  const msg=l==="kk"?"Daryn AI жадын тазалайсыз ба?":l==="en"?"Clear Daryn AI memory?":"Очистить память Daryn AI?";
+  if(!confirm(msg)) return;
+  const err=document.getElementById("profile-error");
+  const succ=document.getElementById("profile-success");
+  try{
+    const res=await fetch(`${BACKEND_URL}/memory/clear`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail}) });
+    const d=await res.json();
+    if(d.status==="success"){
+      await loadUserMemory();
+      err.style.display="none"; succ.innerText="✅ OK!"; succ.style.display="block";
+    } else { err.innerText=d.message; err.style.display="block"; succ.style.display="none"; }
+  } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
+}
+
 async function clearUserHistory(){
-  if(!confirm("Delete DB?")) return;
+  const l=currentLang;
+  const msg=l==="kk"?"Чат тарихын тазалайсыз ба?":l==="en"?"Clear chat history?":"Очистить историю чатов?";
+  if(!confirm(msg)) return;
   const err=document.getElementById("profile-error");
   const succ=document.getElementById("profile-success");
   try{
