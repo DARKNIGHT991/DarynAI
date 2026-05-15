@@ -74,9 +74,10 @@
     </div>
     <h1 class="hero-title">DARYN AI</h1>
     <div class="hero-buttons">
-      <button class="hero-btn primary" onclick="openAuth('register')" data-i18n="hero-reg">Регистрация</button>
-      <button class="hero-btn" onclick="openAuth('login')" data-i18n="hero-login">Войти</button>
-      <button class="hero-btn" onclick="loginAsGuest()" data-i18n="hero-guest">Гость</button>
+      <button class="hero-btn primary landing-auth-btn" onclick="openAuth('register')" data-i18n="hero-reg">Регистрация</button>
+      <button class="hero-btn landing-auth-btn" onclick="openAuth('login')" data-i18n="hero-login">Войти</button>
+      <button class="hero-btn landing-auth-btn" onclick="loginAsGuest()" data-i18n="hero-guest">Гость</button>
+      <button id="hero-continue-btn" class="hero-btn primary" onclick="returnToChat()" data-i18n="hero-continue" style="display:none;">Вернуться в чат</button>
       <button class="hero-btn" onclick="document.getElementById('pricing-section').scrollIntoView({behavior:'smooth'})" data-i18n="hero-pricing">💎 Тарифы</button>
     </div>
     <div class="scroll-indicator" onclick="document.getElementById('core').scrollIntoView()">
@@ -370,13 +371,13 @@
             <line x1="3" y1="18" x2="21" y2="18"></line>
           </svg>
         </button>
-        <div class="logo">
+        <button class="logo home-logo" onclick="goHome()" title="На главную" aria-label="На главную">
           <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-blue)" stroke-width="2.5" style="width:22px;">
             <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
             <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
           </svg>
           DARYN AI
-        </div>
+        </button>
       </div>
       <div style="display:flex;align-items:center;gap:15px;">
         <div class="lang-switch">

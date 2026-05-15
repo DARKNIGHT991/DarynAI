@@ -228,7 +228,7 @@ window.addEventListener("offline",()=>{
 // ================================================================
 const i18n = {
   ru:{
-    "hero-reg":"Регистрация","hero-login":"Войти","hero-guest":"Гость",
+    "hero-reg":"Регистрация","hero-login":"Войти","hero-guest":"Гость","hero-continue":"Вернуться в чат",
     "hero-pricing":"💎 Тарифы","hero-scroll":"Изучать ядро",
     "core-llm-desc":"Высокоскоростной стриминг токенов (LPU). Встроенная мультимодальность: парсинг Base64 изображений и анализ контекста на лету.",
     "core-backend-desc":"Асинхронная обработка маршрутов. Строгая типизация через Pydantic. Нативная работа с бинарниками через io.BytesIO и PyPDF2.",
@@ -279,7 +279,7 @@ const i18n = {
     "loading":"⏳ Обработка запроса ядром...","sys-err":"[SYS_ERROR] Ошибка ответа сервера."
   },
   kk:{
-    "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ",
+    "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ","hero-continue":"Чатқа оралу",
     "hero-pricing":"💎 Тарифтер","hero-scroll":"Ядроны зерттеу",
     "core-llm-desc":"Токендердің жоғары жылдамдықты стримингі (LPU). Base64 суреттерін талдау және контекстті бірден өңдеу.",
     "core-backend-desc":"Маршруттарды асинхронды өңдеу. Pydantic арқылы қатаң типтеу. io.BytesIO және PyPDF2 қолдауы.",
@@ -330,7 +330,7 @@ const i18n = {
     "loading":"⏳ Ядро өңдеуде...","sys-err":"[SYS_ERROR] Сервер қатесі."
   },
   en:{
-    "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest",
+    "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest","hero-continue":"Back to chat",
     "hero-pricing":"💎 Pricing","hero-scroll":"Explore Core",
     "core-llm-desc":"High-speed token streaming (LPU). Built-in multimodality: Base64 image parsing and on-the-fly context analysis.",
     "core-backend-desc":"Async route processing. Strict typing via Pydantic. Native binary handling using io.BytesIO and PyPDF2.",
@@ -409,6 +409,7 @@ function updatePlaceholder(){
 
 document.addEventListener("DOMContentLoaded",()=>{
   setLanguage(currentLang);
+  updateLandingAuthState();
   loadGoogleAuthConfig();
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add("active"); });
@@ -444,6 +445,47 @@ function closeAuth(){
   setTimeout(()=>s.style.display="none",300);
 }
 
+
+function updateLandingAuthState(){
+  const isSignedIn = currentUserEmail !== "guest";
+  const continueBtn = document.getElementById("hero-continue-btn");
+  if(continueBtn) continueBtn.style.display = isSignedIn ? "inline-flex" : "none";
+  document.querySelectorAll(".landing-auth-btn").forEach(btn=>{
+    btn.style.display = isSignedIn ? "none" : "inline-flex";
+  });
+}
+
+function goHome(){
+  stopGeneration();
+  closeProfile();
+  const sidebar=document.getElementById("sidebar");
+  const sidebarOverlay=document.getElementById("sidebar-overlay");
+  if(sidebar) sidebar.classList.remove("open");
+  if(sidebarOverlay) sidebarOverlay.classList.remove("active");
+
+  const app=document.getElementById("app-container");
+  const landing=document.getElementById("landing-screen");
+  if(app) app.style.display="none";
+  if(landing){
+    landing.style.display="block";
+    landing.style.opacity="1";
+    landing.scrollTo({top:0,behavior:"smooth"});
+  }
+  updateLandingAuthState();
+  if(window._showParticles) window._showParticles();
+}
+
+function returnToChat(){
+  const landing=document.getElementById("landing-screen");
+  const app=document.getElementById("app-container");
+  if(landing) landing.style.opacity="0";
+  setTimeout(()=>{
+    if(landing) landing.style.display="none";
+    if(app) app.style.display="flex";
+    if(window._stopParticles) window._stopParticles();
+  },300);
+}
+
 async function enterApp(){
   document.getElementById("auth-screen").style.opacity="0";
   document.getElementById("landing-screen").style.opacity="0";
@@ -455,6 +497,7 @@ async function enterApp(){
   },500);
   await loadChats();
   await loadUserPlan();
+  updateLandingAuthState();
 }
 
 
