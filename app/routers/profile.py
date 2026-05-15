@@ -2,6 +2,7 @@ from fastapi import APIRouter
 
 from ..db import get_db_connection
 from ..schemas import HistoryRequest, ProfileUpdate
+from ..services.memory import clear_user_memories, get_user_memories
 
 router = APIRouter()
 
@@ -55,6 +56,27 @@ def clear_user_history(req: HistoryRequest):
         )
         conn.commit()
         conn.close()
+        return {"status": "success"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.get("/memory")
+def get_memory(email: str):
+    if email == "guest":
+        return {"status": "success", "memory": []}
+    try:
+        return {"status": "success", "memory": get_user_memories(email)}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
+@router.post("/memory/clear")
+def clear_memory(req: HistoryRequest):
+    if req.email == "guest":
+        return {"status": "success"}
+    try:
+        clear_user_memories(req.email)
         return {"status": "success"}
     except Exception as e:
         return {"status": "error", "message": str(e)}

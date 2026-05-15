@@ -350,11 +350,33 @@ body {
   display:none; position:fixed; top:50%; left:50%;
   transform:translate(-50%,-50%);
   z-index:3001; width:90%; max-width:380px; padding:30px;
+  max-height:90vh; overflow-y:auto;
 }
 .profile-info {
   color:var(--accent-blue); font-weight:500;
   font-size:14px; margin-bottom:20px; word-break:break-all;
 }
+.memory-panel {
+  margin:12px 0; padding:12px;
+  border:1px solid rgba(245,158,11,0.2);
+  border-radius:12px;
+  background:rgba(245,158,11,0.05);
+  text-align:left;
+}
+.memory-panel-title {
+  color:#f59e0b; font-size:12px; font-weight:700;
+  margin-bottom:8px; letter-spacing:0.04em;
+  text-transform:uppercase;
+}
+.memory-list {
+  max-height:120px; overflow-y:auto;
+  color:var(--text-muted); font-size:12px; line-height:1.5;
+}
+.memory-item {
+  padding:6px 0; border-top:1px solid rgba(255,255,255,0.06);
+}
+.memory-item:first-child { border-top:none; padding-top:0; }
+
 
 /* ================================================================
    UPGRADE MODAL

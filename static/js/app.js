@@ -270,7 +270,7 @@ const i18n = {
     "pass-hint":"Минимум 8 символов, буква и цифра","auth-or":"или",
     "btn-login":"Авторизация","btn-reg":"Создать",
     "prof-title":"Ваш профиль","ph-new-name":"Новое имя",
-    "btn-save":"Сохранить имя","btn-clear":"Очистить БД","btn-close":"Закрыть настройки",
+    "btn-save":"Сохранить имя","btn-clear":"Очистить историю","btn-clear-memory":"Очистить память","memory-title":"Память Daryn AI","memory-empty":"Память пуста","btn-close":"Закрыть настройки",
     "sb-new":"Новая сессия","sb-guest":"Гость","tb-logout":"Выйти",
     "init-msg":"Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.",
     "tool-code":"Код","tool-img":"Фото","tool-scan":"Скан","tool-export":"Экспорт",
@@ -321,7 +321,7 @@ const i18n = {
     "pass-hint":"Кемінде 8 таңба, әріп және сан","auth-or":"немесе",
     "btn-login":"Авторизация","btn-reg":"Жасау",
     "prof-title":"Сіздің профиліңіз","ph-new-name":"Жаңа есім",
-    "btn-save":"Есімді сақтау","btn-clear":"ДҚ тазарту","btn-close":"Баптауларды жабу",
+    "btn-save":"Есімді сақтау","btn-clear":"Тарихты тазарту","btn-clear-memory":"Жадты тазарту","memory-title":"Daryn AI жады","memory-empty":"Жад бос","btn-close":"Баптауларды жабу",
     "sb-new":"Жаңа сессия","sb-guest":"Қонақ","tb-logout":"Шығу",
     "init-msg":"Жүйе іске қосылды. Құралды таңдаңыз, сұрақ қойыңыз немесе файл тіркеңіз.",
     "tool-code":"Код","tool-img":"Сурет","tool-scan":"Скан","tool-export":"Экспорт",
@@ -372,7 +372,7 @@ const i18n = {
     "pass-hint":"At least 8 characters, a letter and a number","auth-or":"or",
     "btn-login":"Authorize","btn-reg":"Create",
     "prof-title":"Your Profile","ph-new-name":"New name",
-    "btn-save":"Save name","btn-clear":"Clear DB","btn-close":"Close settings",
+    "btn-save":"Save name","btn-clear":"Clear history","btn-clear-memory":"Clear memory","memory-title":"Daryn AI Memory","memory-empty":"Memory is empty","btn-close":"Close settings",
     "sb-new":"New Session","sb-guest":"Guest","tb-logout":"Log Out",
     "init-msg":"System initialized. Select a tool, ask a question, or attach a file.",
     "tool-code":"Code","tool-img":"Image","tool-scan":"Scan","tool-export":"Export",
@@ -871,6 +871,7 @@ function openProfile(){
   document.getElementById("profile-error").style.display="none";
   document.getElementById("profile-success").style.display="none";
   if(userPlanData) updateUpgradeButtons(userPlanData);
+  loadUserMemory();
   if(window.innerWidth<=768) toggleSidebar();
 }
 
@@ -892,8 +893,43 @@ async function saveProfile(){
   } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
 }
 
+
+async function loadUserMemory(){
+  const box=document.getElementById("memory-list");
+  if(!box||currentUserEmail==="guest") return;
+  box.innerHTML="⏳...";
+  try{
+    const res=await fetch(`${BACKEND_URL}/memory?email=${encodeURIComponent(currentUserEmail)}`);
+    const d=await res.json();
+    if(d.status==="success"){
+      if(!d.memory.length){ box.innerHTML=i18n[currentLang]["memory-empty"]; return; }
+      box.innerHTML=d.memory.map(item=>`<div class="memory-item">${escHtml(item.value)}</div>`).join("");
+    } else {
+      box.innerHTML=escHtml(d.message||"Error");
+    }
+  } catch { box.innerHTML="Network Error."; }
+}
+
+async function clearUserMemory(){
+  const l=currentLang;
+  const msg=l==="kk"?"Daryn AI жадын тазалайсыз ба?":l==="en"?"Clear Daryn AI memory?":"Очистить память Daryn AI?";
+  if(!confirm(msg)) return;
+  const err=document.getElementById("profile-error");
+  const succ=document.getElementById("profile-success");
+  try{
+    const res=await fetch(`${BACKEND_URL}/memory/clear`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail}) });
+    const d=await res.json();
+    if(d.status==="success"){
+      await loadUserMemory();
+      err.style.display="none"; succ.innerText="✅ OK!"; succ.style.display="block";
+    } else { err.innerText=d.message; err.style.display="block"; succ.style.display="none"; }
+  } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
+}
+
 async function clearUserHistory(){
-  if(!confirm("Delete DB?")) return;
+  const l=currentLang;
+  const msg=l==="kk"?"Чат тарихын тазалайсыз ба?":l==="en"?"Clear chat history?":"Очистить историю чатов?";
+  if(!confirm(msg)) return;
   const err=document.getElementById("profile-error");
   const succ=document.getElementById("profile-success");
   try{

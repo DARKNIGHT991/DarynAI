@@ -32,6 +32,23 @@ def init_db():
         ''')
 
         cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_memory (
+                id         SERIAL PRIMARY KEY,
+                user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                "key"      VARCHAR(80) NOT NULL,
+                value      TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (user_id, "key")
+            )
+        ''')
+
+        cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_user_memory_user_id
+            ON user_memory(user_id)
+        ''')
+
+        cursor.execute('''
             CREATE TABLE IF NOT EXISTS messages (
                 id         SERIAL PRIMARY KEY,
                 email      VARCHAR(255) NOT NULL,
