@@ -1069,110 +1069,131 @@ function handleKeyPress(e){ if(e.key==="Enter") sendMessage(); }
 // ================================================================
 // SEND MESSAGE
 // ================================================================
-async function sendMessage(){
-  if(isGenerating) return;
-  const input=document.getElementById("user-input");
-  const chat=document.getElementById("chat");
-  const text=input.value.trim();
-  if(text===""&&!attachedFile) return;
-  lastUserMessage=text;
-
-  // Создаём чат если нет (гость пропускает)
-  if(currentUserEmail!=="guest"&&!currentChatId){
+async function sendMessage() {
+  if (isGenerating) return;
+  const input = document.getElementById("user-input");
+  const chat = document.getElementById("chat");
+  const text = input.value.trim();
+  if (text === "" && !attachedFile) return;
+  lastUserMessage = text;
+ 
+  if (currentUserEmail !== "guest" && !currentChatId) {
     await createNewChat();
   }
-
-  let dm=text;
-  if(attachedFile) dm=`📎 [${escHtml(attachedFile.name)}]<br>`+escHtml(text);
-  else dm=escHtml(text);
-  chat.innerHTML+=`<div class="message user">${dm}</div>`;
-  input.value="";
-  chat.scrollTop=chat.scrollHeight;
-
-  const lid="ai-"+Date.now();
-  chat.innerHTML+=`<div class="message ai" id="${lid}"><div class="md-content">${i18n[currentLang]["loading"]}</div></div>`;
-  chat.scrollTop=chat.scrollHeight;
-
-  const payload={ text, email:currentUserEmail, mode:currentMode, chat_id:currentChatId,
-    file_name:attachedFile?attachedFile.name:null, file_type:attachedFile?attachedFile.type:null, file_data:attachedFile?attachedFile.data:null };
+ 
+  let dm = text;
+  if (attachedFile) dm = `📎 [${escHtml(attachedFile.name)}]<br>` + escHtml(text);
+  else dm = escHtml(text);
+  chat.innerHTML += `<div class="message user">${dm}</div>`;
+  input.value = "";
+  chat.scrollTop = chat.scrollHeight;
+ 
+  const lid = "ai-" + Date.now();
+  chat.innerHTML += `<div class="message ai" id="${lid}"><div class="md-content">${i18n[currentLang]["loading"]}</div></div>`;
+  chat.scrollTop = chat.scrollHeight;
+ 
+  const payload = {
+    text, email: currentUserEmail, mode: currentMode, chat_id: currentChatId,
+    file_name: attachedFile ? attachedFile.name : null,
+    file_type: attachedFile ? attachedFile.type : null,
+    file_data: attachedFile ? attachedFile.data : null,
+  };
   removeFile();
-
-  currentAbortCtrl=new AbortController();
+ 
+  currentAbortCtrl = new AbortController();
   setGenerating(true);
-
-  try{
-    const response=await fetch(`${BACKEND_URL}/chat`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload), signal:currentAbortCtrl.signal });
-    const msgEl=document.getElementById(lid);
-    const mdC=msgEl.querySelector(".md-content");
-
-    if(currentMode==="image"){
-      mdC.innerHTML=await response.text();
-      chat.scrollTop=chat.scrollHeight;
-      if(currentUserEmail!=="guest") await loadUserPlan();
+ 
+  try {
+    const response = await fetch(`${BACKEND_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: currentAbortCtrl.signal,
+    });
+ 
+    const msgEl = document.getElementById(lid);
+    const mdC = msgEl.querySelector(".md-content");
+ 
+    if (currentMode === "image") {
+      mdC.innerHTML = await response.text();
+      chat.scrollTop = chat.scrollHeight;
+      if (currentUserEmail !== "guest") await loadUserPlan();
       setGenerating(false);
-      // Show export btn
-      const exportBtn=document.getElementById("export-chat-btn");
-      if(exportBtn) exportBtn.style.display="flex";
+      const exportBtn = document.getElementById("export-chat-btn");
+      if (exportBtn) exportBtn.style.display = "flex";
       return;
     }
-
-    const reader=response.body.getReader(), decoder=new TextDecoder("utf-8");
-    mdC.innerHTML="";
-    let cq=[], ia=false, cam="";
-    function pq(){
-      if(cq.length>0){ ia=true; cam+=cq.shift(); mdC.innerHTML=marked.parse(cam); chat.scrollTop=chat.scrollHeight; setTimeout(pq,15); }
-      else { ia=false; }
+ 
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    mdC.innerHTML = "";
+    let cq = [], ia = false, cam = "";
+ 
+    function pq() {
+      if (cq.length > 0) {
+        ia = true;
+        cam += cq.shift();
+        // Скрываем маркер подписи пока он стримится
+        const displayText = cam.replace(/<!--DARYN_SIG\|.*?-->/gs, "").trimEnd();
+        mdC.innerHTML = marked.parse(displayText);
+        chat.scrollTop = chat.scrollHeight;
+        setTimeout(pq, 15);
+      } else {
+        ia = false;
+      }
     }
-    while(true){
-      const {done,value}=await reader.read();
-      if(done){
-        const ck=setInterval(()=>{
-          if(!ia){
+ 
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) {
+        const ck = setInterval(async () => {
+          if (!ia) {
             clearInterval(ck);
-            msgEl.innerHTML+=getActionsHtml();
-            chat.scrollTop=chat.scrollHeight;
+ 
+            // ── Парсим подпись из финального текста ──
+            const { cleanText, signature, timestamp } = extractSignature(cam);
+ 
+            // Рендерим чистый текст без маркера
+            mdC.innerHTML = marked.parse(cleanText);
+ 
+            // Добавляем кнопки действий
+            msgEl.innerHTML += getActionsHtml();
+ 
+            // Верифицируем и добавляем бейдж
+            if (signature) {
+              await verifyAndBadge(msgEl, cleanText, signature, timestamp);
+            }
+ 
+            chat.scrollTop = chat.scrollHeight;
             setGenerating(false);
-            if(currentUserEmail!=="guest") loadUserPlan();
-            // Show export btn & refresh chat list for auto-title
-            const exportBtn=document.getElementById("export-chat-btn");
-            if(exportBtn) exportBtn.style.display="flex";
-            setTimeout(()=>refreshChatTitles(),1500);
+            if (currentUserEmail !== "guest") loadUserPlan();
+            const exportBtn = document.getElementById("export-chat-btn");
+            if (exportBtn) exportBtn.style.display = "flex";
+            setTimeout(() => refreshChatTitles(), 1500);
           }
-        },50);
+        }, 50);
         break;
       }
-      cq.push(...decoder.decode(value,{stream:true}).split(""));
-      if(!ia) pq();
+      cq.push(...decoder.decode(value, { stream: true }).split(""));
+      if (!ia) pq();
     }
-  } catch(e){
-    if(e.name==="AbortError"){
-      const msgEl=document.getElementById(lid);
-      if(msgEl){
-        const mdC=msgEl.querySelector(".md-content");
-        if(mdC&&!mdC.innerText.trim()) mdC.innerHTML=`<span style="color:#888;">[Генерация остановлена]</span>`;
-        msgEl.innerHTML+=getActionsHtml();
+  } catch (e) {
+    if (e.name === "AbortError") {
+      const msgEl = document.getElementById(lid);
+      if (msgEl) {
+        const mdC = msgEl.querySelector(".md-content");
+        if (mdC && !mdC.innerText.trim())
+          mdC.innerHTML = `<span style="color:#888;">[Генерация остановлена]</span>`;
+        msgEl.innerHTML += getActionsHtml();
       }
     } else {
-      const el=document.getElementById(lid);
-      if(el) el.querySelector(".md-content").innerHTML=`<span style="color:#ef4444;">${i18n[currentLang]["sys-err"]}</span>`;
+      const el = document.getElementById(lid);
+      if (el)
+        el.querySelector(".md-content").innerHTML =
+          `<span style="color:#ef4444;">${i18n[currentLang]["sys-err"]}</span>`;
     }
     setGenerating(false);
   }
-}
-
-// Refresh chat list titles (after auto-naming)
-async function refreshChatTitles(){
-  if(currentUserEmail==="guest"||!currentChatId) return;
-  try{
-    const res=await fetch(`${BACKEND_URL}/chats?email=${encodeURIComponent(currentUserEmail)}`);
-    const d=await res.json();
-    if(d.status==="success"){
-      allChats=d.chats;
-      renderChatList(allChats);
-    }
-  } catch {}
-}
-
 // ================================================================
 // ГОЛОСОВОЙ ЧАТ
 // ================================================================
@@ -1241,3 +1262,80 @@ async function downloadGeneratedImage(url,name){
 // UTILS
 // ================================================================
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+// ================================================================
+// ПАТЧ для app.js — вставь эти функции в конец файла,
+// а sendMessage() замени на версию ниже (ищи "async function sendMessage")
+// ================================================================
+ 
+// ── ВЕРИФИКАЦИЯ ПОДПИСИ ──────────────────────────────────────────
+ 
+const SIG_MARKER = "<!--DARYN_SIG|";
+ 
+/**
+ * Парсит маркер подписи из финального текста стрима.
+ * Возвращает { cleanText, signature, timestamp } или null.
+ */
+function extractSignature(text) {
+  const idx = text.indexOf(SIG_MARKER);
+  if (idx === -1) return { cleanText: text, signature: null, timestamp: null };
+ 
+  const markerContent = text.slice(idx + SIG_MARKER.length);
+  const endIdx = markerContent.indexOf("-->");
+  if (endIdx === -1) return { cleanText: text, signature: null, timestamp: null };
+ 
+  const parts = markerContent.slice(0, endIdx).split("|");
+  if (parts.length !== 2) return { cleanText: text, signature: null, timestamp: null };
+ 
+  return {
+    cleanText: text.slice(0, idx).trimEnd(),
+    signature: parts[0],
+    timestamp: parts[1],
+  };
+}
+ 
+/**
+ * Верифицирует подпись через бэкенд и добавляет значок к сообщению.
+ */
+async function verifyAndBadge(msgEl, text, signature, timestamp) {
+  if (!signature) return;
+  try {
+    const res = await fetch(`${BACKEND_URL}/verify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, signature, timestamp }),
+    });
+    const d = await res.json();
+ 
+    const badge = document.createElement("div");
+    badge.style.cssText = `
+      display:inline-flex; align-items:center; gap:5px;
+      font-size:11px; font-family:'JetBrains Mono',monospace;
+      margin-top:6px; padding:3px 8px; border-radius:6px;
+      cursor:pointer; user-select:none;
+      ${d.valid
+        ? "color:#10b981; background:rgba(16,185,129,0.08); border:1px solid rgba(16,185,129,0.2);"
+        : "color:#ef4444; background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.2);"
+      }
+    `;
+    badge.title = d.valid
+      ? `Подпись: ${signature.slice(0, 16)}...`
+      : "Подпись не совпадает!";
+    badge.innerHTML = d.valid
+      ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg> verified`
+      : `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg> invalid`;
+ 
+    // Клик — показать детали
+    badge.addEventListener("click", () => {
+      const ts = new Date(parseInt(timestamp) * 1000).toLocaleString("ru");
+      alert(
+        d.valid
+          ? `✅ Ответ подлинный\n\nПодпись: ${signature}\nВремя: ${ts}`
+          : `❌ Подпись не совпадает!\n\nОжидалось: ${signature}\nВремя: ${ts}`
+      );
+    });
+ 
+    msgEl.appendChild(badge);
+  } catch (e) {
+    console.warn("verify error:", e);
+  }
+}
