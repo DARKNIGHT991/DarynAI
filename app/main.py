@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routers import admin, auth, chat, chats, plans, profile, static, voice
+from .routers import verify 
 
 app = FastAPI()
 
@@ -27,3 +28,4 @@ app.include_router(plans.router)
 app.include_router(admin.router)
 app.include_router(voice.router)
 app.include_router(chat.router)
+app.include_router(verify.router)
