@@ -16,14 +16,50 @@ from ..services.plans import check_and_reset_daily_limits, get_user_plan
 
 router = APIRouter()
 
+
+def get_chat_history(email: str, chat_id: int, msg_limit: int) -> list:
+    """Подтягивает историю чата из БД и возвращает в формате для LLM."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT role, content FROM messages
+               WHERE email = %s AND chat_id = %s
+               ORDER BY id DESC LIMIT %s""",
+            (email, chat_id, msg_limit)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        history = []
+        for role, content in reversed(rows):
+            history.append({
+                "role": "assistant" if role == "ai" else "user",
+                # Обрезаем слишком длинные сообщения чтобы не взорвать контекст
+                "content": content[:3000]
+            })
+        return history
+    except Exception as e:
+        print(f"🚨 get_chat_history error: {e}")
+        return []
+
+
 @router.post("/chat")
 def chat_with_ai(req: ChatRequest):
-    prompt_text          = req.text.lower()
+    prompt_text = req.text.lower()
     is_admin_command = bool(
         ADMIN_COMMAND and req.text.strip() == ADMIN_COMMAND
     )
 
     user_plan = get_user_plan(req.email)
+
+    # Лимит сообщений в контексте зависит от плана пользователя
+    context_length = user_plan.get("context_length", 8000)
+    if context_length <= 8000:
+        msg_limit = 6    # Free: 3 пары (6 сообщений)
+    elif context_length <= 32000:
+        msg_limit = 20   # Pro: 10 пар
+    else:
+        msg_limit = 40   # Premium/Admin: 20 пар
 
     history_save_text = req.text
     if req.file_name:
@@ -51,7 +87,7 @@ def chat_with_ai(req: ChatRequest):
                 return StreamingResponse(_limit_stream(), media_type="text/plain")
 
         try:
-            conn   = get_db_connection()
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
                 "UPDATE users SET msg_count = msg_count + 1 WHERE email = %s",
@@ -63,7 +99,7 @@ def chat_with_ai(req: ChatRequest):
             pass
 
         try:
-            conn   = get_db_connection()
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute(
                 "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
@@ -81,7 +117,7 @@ def chat_with_ai(req: ChatRequest):
 
         if is_admin_command:
             try:
-                conn   = get_db_connection()
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
                     "SELECT id, username, email, plan, credits, msg_count FROM users"
@@ -128,18 +164,31 @@ def chat_with_ai(req: ChatRequest):
         )
 
         final_prompt = req.text
-        messages     = []
+        messages = []
+
+        # ── Подтягиваем историю чата (только для зарегистрированных) ──
+        chat_history = []
+        if req.chat_id and req.email != "guest":
+            chat_history = get_chat_history(req.email, req.chat_id, msg_limit)
 
         if req.file_data:
             try:
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
+                    # Для vision-модели история в виде текста добавляется в системный промпт
+                    context_str = ""
+                    if chat_history:
+                        context_str = "Контекст предыдущего разговора:\n"
+                        for msg in chat_history[-6:]:  # последние 3 пары для vision
+                            role_label = "Пользователь" if msg["role"] == "user" else "Ассистент"
+                            context_str += f"{role_label}: {msg['content'][:500]}\n"
+                        context_str += "\n"
                     messages = [{
                         "role": "user",
                         "content": [
                             {
                                 "type": "text",
-                                "text": final_prompt or "Опиши, что на этой картинке детально.",
+                                "text": context_str + (final_prompt or "Опиши, что на этой картинке детально."),
                             },
                             {
                                 "type": "image_url",
@@ -153,13 +202,13 @@ def chat_with_ai(req: ChatRequest):
                     file_content = ""
                     if req.file_name and req.file_name.lower().endswith(".pdf"):
                         pdf_bytes = io.BytesIO(base64.b64decode(req.file_data))
-                        reader    = PyPDF2.PdfReader(pdf_bytes)
+                        reader = PyPDF2.PdfReader(pdf_bytes)
                         for page in reader.pages:
                             file_content += (page.extract_text() or "") + "\n"
                     else:
                         file_content = base64.b64decode(req.file_data).decode("utf-8")
 
-                    max_chars    = user_plan.get("max_file_mb", 5) * 1024 * 100
+                    max_chars = user_plan.get("max_file_mb", 5) * 1024 * 100
                     file_content = file_content[:max_chars]
 
                     combined_prompt = (
@@ -169,7 +218,8 @@ def chat_with_ai(req: ChatRequest):
                     )
                     messages = [
                         {"role": "system", "content": system_instruction},
-                        {"role": "user",   "content": combined_prompt},
+                        *chat_history,
+                        {"role": "user", "content": combined_prompt},
                     ]
             except Exception as e:
                 yield f"⚠️ Ошибка при чтении файла: {e}. Проверьте формат файла."
@@ -191,7 +241,7 @@ def chat_with_ai(req: ChatRequest):
 
                 if not is_admin:
                     try:
-                        conn   = get_db_connection()
+                        conn = get_db_connection()
                         cursor = conn.cursor()
                         cursor.execute(
                             "SELECT credits, last_reset FROM users WHERE email = %s",
@@ -200,8 +250,8 @@ def chat_with_ai(req: ChatRequest):
                         row = cursor.fetchone()
                         if row:
                             credits_left = row[0]
-                            last_reset   = row[1]
-                            now          = datetime.now()
+                            last_reset = row[1]
+                            now = datetime.now()
 
                             if last_reset is None or (now - last_reset).total_seconds() >= 86400:
                                 credits_left = user_plan["images_per_day"]
@@ -215,7 +265,7 @@ def chat_with_ai(req: ChatRequest):
                             if credits_left <= 0:
                                 conn.close()
                                 next_plan = (
-                                    "Pro"     if user_plan["plan_key"] == "free"
+                                    "Pro" if user_plan["plan_key"] == "free"
                                     else "Premium"
                                 )
                                 yield (
@@ -255,7 +305,7 @@ def chat_with_ai(req: ChatRequest):
 
                 plan_limit = user_plan["images_per_day"]
                 limit_label = (
-                    f"∞" if is_admin
+                    "∞" if is_admin
                     else f"{credits_left}/{plan_limit}"
                 )
                 plan_badge = user_plan["badge"]
@@ -286,7 +336,7 @@ def chat_with_ai(req: ChatRequest):
 
                 if req.email != "guest":
                     try:
-                        conn   = get_db_connection()
+                        conn = get_db_connection()
                         cursor = conn.cursor()
                         cursor.execute(
                             "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
@@ -335,9 +385,11 @@ def chat_with_ai(req: ChatRequest):
                         f"Факты:\n{search_web(query)}\nОтветь: {req.text}"
                     )
 
+            # ── Собираем финальный messages с историей ──
             messages = [
                 {"role": "system", "content": system_instruction},
-                {"role": "user",   "content": final_prompt},
+                *chat_history,
+                {"role": "user", "content": final_prompt},
             ]
 
         try:
@@ -356,7 +408,7 @@ def chat_with_ai(req: ChatRequest):
 
         if req.email != "guest" and full_ai_response:
             try:
-                conn   = get_db_connection()
+                conn = get_db_connection()
                 cursor = conn.cursor()
                 cursor.execute(
                     "INSERT INTO messages (email, role, content, chat_id) VALUES (%s, %s, %s, %s)",
