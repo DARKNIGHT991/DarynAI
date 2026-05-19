@@ -66,7 +66,7 @@ body {
   min-height:100vh; display:flex;
   flex-direction:column; justify-content:center;
   align-items:center; position:relative;
-  padding:20px; text-align:center; z-index:2001;
+  padding:20px; text-align:center; z-index:2005;
 }
 
 .landing-top-right {
@@ -130,6 +130,7 @@ body {
   display:flex; gap:15px;
   opacity:0; animation:fadeUp 1s ease 0.9s forwards;
   flex-wrap:wrap; justify-content:center;
+   position:relative; z-index:2005;
 }
 .hero-btn {
   background:rgba(255,255,255,0.03);
@@ -714,4 +715,12 @@ body {
 @media(min-width:769px) {
   #sidebar { position:relative; transform:translateX(0); margin-left:calc(-1 * var(--sidebar-width)); }
   #sidebar.open { margin-left:0; }
+}
+@media(min-width:769px) {
+  .hero-btn {
+    min-width:160px;
+  }
+  .hero-title {
+    font-size:clamp(60px, 8vw, 100px);
+  }
 }
