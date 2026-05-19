@@ -271,7 +271,7 @@ const i18n = {
     "btn-login":"Авторизация","btn-reg":"Создать",
     "prof-title":"Ваш профиль","ph-new-name":"Новое имя",
     "btn-save":"Сохранить имя","btn-clear":"Очистить историю","btn-clear-memory":"Очистить память","memory-title":"Память Daryn AI","memory-empty":"Память пуста","btn-close":"Закрыть настройки",
-    "sb-new":"Новая сессия","sb-guest":"Гость","tb-logout":"Выйти",
+    "sb-new":"Новая сессия","sb-guest":"Гость","tb-refresh":"Обновить","tb-logout":"Выйти",
     "init-msg":"Система инициализирована. Выберите инструмент, задайте вопрос или прикрепите файл.",
     "tool-code":"Код","tool-img":"Фото","tool-scan":"Скан","tool-export":"Экспорт",
     "ph-input":"Команда терминалу...","ph-input-code":"Команда для парсинга кода...",
@@ -322,7 +322,7 @@ const i18n = {
     "btn-login":"Авторизация","btn-reg":"Жасау",
     "prof-title":"Сіздің профиліңіз","ph-new-name":"Жаңа есім",
     "btn-save":"Есімді сақтау","btn-clear":"Тарихты тазарту","btn-clear-memory":"Жадты тазарту","memory-title":"Daryn AI жады","memory-empty":"Жад бос","btn-close":"Баптауларды жабу",
-    "sb-new":"Жаңа сессия","sb-guest":"Қонақ","tb-logout":"Шығу",
+    "sb-new":"Жаңа сессия","sb-guest":"Қонақ","tb-refresh":"Жаңарту","tb-logout":"Шығу",
     "init-msg":"Жүйе іске қосылды. Құралды таңдаңыз, сұрақ қойыңыз немесе файл тіркеңіз.",
     "tool-code":"Код","tool-img":"Сурет","tool-scan":"Скан","tool-export":"Экспорт",
     "ph-input":"Терминал командасы...","ph-input-code":"Кодты талдау командасы...",
@@ -373,7 +373,7 @@ const i18n = {
     "btn-login":"Authorize","btn-reg":"Create",
     "prof-title":"Your Profile","ph-new-name":"New name",
     "btn-save":"Save name","btn-clear":"Clear history","btn-clear-memory":"Clear memory","memory-title":"Daryn AI Memory","memory-empty":"Memory is empty","btn-close":"Close settings",
-    "sb-new":"New Session","sb-guest":"Guest","tb-logout":"Log Out",
+    "sb-new":"New Session","sb-guest":"Guest","tb-refresh":"Refresh","tb-logout":"Log Out",
     "init-msg":"System initialized. Select a tool, ask a question, or attach a file.",
     "tool-code":"Code","tool-img":"Image","tool-scan":"Scan","tool-export":"Export",
     "ph-input":"Terminal command...","ph-input-code":"Code parsing command...",
@@ -1241,3 +1241,31 @@ async function downloadGeneratedImage(url,name){
 // UTILS
 // ================================================================
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+async function signVerifyText(){
+  const textEl=document.getElementById("verify-text");
+  const sigEl=document.getElementById("verify-signature");
+  const out=document.getElementById("verify-result");
+  const text=(textEl?.value||"").trim();
+  if(!text){ out.innerText="Введите текст для подписи"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/verify/sign`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+    const d=await res.json();
+    sigEl.value=d.signature||"";
+    out.style.color="#10b981";
+    out.innerText=`Подпись создана (${d.algorithm})`;
+  }catch{ out.style.color="#ef4444"; out.innerText="Ошибка подписи"; }
+}
+
+async function checkVerifyText(){
+  const text=(document.getElementById("verify-text")?.value||"").trim();
+  const signature=(document.getElementById("verify-signature")?.value||"").trim();
+  const out=document.getElementById("verify-result");
+  if(!text||!signature){ out.innerText="Введите текст и подпись"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/verify/check`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,signature})});
+    const d=await res.json();
+    if(d.valid){ out.style.color="#10b981"; out.innerText="✅ Подпись совпадает. Ответ верифицирован."; }
+    else{ out.style.color="#ef4444"; out.innerText="❌ Подпись не совпадает. Текст был изменён."; }
+  }catch{ out.style.color="#ef4444"; out.innerText="Ошибка проверки"; }
+}
