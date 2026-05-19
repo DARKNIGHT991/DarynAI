@@ -447,6 +447,16 @@
           <button onclick="removeFile()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">✖</button>
         </div>
 
+        <div class="verify-box">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="tool-btn" onclick="signVerifyText()">✍️ Подписать ответ</button>
+            <button class="tool-btn" onclick="checkVerifyText()">✅ Проверить подпись</button>
+          </div>
+          <textarea id="verify-text" class="chat-input" style="margin-top:8px;min-height:70px;resize:vertical;" placeholder="Текст для подписи/проверки..."></textarea>
+          <input id="verify-signature" class="chat-input" style="margin-top:8px;" placeholder="Подпись (HMAC-SHA256)">
+          <div id="verify-result" style="margin-top:8px;color:var(--text-muted);font-size:12px;"></div>
+        </div>
+
         <div class="input-wrapper">
           <button class="attach-btn" onclick="document.getElementById('file-upload').click()">
             <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

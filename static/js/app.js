@@ -1241,3 +1241,31 @@ async function downloadGeneratedImage(url,name){
 // UTILS
 // ================================================================
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+async function signVerifyText(){
+  const textEl=document.getElementById("verify-text");
+  const sigEl=document.getElementById("verify-signature");
+  const out=document.getElementById("verify-result");
+  const text=(textEl?.value||"").trim();
+  if(!text){ out.innerText="Введите текст для подписи"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/verify/sign`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
+    const d=await res.json();
+    sigEl.value=d.signature||"";
+    out.style.color="#10b981";
+    out.innerText=`Подпись создана (${d.algorithm})`;
+  }catch{ out.style.color="#ef4444"; out.innerText="Ошибка подписи"; }
+}
+
+async function checkVerifyText(){
+  const text=(document.getElementById("verify-text")?.value||"").trim();
+  const signature=(document.getElementById("verify-signature")?.value||"").trim();
+  const out=document.getElementById("verify-result");
+  if(!text||!signature){ out.innerText="Введите текст и подпись"; return; }
+  try{
+    const res=await fetch(`${BACKEND_URL}/verify/check`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text,signature})});
+    const d=await res.json();
+    if(d.valid){ out.style.color="#10b981"; out.innerText="✅ Подпись совпадает. Ответ верифицирован."; }
+    else{ out.style.color="#ef4444"; out.innerText="❌ Подпись не совпадает. Текст был изменён."; }
+  }catch{ out.style.color="#ef4444"; out.innerText="Ошибка проверки"; }
+}

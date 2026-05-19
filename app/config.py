@@ -11,6 +11,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "")
 ADMIN_COMMAND = os.getenv("ADMIN_COMMAND")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+RESPONSE_SIGNING_SECRET = os.getenv("RESPONSE_SIGNING_SECRET", "daryn-dev-secret")
 
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
