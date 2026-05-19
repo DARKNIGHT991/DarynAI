@@ -527,7 +527,7 @@ function renderChatList(chats){
     el.innerHTML=`
       <span class="chat-title">${escHtml(c.title||"Новый чат")}</span>
       <div class="chat-actions">
-        <button class="chat-act-btn" title="Переименовать" onclick="event.stopPropagation();renameChatPrompt(${c.id},'${escHtml(c.title||"")}')">
+        <button class="chat-act-btn" title="Переименовать" onclick="event.stopPropagation();renameChatPrompt(${c.id})">
           <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
         </button>
         <button class="chat-act-btn" title="Удалить" onclick="event.stopPropagation();deleteChatConfirm(${c.id})" style="color:#ef444488;">
@@ -602,6 +602,7 @@ function clearChatUI(){
 }
 
 async function renameChatPrompt(chatId, currentTitle){
+  if(typeof currentTitle!=="string") currentTitle=(allChats.find(c=>c.id===chatId)?.title)||"";
   const newTitle=prompt("Новое название чата:", currentTitle);
   if(!newTitle||newTitle.trim()===currentTitle) return;
   try{

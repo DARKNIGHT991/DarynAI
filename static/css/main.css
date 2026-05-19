@@ -384,7 +384,9 @@ body {
 ================================================================ */
 #app-container {
   display:none; width:100%; height:100%;
-  position:relative; background:var(--bg-main); overflow:hidden;
+  position:relative;
+  background:radial-gradient(circle at 20% 20%, #0b1220 0%, #050505 45%), var(--bg-main);
+  overflow:hidden;
 }
 .chat-bg-grid {
   position:absolute; inset:0; z-index:0; pointer-events:none;
