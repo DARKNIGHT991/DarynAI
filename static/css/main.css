@@ -770,3 +770,12 @@ body {
   justify-content: center;
   min-height: 40px;
 }
+
+
+.verify-box {
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px;
+  margin:10px 0;
+  background:rgba(255,255,255,0.02);
+}

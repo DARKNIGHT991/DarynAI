@@ -258,7 +258,9 @@
   <p id="profile-error"   class="error-msg"></p>
   <p id="profile-success" style="color:#10b981;font-size:13px;margin-bottom:12px;display:none;"></p>
   <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя" data-i18n="ph-new-name">
-  <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить имя</button>
+  <input type="text" class="auth-input" id="profile-pref-input" placeholder="Предпочтения: стиль, темы, формат ответа" data-i18n="ph-pref">
+  <input type="text" class="auth-input" id="profile-lang-input" placeholder="Предпочитаемый язык: ru/kk/en" data-i18n="ph-lang-pref">
+  <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить профиль</button>
   <div class="memory-panel">
     <div class="memory-panel-title" data-i18n="memory-title">Память Daryn AI</div>
     <div id="memory-list" class="memory-list">Память пуста</div>
@@ -385,6 +387,7 @@
           <button class="lang-btn" onclick="setLanguage('kk')">KK</button>
           <button class="lang-btn" onclick="setLanguage('en')">EN</button>
         </div>
+        <div class="logout-btn" onclick="location.reload()" data-i18n="tb-refresh">Обновить</div>
         <div class="logout-btn" onclick="location.reload()" data-i18n="tb-logout">Выйти</div>
       </div>
     </div>
@@ -444,6 +447,16 @@
             <span id="fname-text">Файл.pdf</span>
           </span>
           <button onclick="removeFile()" style="background:none;border:none;cursor:pointer;color:var(--text-muted);">✖</button>
+        </div>
+
+        <div class="verify-box">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="tool-btn" onclick="signVerifyText()">✍️ Подписать ответ</button>
+            <button class="tool-btn" onclick="checkVerifyText()">✅ Проверить подпись</button>
+          </div>
+          <textarea id="verify-text" class="chat-input" style="margin-top:8px;min-height:70px;resize:vertical;" placeholder="Текст для подписи/проверки..."></textarea>
+          <input id="verify-signature" class="chat-input" style="margin-top:8px;" placeholder="Подпись (HMAC-SHA256)">
+          <div id="verify-result" style="margin-top:8px;color:var(--text-muted);font-size:12px;"></div>
         </div>
 
         <div class="input-wrapper">
