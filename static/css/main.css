@@ -779,3 +779,202 @@ body {
   margin:10px 0;
   background:rgba(255,255,255,0.02);
 }
+
+/* ================================================================
+   PASTE THIS AT THE END OF static/css/main.css
+================================================================ */
+
+/* Живой фон чата — канвас */
+#chat-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* Welcome Screen */
+#welcome-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+
+#welcome-screen.hiding {
+  opacity: 0;
+  transform: translateY(-30px);
+  pointer-events: none;
+}
+
+.welcome-logo-wrap {
+  animation: wFadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.1s both;
+  margin-bottom: 28px;
+  position: relative;
+}
+
+.welcome-logo-glow {
+  position: absolute;
+  inset: -24px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59,130,246,0.4) 0%, transparent 70%);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.18); }
+}
+
+.welcome-logo-svg {
+  width: 88px;
+  height: 88px;
+  position: relative;
+  filter: drop-shadow(0 0 22px rgba(59,130,246,0.8));
+  animation: logoGlow 4s ease-in-out infinite;
+}
+
+@keyframes logoGlow {
+  0%, 100% { filter: drop-shadow(0 0 18px rgba(59,130,246,0.6)); }
+  50%       { filter: drop-shadow(0 0 36px rgba(59,130,246,1.0)); }
+}
+
+.welcome-greeting {
+  animation: wFadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.25s both;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.welcome-greeting h2 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.welcome-greeting h2 span {
+  background: linear-gradient(135deg, #3b82f6, #0ea5e9);
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.welcome-subtitle {
+  animation: wFadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.38s both;
+  font-size: 15px;
+  color: #555;
+  text-align: center;
+  margin-bottom: 36px;
+  font-weight: 400;
+}
+
+.welcome-start-btn {
+  animation: wFadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.5s both;
+  background: #fff;
+  color: #050505;
+  border: none;
+  padding: 15px 42px;
+  border-radius: 100px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.2px;
+  transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+  box-shadow:
+    0 8px 32px rgba(0,0,0,0.5),
+    0 0 60px rgba(59,130,246,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-start-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59,130,246,0.15), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.welcome-start-btn:hover {
+  transform: translateY(-3px) scale(1.04);
+  box-shadow:
+    0 16px 48px rgba(0,0,0,0.6),
+    0 0 80px rgba(59,130,246,0.35);
+}
+
+.welcome-start-btn:hover::after { opacity: 1; }
+.welcome-start-btn:active { transform: translateY(-1px) scale(1.01); }
+
+.welcome-start-btn .btn-arrow {
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 0.2s;
+}
+.welcome-start-btn:hover .btn-arrow { transform: translateX(5px); }
+
+.welcome-chips {
+  animation: wFadeUp 0.9s cubic-bezier(0.4,0,0.2,1) 0.62s both;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 28px;
+  max-width: 520px;
+  padding: 0 20px;
+}
+
+.welcome-chip {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #666;
+  font-size: 12px;
+  padding: 7px 14px;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.welcome-chip:hover {
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.35);
+  color: #3b82f6;
+  transform: translateY(-2px);
+}
+
+@keyframes wFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Chat hidden while welcome shown */
+.chat-hidden {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Panel needs relative + overflow hidden for canvas */
+.panel {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Ensure chat + tools-bar sit above canvas */
+#chat,
+.tools-bar,
+#file-preview,
+.input-wrapper {
+  position: relative;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .welcome-greeting h2 { font-size: 24px; }
+  .welcome-chips { gap: 6px; }
+  .welcome-chip  { font-size: 11px; padding: 6px 12px; }
+}
