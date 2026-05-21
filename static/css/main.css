@@ -978,3 +978,10 @@ body {
   .welcome-chips { gap: 6px; }
   .welcome-chip  { font-size: 11px; padding: 6px 12px; }
 }
+/* Скрываем инструменты пока активен welcome screen */
+#main-content:has(#welcome-screen) .tools-bar,
+#main-content:has(#welcome-screen) .input-wrapper,
+#main-content:has(#welcome-screen) #file-preview {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
