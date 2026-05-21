@@ -434,6 +434,9 @@
           <button class="tool-btn" onclick="signVerifyText()" title="Подписать ответ">
             ✍️ <span>Подписать ответ</span>
           </button>
+          <button class="tool-btn" onclick="showVerifyBox('check')" title="Проверить подпись">
+            ✅ <span>Проверить подпись</span>
+          </button>
           <button class="tool-btn" id="upgrade-tool-btn"
             onclick="showUpgradeModal('pro')"
             style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
@@ -453,9 +456,9 @@
         </div>
 
         <div class="verify-box">
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="tool-btn" onclick="signVerifyText()">✍️ Подписать ответ</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
             <button class="tool-btn" onclick="checkVerifyText()">✅ Проверить подпись</button>
+            <button class="tool-btn" onclick="hideVerifyBox()" style="margin-left:auto;">✕</button>
           </div>
           <textarea id="verify-text" class="chat-input" style="margin-top:8px;min-height:70px;resize:vertical;" placeholder="Текст для подписи/проверки..."></textarea>
           <input id="verify-signature" class="chat-input" style="margin-top:8px;" placeholder="Подпись (HMAC-SHA256)">

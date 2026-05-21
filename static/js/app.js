@@ -1508,12 +1508,39 @@ async function downloadGeneratedImage(url,name){
 // ================================================================
 function escHtml(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
 
+function showVerifyBox(mode="sign"){
+  const box=document.querySelector(".verify-box");
+  if(!box) return;
+  box.classList.add("open");
+  const target=mode==="check" ? document.getElementById("verify-signature") : document.getElementById("verify-text");
+  setTimeout(()=>target?.focus(),0);
+}
+
+function hideVerifyBox(){
+  document.querySelector(".verify-box")?.classList.remove("open");
+}
+
+function getLatestAiResponseText(){
+  const messages=[...document.querySelectorAll(".message.ai .md-content")];
+  for(let i=messages.length-1;i>=0;i--){
+    if(messages[i].dataset.i18n==="init-msg") continue;
+    const text=messages[i].innerText?.trim();
+    if(text) return text;
+  }
+  return "";
+}
+
 async function signVerifyText(){
+  showVerifyBox("sign");
   const textEl=document.getElementById("verify-text");
   const sigEl=document.getElementById("verify-signature");
   const out=document.getElementById("verify-result");
+  if(textEl && !textEl.value.trim()){
+    const latest=getLatestAiResponseText();
+    if(latest) textEl.value=latest;
+  }
   const text=(textEl?.value||"").trim();
-  if(!text){ out.innerText="Введите текст для подписи"; return; }
+  if(!text){ if(out) out.innerText="Введите текст для подписи"; return; }
   try{
     const res=await fetch(`${BACKEND_URL}/verify/sign`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({text})});
     const d=await res.json();
@@ -1524,6 +1551,7 @@ async function signVerifyText(){
 }
 
 async function checkVerifyText(){
+  showVerifyBox("check");
   const text=(document.getElementById("verify-text")?.value||"").trim();
   const signature=(document.getElementById("verify-signature")?.value||"").trim();
   const out=document.getElementById("verify-result");
