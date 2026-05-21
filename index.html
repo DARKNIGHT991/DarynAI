@@ -258,7 +258,9 @@
   <p id="profile-error"   class="error-msg"></p>
   <p id="profile-success" style="color:#10b981;font-size:13px;margin-bottom:12px;display:none;"></p>
   <input type="text" class="auth-input" id="profile-name-input" placeholder="Новое имя" data-i18n="ph-new-name">
-  <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить имя</button>
+  <input type="text" class="auth-input" id="profile-pref-input" placeholder="Предпочтения: стиль, темы, формат ответа" data-i18n="ph-pref">
+  <input type="text" class="auth-input" id="profile-lang-input" placeholder="Предпочитаемый язык: ru/kk/en" data-i18n="ph-lang-pref">
+  <button class="btn-primary" onclick="saveProfile()" data-i18n="btn-save">Сохранить профиль</button>
   <div class="memory-panel">
     <div class="memory-panel-title" data-i18n="memory-title">Память Daryn AI</div>
     <div id="memory-list" class="memory-list">Память пуста</div>
@@ -428,6 +430,9 @@
               <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
             <span data-i18n="tool-export">Экспорт</span>
+          </button>
+          <button class="tool-btn" onclick="signVerifyText()" title="Подписать ответ">
+            ✍️ <span>Подписать ответ</span>
           </button>
           <button class="tool-btn" id="upgrade-tool-btn"
             onclick="showUpgradeModal('pro')"

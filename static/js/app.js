@@ -500,7 +500,7 @@ const i18n = {
     "upg-btn":"✅ Я оплатил — отправить заявку",
     "auth-login-title":"Вход в систему","auth-login-sub":"Укажите данные для доступа",
     "auth-reg-title":"Регистрация","auth-reg-sub":"Создайте новый профиль доступа",
-    "ph-email":"Email","ph-pass":"Пароль","ph-name":"Имя пользователя",
+    "ph-email":"Email","ph-pass":"Пароль","ph-name":"Имя пользователя","ph-pref":"Предпочтения: стиль, темы, формат ответа","ph-lang-pref":"Предпочитаемый язык: ru/kk/en",
     "pass-hint":"Минимум 8 символов, буква и цифра","auth-or":"или",
     "btn-login":"Авторизация","btn-reg":"Создать",
     "prof-title":"Ваш профиль","ph-new-name":"Новое имя",
@@ -551,7 +551,7 @@ const i18n = {
     "upg-btn":"✅ Төледім — өтінім жіберу",
     "auth-login-title":"Жүйеге кіру","auth-login-sub":"Мәліметтерді енгізіңіз",
     "auth-reg-title":"Тіркелу","auth-reg-sub":"Жаңа профиль жасаңыз",
-    "ph-email":"Электрондық пошта","ph-pass":"Құпия сөз","ph-name":"Пайдаланушы аты",
+    "ph-email":"Электрондық пошта","ph-pass":"Құпия сөз","ph-name":"Пайдаланушы аты","ph-pref":"Қалаулар: стиль, тақырыптар, жауап форматы","ph-lang-pref":"Таңдаулы тіл: ru/kk/en",
     "pass-hint":"Кемінде 8 таңба, әріп және сан","auth-or":"немесе",
     "btn-login":"Авторизация","btn-reg":"Жасау",
     "prof-title":"Сіздің профиліңіз","ph-new-name":"Жаңа есім",
@@ -602,7 +602,7 @@ const i18n = {
     "upg-btn":"✅ I paid — send request",
     "auth-login-title":"System Login","auth-login-sub":"Enter your credentials",
     "auth-reg-title":"Registration","auth-reg-sub":"Create a new profile",
-    "ph-email":"Email","ph-pass":"Password","ph-name":"Username",
+    "ph-email":"Email","ph-pass":"Password","ph-name":"Username","ph-pref":"Preferences: style, topics, response format","ph-lang-pref":"Preferred language: ru/kk/en",
     "pass-hint":"At least 8 characters, a letter and a number","auth-or":"or",
     "btn-login":"Authorize","btn-reg":"Create",
     "prof-title":"Your Profile","ph-new-name":"New name",
@@ -1156,6 +1156,7 @@ function openProfile(){
   document.getElementById("profile-success").style.display="none";
   if(userPlanData) updateUpgradeButtons(userPlanData);
   loadUserMemory();
+  loadProfilePreferences();
   if(window.innerWidth<=768) toggleSidebar();
 }
 
@@ -1166,15 +1167,39 @@ function closeProfile(){
 
 async function saveProfile(){
   const n=document.getElementById("profile-name-input").value.trim();
+  const preferences=document.getElementById("profile-pref-input")?.value.trim()||"";
+  const language=document.getElementById("profile-lang-input")?.value.trim()||"";
   const err=document.getElementById("profile-error");
   const succ=document.getElementById("profile-success");
   if(!n){ err.innerText="Error"; err.style.display="block"; succ.style.display="none"; return; }
   try{
     const res=await fetch(`${BACKEND_URL}/update_profile`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail,new_username:n}) });
     const d=await res.json();
-    if(d.status==="success"){ document.getElementById("sidebar-username").innerText=n; err.style.display="none"; succ.innerText="✅ OK"; succ.style.display="block"; setTimeout(closeProfile,1500); }
+    if(d.status==="success"){
+      await fetch(`${BACKEND_URL}/profile/preferences`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({email:currentUserEmail,preferences,language})
+      });
+      document.getElementById("sidebar-username").innerText=n;
+      err.style.display="none"; succ.innerText="✅ OK"; succ.style.display="block"; setTimeout(closeProfile,1500);
+    }
     else { err.innerText=d.message; err.style.display="block"; succ.style.display="none"; }
   } catch { err.innerText="Network Error."; err.style.display="block"; succ.style.display="none"; }
+}
+
+async function loadProfilePreferences(){
+  if(currentUserEmail==="guest") return;
+  try{
+    const res=await fetch(`${BACKEND_URL}/profile/preferences?email=${encodeURIComponent(currentUserEmail)}`);
+    const d=await res.json();
+    if(d.status==="success"&&d.profile){
+      const pref=document.getElementById("profile-pref-input");
+      const lang=document.getElementById("profile-lang-input");
+      if(pref) pref.value=d.profile.preferences||"";
+      if(lang) lang.value=d.profile.language||"";
+    }
+  } catch {}
 }
 
 
