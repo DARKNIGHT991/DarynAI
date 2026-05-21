@@ -552,7 +552,9 @@ body {
 .chat {
   flex:1; overflow-y:auto; padding-right:5px;
   display:flex; flex-direction:column;
+  flex: 1; 
   min-height: 0;
+  overflow-y: auto;
   gap:16px; scroll-behavior:smooth; margin-bottom:6px;
 }
 .message {
