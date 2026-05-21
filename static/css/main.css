@@ -550,11 +550,8 @@ body {
   padding:20px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
 }
 .chat {
-  flex:1; overflow-y:auto; padding-right:5px;
+  flex:1; min-height:0; overflow-y:auto; padding-right:5px;
   display:flex; flex-direction:column;
-  flex: 1; 
-  min-height: 0;
-  overflow-y: auto;
   gap:16px; scroll-behavior:smooth; margin-bottom:6px;
 }
 .message {
@@ -962,10 +959,13 @@ body {
 
 /* Panel needs relative + overflow hidden for canvas */
 .panel {
-  position: relative;
-  overflow: hidden;
+  width:100%; max-width:880px; height:100%;
+  background:rgba(12,12,12,0.6); backdrop-filter:blur(25px);
+  border:1px solid var(--border); border-radius:20px;
+  display:flex; flex-direction:column;
+  padding:20px; box-shadow:0 10px 40px rgba(0,0,0,0.5);
+  overflow:hidden; position:relative;
 }
-
 /* Ensure chat + tools-bar sit above canvas */
 #chat,
 .tools-bar,
