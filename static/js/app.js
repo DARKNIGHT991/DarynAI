@@ -1,3 +1,237 @@
+// ================================================================
+// WELCOME SCREEN + LIVE CHAT CANVAS
+// Вставить в начало static/js/app.js (ПЕРЕД строкой: const BACKEND_URL = "")
+// ================================================================
+
+/* ── LIVE CHAT CANVAS BACKGROUND ─────────────────────────────── */
+function initChatCanvas() {
+  if (document.getElementById("chat-canvas")) return;
+
+  const canvas = document.createElement("canvas");
+  canvas.id = "chat-canvas";
+  const panel = document.querySelector(".panel");
+  if (!panel) return;
+  panel.insertBefore(canvas, panel.firstChild);
+
+  const ctx    = canvas.getContext("2d");
+  const COLORS = ["#3b82f6","#0ea5e9","#10b981","#6366f1","#38bdf8","#8b5cf6"];
+  const COUNT  = window.innerWidth < 768 ? 45 : 75;
+  let W, H, particles = [];
+  let mouse = { x: -9999, y: -9999 };
+
+  function rand(a, b) { return Math.random() * (b - a) + a; }
+
+  function createP() {
+    return {
+      x: rand(0, W), y: rand(0, H),
+      vx: rand(-0.15, 0.15), vy: rand(-0.28, -0.07),
+      size: rand(0.8, 2.2),
+      baseAlpha: rand(0.2, 0.75),
+      alpha: rand(0.2, 0.75),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      pulse: rand(0, Math.PI * 2),
+      twinkleSpeed: rand(0.007, 0.024),
+    };
+  }
+
+  function hexToRgb(h) {
+    return `${parseInt(h.slice(1,3),16)},${parseInt(h.slice(3,5),16)},${parseInt(h.slice(5,7),16)}`;
+  }
+
+  function resize() {
+    W = canvas.width  = panel.offsetWidth;
+    H = canvas.height = panel.offsetHeight;
+  }
+
+  function drawConnections() {
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d  = Math.sqrt(dx*dx + dy*dy);
+        if (d < 90) {
+          ctx.beginPath();
+          ctx.strokeStyle = `rgba(59,130,246,${0.10*(1-d/90)})`;
+          ctx.lineWidth   = 0.5;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    ctx.clearRect(0, 0, W, H);
+
+    const bg = ctx.createRadialGradient(W*.5, H*.42, 0, W*.5, H*.55, W*.95);
+    bg.addColorStop(0, "#0c0c18");
+    bg.addColorStop(.5, "#080812");
+    bg.addColorStop(1,  "#050508");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const cg = ctx.createRadialGradient(W*.5, H*.44, 0, W*.5, H*.44, W*.38);
+    cg.addColorStop(0, "rgba(59,130,246,0.055)");
+    cg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = cg;
+    ctx.fillRect(0, 0, W, H);
+
+    drawConnections();
+
+    particles.forEach(p => {
+      p.pulse += p.twinkleSpeed;
+      p.alpha  = p.baseAlpha * (0.5 + 0.5 * Math.sin(p.pulse));
+
+      const dx = p.x - mouse.x;
+      const dy = p.y - mouse.y;
+      const d  = Math.sqrt(dx*dx + dy*dy);
+      if (d < 75 && d > 0) {
+        const f = (75 - d) / 75;
+        p.x += (dx/d) * f * 1.0;
+        p.y += (dy/d) * f * 1.0;
+      }
+
+      p.x += p.vx;
+      p.y += p.vy;
+      if (p.y < -6)  { p.y = H + 6; p.x = rand(0, W); }
+      if (p.x < -6)    p.x = W + 6;
+      if (p.x > W+6)   p.x = -6;
+
+      const rgb = hexToRgb(p.color);
+      ctx.save();
+      ctx.globalAlpha = p.alpha * 0.22;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 3.2, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(${rgb},0.12)`;
+      ctx.fill();
+      ctx.restore();
+
+      ctx.save();
+      ctx.globalAlpha = p.alpha;
+      ctx.shadowBlur  = 8;
+      ctx.shadowColor = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+      ctx.fillStyle   = `rgba(${rgb},1)`;
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  canvas.addEventListener("mousemove", e => {
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = e.clientX - rect.left;
+    mouse.y = e.clientY - rect.top;
+  });
+  canvas.addEventListener("mouseleave", () => { mouse.x = -9999; mouse.y = -9999; });
+  window.addEventListener("resize", resize);
+
+  resize();
+  particles = Array.from({ length: COUNT }, createP);
+  animate();
+}
+
+
+/* ── WELCOME SCREEN ───────────────────────────────────────────── */
+let _welcomeVisible = false;
+
+function showWelcomeScreen(username) {
+  if (_welcomeVisible) return;
+  _welcomeVisible = true;
+
+  const chat = document.getElementById("chat");
+  if (chat) chat.classList.add("chat-hidden");
+
+  const old = document.getElementById("welcome-screen");
+  if (old) old.remove();
+
+  const lang = localStorage.getItem("daryn_lang") || "ru";
+  const T = {
+    ru: { hi:"Привет,", sub:"Чем я могу помочь?", btn:"Начать чат",
+          chips:["💬 Задать вопрос","🖼 Сгенерировать фото","💻 Написать код","📄 Анализ PDF","🌐 Найти информацию"] },
+    kk: { hi:"Сәлем,",  sub:"Қалай көмектесе аламын?", btn:"Чатты бастау",
+          chips:["💬 Сұрақ қою","🖼 Сурет жасау","💻 Код жазу","📄 PDF талдау","🌐 Іздеу"] },
+    en: { hi:"Hello,",  sub:"How can I help you today?", btn:"Start chatting",
+          chips:["💬 Ask a question","🖼 Generate image","💻 Write code","📄 Analyze PDF","🌐 Search the web"] },
+  };
+  const t = T[lang] || T.ru;
+
+  const el = document.createElement("div");
+  el.id = "welcome-screen";
+  el.innerHTML = `
+    <div class="welcome-logo-wrap">
+      <div class="welcome-logo-glow"></div>
+      <svg class="welcome-logo-svg" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.6">
+        <polygon points="7.86 2 16.14 2 22 7.86 22 16.14 16.14 22 7.86 22 2 16.14 2 7.86 7.86 2"></polygon>
+        <path d="M9 8h3.5a4 4 0 1 1 0 8H9v-8z"></path>
+      </svg>
+    </div>
+    <div class="welcome-greeting">
+      <h2>${t.hi} <span>${(username||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")}</span></h2>
+    </div>
+    <p class="welcome-subtitle">${t.sub}</p>
+    <button class="welcome-start-btn" id="welcome-start-btn">
+      ${t.btn} <span class="btn-arrow">→</span>
+    </button>
+    <div class="welcome-chips">
+      ${t.chips.map(c=>`<button class="welcome-chip" onclick="useWelcomeChip(this)">${c}</button>`).join("")}
+    </div>
+  `;
+
+  const mc = document.getElementById("main-content");
+  if (mc) mc.appendChild(el);
+
+  document.getElementById("welcome-start-btn").addEventListener("click", hideWelcomeScreen);
+}
+
+function hideWelcomeScreen() {
+  const ws = document.getElementById("welcome-screen");
+  if (!ws) return;
+  ws.classList.add("hiding");
+  setTimeout(() => {
+    ws.remove();
+    _welcomeVisible = false;
+    const chat = document.getElementById("chat");
+    if (chat) {
+      chat.classList.remove("chat-hidden");
+      chat.style.animation = "wFadeUp 0.5s ease both";
+    }
+    const inp = document.getElementById("user-input");
+    if (inp) inp.focus();
+  }, 580);
+}
+
+function useWelcomeChip(el) {
+  // Set mode based on chip content
+  const txt = el.textContent.trim();
+  if (txt.includes("фото") || txt.includes("Сурет") || txt.includes("image")) {
+    currentMode = "image";
+    document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
+    const imgBtn = document.querySelector('.tool-btn[onclick*="image"]');
+    if (imgBtn) imgBtn.classList.add("active");
+  } else if (txt.includes("код") || txt.includes("Код") || txt.includes("code")) {
+    currentMode = "code";
+    document.querySelectorAll(".tool-btn").forEach(b=>b.classList.remove("active"));
+    const codeBtn = document.querySelector('.tool-btn[onclick*="code"]');
+    if (codeBtn) codeBtn.classList.add("active");
+  }
+
+  hideWelcomeScreen();
+
+  const clean = txt.replace(/^[\p{Emoji}\s]+/u, "").trim();
+  setTimeout(() => {
+    const inp = document.getElementById("user-input");
+    if (inp) { inp.value = clean; inp.focus(); }
+  }, 620);
+}
+
+// ================================================================
+// END OF ADDITIONS — ниже идёт оригинальный app.js без изменений
+// Единственная правка: в функции enterApp() после loadChats()
+// добавить вызов initChatCanvas() и showWelcomeScreen(username)
+// ================================================================
 const BACKEND_URL = "";
 
 marked.setOptions({
@@ -494,10 +728,17 @@ async function enterApp(){
     document.getElementById("landing-screen").style.display="none";
     document.getElementById("app-container").style.display="flex";
     if(window._stopParticles) window._stopParticles();
+
+    // ── Инициализируем живой канвас-фон чата
+    setTimeout(initChatCanvas, 100);
+
+    // ── Показываем welcome screen с именем пользователя
+    const username = document.getElementById("sidebar-username")?.innerText
+      || (currentUserEmail === "guest" ? "Гость" : currentUserEmail.split("@")[0]);
+    setTimeout(() => showWelcomeScreen(username), 150);
   },500);
   await loadChats();
   await loadUserPlan();
-  updateLandingAuthState();
 }
 
 
