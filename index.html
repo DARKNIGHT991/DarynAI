@@ -431,6 +431,9 @@
             </svg>
             <span data-i18n="tool-export">Экспорт</span>
           </button>
+          <button class="tool-btn" onclick="signVerifyText()" title="Подписать ответ">
+            ✍️ <span>Подписать ответ</span>
+          </button>
           <button class="tool-btn" id="upgrade-tool-btn"
             onclick="showUpgradeModal('pro')"
             style="border-color:rgba(59,130,246,0.4);color:#3b82f6;display:none;">
@@ -451,7 +454,6 @@
 
         <div class="verify-box">
           <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="tool-btn" onclick="signVerifyText()">✍️ Подписать ответ</button>
             <button class="tool-btn" onclick="checkVerifyText()">✅ Проверить подпись</button>
           </div>
           <textarea id="verify-text" class="chat-input" style="margin-top:8px;min-height:70px;resize:vertical;" placeholder="Текст для подписи/проверки..."></textarea>
