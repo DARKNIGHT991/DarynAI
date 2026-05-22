@@ -16,9 +16,10 @@ SKIP_DIRS = {
     ".git", "node_modules", "dist", "build", ".next", ".nuxt", ".venv",
     "venv", "__pycache__", ".pytest_cache", ".mypy_cache", "coverage",
 }
-MAX_ZIP_FILES = 120
-MAX_ZIP_FILE_BYTES = 1_000_000
-MAX_ZIP_TOTAL_BYTES = 5_000_000
+MAX_ZIP_FILES = 40
+MAX_ZIP_FILE_BYTES = 500_000
+MAX_ZIP_TOTAL_BYTES = 2_000_000
+MAX_ZIP_MEMBER_CHARS = 4000
 
 
 def extract_uploaded_file(file_name: str | None, file_data: str) -> str:
@@ -150,7 +151,7 @@ def extract_project_zip(raw: bytes) -> str:
                 included_files += 1
                 total_bytes += info.file_size
                 content_sections.append(
-                    f"--- FILE: {info.filename} ---\n{extracted[:12000]}"
+                    f"--- FILE: {info.filename} ---\n{extracted[:MAX_ZIP_MEMBER_CHARS]}"
                 )
 
         return (
@@ -205,9 +206,9 @@ def file_extension(name: str) -> str:
 def build_zip_tree(infos: list[zipfile.ZipInfo]) -> list[str]:
     paths = sorted(info.filename.replace("\\", "/") for info in infos)
     lines = []
-    for path in paths[:300]:
+    for path in paths[:120]:
         depth = max(0, len(PurePosixPath(path).parts) - 1)
         lines.append(f"{'  ' * depth}- {PurePosixPath(path).name}")
-    if len(paths) > 300:
-        lines.append("... structure truncated after 300 files ...")
+    if len(paths) > 120:
+        lines.append("... structure truncated after 120 files ...")
     return lines or ["(empty project archive)"]

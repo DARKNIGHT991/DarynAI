@@ -15,6 +15,20 @@ from ..services.plans import check_and_reset_daily_limits, get_user_plan
 
 router = APIRouter()
 
+MAX_FILE_CONTEXT_CHARS = 3500
+MAX_ZIP_CONTEXT_CHARS = 4500
+
+
+def trim_file_context(content: str, limit: int) -> str:
+    if len(content) <= limit:
+        return content
+    return (
+        content[:limit]
+        + "\n\n[Content truncated to keep the AI request under the Groq token limit. "
+        + "Ask for a specific file or section if deeper analysis is needed.]"
+    )
+
+
 @router.post("/chat")
 def chat_with_ai(req: ChatRequest):
     prompt_text          = req.text.lower()
@@ -158,16 +172,18 @@ def chat_with_ai(req: ChatRequest):
                 else:
                     file_content = extract_uploaded_file(req.file_name, req.file_data)
 
-                    max_chars    = user_plan.get("max_file_mb", 5) * 1024 * 100
-                    file_content = file_content[:max_chars]
-
                     extra_instruction = ""
                     if req.file_name and req.file_name.lower().endswith(".zip"):
+                        max_chars = MAX_ZIP_CONTEXT_CHARS
                         extra_instruction = (
                             "\n\nThis is a ZIP project archive. Analyze it as a software project: "
                             "explain the structure, identify likely bugs or weak points, suggest "
                             "improvements, and answer the user's question using the included files."
                         )
+                    else:
+                        max_chars = MAX_FILE_CONTEXT_CHARS
+
+                    file_content = trim_file_context(file_content, max_chars)
 
                     combined_prompt = (
                         f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n"
