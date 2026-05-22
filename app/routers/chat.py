@@ -1,9 +1,6 @@
-import base64
-import io
 from datetime import datetime
 from urllib.parse import quote
 
-import PyPDF2
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 
@@ -11,6 +8,7 @@ from ..config import ADMIN_COMMAND, ADMIN_EMAIL, GROQ_API_KEY, GROQ_MODEL, clien
 from ..db import get_db_connection
 from ..schemas import ChatRequest
 from ..services.ai import ask_ai_quick, search_web
+from ..services.file_extractors import extract_uploaded_file
 from ..services.memory import format_user_memories, remember_from_message
 from ..services.network import get_weather, ping_host, scan_ports
 from ..services.plans import check_and_reset_daily_limits, get_user_plan
@@ -158,22 +156,24 @@ def chat_with_ai(req: ChatRequest):
                         ],
                     }]
                 else:
-                    file_content = ""
-                    if req.file_name and req.file_name.lower().endswith(".pdf"):
-                        pdf_bytes = io.BytesIO(base64.b64decode(req.file_data))
-                        reader    = PyPDF2.PdfReader(pdf_bytes)
-                        for page in reader.pages:
-                            file_content += (page.extract_text() or "") + "\n"
-                    else:
-                        file_content = base64.b64decode(req.file_data).decode("utf-8")
+                    file_content = extract_uploaded_file(req.file_name, req.file_data)
 
                     max_chars    = user_plan.get("max_file_mb", 5) * 1024 * 100
                     file_content = file_content[:max_chars]
+
+                    extra_instruction = ""
+                    if req.file_name and req.file_name.lower().endswith(".zip"):
+                        extra_instruction = (
+                            "\n\nThis is a ZIP project archive. Analyze it as a software project: "
+                            "explain the structure, identify likely bugs or weak points, suggest "
+                            "improvements, and answer the user's question using the included files."
+                        )
 
                     combined_prompt = (
                         f"Я прикрепил файл '{req.file_name}'. Вот его содержимое:\n\n"
                         f"```\n{file_content}\n```\n\n"
                         f"Мой вопрос: {final_prompt}"
+                        f"{extra_instruction}"
                     )
                     messages = [
                         {"role": "system", "content": system_instruction},

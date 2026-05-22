@@ -246,6 +246,10 @@ let attachedFile        = null;
 let lastUserMessage     = "";
 let selectedUpgradePlan = null;
 let userPlanData        = null;
+const SUPPORTED_FILE_EXTENSIONS = [
+  ".pdf", ".txt", ".js", ".py", ".html", ".css", ".json", ".jpg", ".jpeg", ".png",
+  ".docx", ".xlsx", ".csv", ".md", ".zip", ".log"
+];
 
 // ── CHAT STATE ─────────────────────────────────────────────────
 let currentChatId    = null;   // active chat_id (null = guest/unsaved)
@@ -1298,6 +1302,13 @@ function regenerateMessage(){
 function handleFileSelect(event){
   const file=event.target.files[0];
   if(!file) return;
+  const lowerName=file.name.toLowerCase();
+  const isSupported=SUPPORTED_FILE_EXTENSIONS.some(ext=>lowerName.endsWith(ext));
+  if(!isSupported){
+    alert(`Unsupported file format. Supported: ${SUPPORTED_FILE_EXTENSIONS.join(", ")}`);
+    event.target.value="";
+    return;
+  }
   if(file.size>100*1024*1024){ alert("File too large!"); event.target.value=""; return; }
   const reader=new FileReader();
   reader.onload=function(e){
