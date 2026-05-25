@@ -9,3 +9,4 @@ psycopg2-binary
 PyPDF2
 python-multipart
 Pillow
+stripe
