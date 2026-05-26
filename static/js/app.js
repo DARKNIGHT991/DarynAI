@@ -1112,8 +1112,15 @@ function showUpgradeModal(plan){
   pe.innerText=d.price; pe.style.color=d.color;
   document.getElementById("upgrade-error").style.display="none";
   document.getElementById("upgrade-success").style.display="none";
-  document.getElementById("tx-id-input").value="";
-  document.getElementById("wallet-address").innerText="TXXXXXXXXXXYourWalletAddressHere";
+  const txInput=document.getElementById("tx-id-input");
+  if(txInput) txInput.value="";
+  const infoBox=document.querySelector(".upgrade-info-box");
+  if(infoBox) infoBox.innerHTML='<p style="color:#888;font-size:13px;margin-bottom:12px;">Stripe Checkout</p><ol style="color:#ccc;font-size:13px;line-height:2.2;padding-left:16px;"><li>Click the payment button</li><li>Pay securely on Stripe</li><li>Your plan activates automatically after successful payment</li></ol>';
+  const paymentBox=document.querySelector(".upgrade-payment-box");
+  if(paymentBox) paymentBox.style.display="none";
+  if(txInput) txInput.style.display="none";
+  const confirmBtn=document.getElementById("upgrade-confirm-btn");
+  if(confirmBtn) confirmBtn.innerText="Pay with Stripe";
   document.getElementById("upgrade-modal").style.display="flex";
 }
 
@@ -1128,23 +1135,21 @@ async function confirmUpgrade(){
     document.getElementById("upgrade-error").innerText=currentLang==="en"?"Please log in":currentLang==="kk"?"Жүйеге кіріңіз":"Войдите в систему";
     document.getElementById("upgrade-error").style.display="block"; return;
   }
-  const txId=document.getElementById("tx-id-input").value.trim();
   const err=document.getElementById("upgrade-error");
   const succ=document.getElementById("upgrade-success");
   const btn=document.getElementById("upgrade-confirm-btn");
-  if(!txId){ err.innerText=currentLang==="en"?"Enter TX ID":currentLang==="kk"?"TX ID енгізіңіз":"Введите ID транзакции"; err.style.display="block"; return; }
   btn.innerText="⏳..."; btn.disabled=true;
   try{
-    const res=await fetch(`${BACKEND_URL}/upgrade_plan`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail,plan:selectedUpgradePlan,tx_id:txId}) });
+    const res=await fetch(`${BACKEND_URL}/stripe/create-checkout-session`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email:currentUserEmail,plan:selectedUpgradePlan}) });
     const d=await res.json();
-    if(d.status==="success"){
+    if(d.status==="success"&&d.checkout_url){
       err.style.display="none";
-      succ.innerText=currentLang==="en"?"✅ Request sent! Wait up to 24h.":currentLang==="kk"?"✅ Өтінім жіберілді! 24 сағат күтіңіз.":"✅ Заявка отправлена! Ожидайте до 24 часов.";
+      succ.innerText=currentLang==="en"?"Redirecting to Stripe...":currentLang==="kk"?"Stripe payment page...":"Переходим к оплате Stripe...";
       succ.style.display="block";
-      setTimeout(closeUpgradeModal,3000);
-    } else { err.innerText=d.message; err.style.display="block"; }
+      window.location.href=d.checkout_url;
+    } else { err.innerText=d.detail||d.message||"Stripe error"; err.style.display="block"; }
   } catch { err.innerText=currentLang==="en"?"Connection error":currentLang==="kk"?"Қосылу қатесі":"Ошибка подключения"; err.style.display="block"; }
-  finally { btn.innerText=i18n[currentLang]["upg-btn"]; btn.disabled=false; }
+  finally { btn.innerText="Pay with Stripe"; btn.disabled=false; }
 }
 
 // ================================================================

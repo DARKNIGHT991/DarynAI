@@ -1,0 +1,116 @@
+from datetime import datetime, timedelta
+
+import stripe
+from fastapi import APIRouter, Header, HTTPException, Request
+
+from ..config import FRONTEND_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
+from ..db import get_db_connection
+from ..schemas import StripeCheckoutRequest
+from ..services.plans import PLANS
+
+router = APIRouter(prefix="/stripe", tags=["stripe"])
+
+stripe.api_key = STRIPE_SECRET_KEY
+
+
+def _activate_paid_plan(email: str, plan: str, session_id: str) -> None:
+    plan_data = PLANS[plan]
+    expires = datetime.now() + timedelta(days=30)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """UPDATE users
+           SET plan = %s, credits = %s, plan_expires = %s
+           WHERE email = %s""",
+        (plan, plan_data["images_per_day"], expires, email),
+    )
+    cursor.execute(
+        """UPDATE payments
+           SET status = 'confirmed'
+           WHERE tx_id = %s""",
+        (session_id,),
+    )
+    conn.commit()
+    conn.close()
+
+
+@router.post("/create-checkout-session")
+def create_checkout_session(req: StripeCheckoutRequest):
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe is not configured")
+    if req.email == "guest":
+        raise HTTPException(status_code=401, detail="Please log in before payment")
+    if req.plan not in ("pro", "premium"):
+        raise HTTPException(status_code=400, detail="Invalid plan")
+
+    plan_data = PLANS[req.plan]
+    amount_cents = int(round(float(plan_data["price"]) * 100))
+
+    session = stripe.checkout.Session.create(
+        mode="payment",
+        customer_email=req.email,
+        client_reference_id=req.email,
+        line_items=[
+            {
+                "price_data": {
+                    "currency": "usd",
+                    "unit_amount": amount_cents,
+                    "product_data": {
+                        "name": f"Daryn AI {plan_data['name']} - 30 days",
+                    },
+                },
+                "quantity": 1,
+            }
+        ],
+        metadata={"email": req.email, "plan": req.plan},
+        success_url=f"{FRONTEND_URL}/?payment=success&plan={req.plan}",
+        cancel_url=f"{FRONTEND_URL}/?payment=cancelled",
+    )
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """INSERT INTO payments (email, plan, amount, status, tx_id)
+           VALUES (%s, %s, %s, %s, %s)""",
+        (req.email, req.plan, plan_data["price"], "pending", session.id),
+    )
+    conn.commit()
+    conn.close()
+
+    return {"status": "success", "checkout_url": session.url}
+
+
+@router.post("/webhook")
+async def stripe_webhook(
+    request: Request,
+    stripe_signature: str | None = Header(default=None, alias="stripe-signature"),
+):
+    payload = await request.body()
+
+    try:
+        if STRIPE_WEBHOOK_SECRET:
+            if not stripe_signature:
+                raise HTTPException(status_code=400, detail="Missing Stripe signature")
+            event = stripe.Webhook.construct_event(
+                payload, stripe_signature, STRIPE_WEBHOOK_SECRET
+            )
+        else:
+            event = stripe.Event.construct_from(
+                await request.json(),
+                stripe.api_key,
+            )
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature")
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        if session.get("payment_status") == "paid":
+            email = session.get("metadata", {}).get("email")
+            plan = session.get("metadata", {}).get("plan")
+            if email and plan in ("pro", "premium"):
+                _activate_paid_plan(email, plan, session["id"])
+
+    return {"received": True}

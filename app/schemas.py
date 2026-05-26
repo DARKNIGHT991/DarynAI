@@ -41,6 +41,11 @@ class PlanUpgrade(BaseModel):
     tx_id: str = ""
 
 
+class StripeCheckoutRequest(BaseModel):
+    email: str
+    plan: str
+
+
 class AdminPlanChange(BaseModel):
     admin_email: str
     target_email: str

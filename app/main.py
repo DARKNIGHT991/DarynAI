@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
-from .routers import admin, auth, chat, chats, plans, profile, static, verification, voice
+from .routers import admin, auth, chat, chats, plans, profile, static, stripe_payments, verification, voice
 from .routers import payments
 
 app = FastAPI()
@@ -25,6 +25,7 @@ app.include_router(static.router)
 app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(plans.router)
+app.include_router(stripe_payments.router)
 app.include_router(admin.router)
 app.include_router(voice.router)
 app.include_router(verification.router)
