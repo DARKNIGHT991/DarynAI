@@ -4,7 +4,6 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routers import admin, auth, chat, chats, plans, profile, static, stripe_payments, verification, voice
-from .routers import payments
 
 app = FastAPI()
 
@@ -30,4 +29,3 @@ app.include_router(admin.router)
 app.include_router(voice.router)
 app.include_router(verification.router)
 app.include_router(chat.router)
-app.include_router(payments.router)
