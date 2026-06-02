@@ -648,12 +648,43 @@ function updatePlaceholder(){
 document.addEventListener("DOMContentLoaded",()=>{
   setLanguage(currentLang);
   updateLandingAuthState();
+  handleStripeReturn();
   loadGoogleAuthConfig();
   const obs = new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add("active"); });
   },{ threshold:0.1 });
   document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
 });
+
+async function handleStripeReturn(){
+  const params=new URLSearchParams(window.location.search);
+  const payment=params.get("payment");
+  const sessionId=params.get("session_id");
+  if(payment==="cancelled"){
+    alert(currentLang==="en"?"Payment was cancelled":currentLang==="kk"?"Төлем тоқтатылды":"Оплата отменена");
+    window.history.replaceState({},document.title,window.location.pathname);
+    return;
+  }
+  if(payment!=="success"||!sessionId) return;
+  try{
+    const res=await fetch(`${BACKEND_URL}/stripe/confirm-checkout-session`,{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({session_id:sessionId})
+    });
+    const d=await res.json();
+    if(d.status==="success"){
+      alert(currentLang==="en"?"Payment successful. Your plan is active.":currentLang==="kk"?"Төлем сәтті өтті. Тариф іске қосылды.":"Оплата прошла успешно. Тариф активирован.");
+      if(currentUserEmail===d.email) await loadUserPlan();
+    } else {
+      alert(currentLang==="en"?"Payment is still processing. Please refresh your profile in a minute.":currentLang==="kk"?"Төлем өңделіп жатыр. Бір минуттан кейін профильді жаңартыңыз.":"Оплата еще обрабатывается. Обновите профиль через минуту.");
+    }
+  } catch {
+    alert(currentLang==="en"?"Could not confirm payment. Please contact support.":currentLang==="kk"?"Төлемді растау мүмкін болмады. Қолдауға жазыңыз.":"Не удалось подтвердить оплату. Напишите в поддержку.");
+  } finally {
+    window.history.replaceState({},document.title,window.location.pathname);
+  }
+}
 
 // ================================================================
 // AUTH

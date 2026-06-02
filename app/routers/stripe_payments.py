@@ -5,7 +5,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from ..config import FRONTEND_URL, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET
 from ..db import get_db_connection
-from ..schemas import StripeCheckoutRequest
+from ..schemas import StripeCheckoutRequest, StripeConfirmRequest
 from ..services.plans import PLANS
 
 router = APIRouter(prefix="/stripe", tags=["stripe"])
@@ -70,7 +70,10 @@ def create_checkout_session(req: StripeCheckoutRequest):
                 }
             ],
             metadata={"email": req.email, "plan": req.plan},
-            success_url=f"{FRONTEND_URL}/?payment=success&plan={req.plan}",
+            success_url=(
+                f"{FRONTEND_URL}/?payment=success&plan={req.plan}"
+                "&session_id={CHECKOUT_SESSION_ID}"
+            ),
             cancel_url=f"{FRONTEND_URL}/?payment=cancelled",
         )
     except Exception as e:
@@ -91,6 +94,40 @@ def create_checkout_session(req: StripeCheckoutRequest):
         raise HTTPException(status_code=500, detail=f"Payment database error: {e}")
 
     return {"status": "success", "checkout_url": session.url}
+
+
+@router.post("/confirm-checkout-session")
+def confirm_checkout_session(req: StripeConfirmRequest):
+    if not STRIPE_SECRET_KEY:
+        raise HTTPException(status_code=500, detail="Stripe is not configured")
+
+    try:
+        session = stripe.checkout.Session.retrieve(req.session_id)
+    except Exception as e:
+        message = getattr(e, "user_message", None) or str(e)
+        raise HTTPException(status_code=502, detail=f"Stripe error: {message}")
+
+    payment_status = session.get("payment_status")
+    metadata = session.get("metadata") or {}
+    email = metadata.get("email")
+    plan = metadata.get("plan")
+
+    if payment_status != "paid":
+        return {
+            "status": "pending",
+            "message": "Payment is not completed yet",
+            "payment_status": payment_status,
+        }
+
+    if not email or plan not in ("pro", "premium"):
+        raise HTTPException(status_code=400, detail="Invalid checkout session metadata")
+
+    try:
+        _activate_paid_plan(email, plan, session["id"])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Plan activation error: {e}")
+
+    return {"status": "success", "email": email, "plan": plan}
 
 
 @router.post("/webhook")

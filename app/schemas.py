@@ -46,6 +46,10 @@ class StripeCheckoutRequest(BaseModel):
     plan: str
 
 
+class StripeConfirmRequest(BaseModel):
+    session_id: str
+
+
 class AdminPlanChange(BaseModel):
     admin_email: str
     target_email: str
