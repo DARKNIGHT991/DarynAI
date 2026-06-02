@@ -13,6 +13,12 @@ router = APIRouter(prefix="/stripe", tags=["stripe"])
 stripe.api_key = STRIPE_SECRET_KEY
 
 
+def _stripe_value(obj, key: str, default=None):
+    if hasattr(obj, "get"):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
 def _activate_paid_plan(email: str, plan: str, session_id: str) -> None:
     plan_data = PLANS[plan]
     expires = datetime.now() + timedelta(days=30)
@@ -107,10 +113,10 @@ def confirm_checkout_session(req: StripeConfirmRequest):
         message = getattr(e, "user_message", None) or str(e)
         raise HTTPException(status_code=502, detail=f"Stripe error: {message}")
 
-    payment_status = session.get("payment_status")
-    metadata = session.get("metadata") or {}
-    email = metadata.get("email")
-    plan = metadata.get("plan")
+    payment_status = _stripe_value(session, "payment_status")
+    metadata = _stripe_value(session, "metadata", {}) or {}
+    email = _stripe_value(metadata, "email")
+    plan = _stripe_value(metadata, "plan")
 
     if payment_status != "paid":
         return {
@@ -123,7 +129,7 @@ def confirm_checkout_session(req: StripeConfirmRequest):
         raise HTTPException(status_code=400, detail="Invalid checkout session metadata")
 
     try:
-        _activate_paid_plan(email, plan, session["id"])
+        _activate_paid_plan(email, plan, _stripe_value(session, "id"))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Plan activation error: {e}")
 
@@ -156,10 +162,11 @@ async def stripe_webhook(
 
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
-        if session.get("payment_status") == "paid":
-            email = session.get("metadata", {}).get("email")
-            plan = session.get("metadata", {}).get("plan")
+        if _stripe_value(session, "payment_status") == "paid":
+            metadata = _stripe_value(session, "metadata", {}) or {}
+            email = _stripe_value(metadata, "email")
+            plan = _stripe_value(metadata, "plan")
             if email and plan in ("pro", "premium"):
-                _activate_paid_plan(email, plan, session["id"])
+                _activate_paid_plan(email, plan, _stripe_value(session, "id"))
 
     return {"received": True}
