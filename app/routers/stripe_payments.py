@@ -73,7 +73,7 @@ def create_checkout_session(req: StripeCheckoutRequest):
             success_url=f"{FRONTEND_URL}/?payment=success&plan={req.plan}",
             cancel_url=f"{FRONTEND_URL}/?payment=cancelled",
         )
-    except stripe.error.StripeError as e:
+    except Exception as e:
         message = getattr(e, "user_message", None) or str(e)
         raise HTTPException(status_code=502, detail=f"Stripe error: {message}")
 
