@@ -39,6 +39,11 @@ def _activate_paid_plan(email: str, plan: str, session_id: str) -> None:
 def create_checkout_session(req: StripeCheckoutRequest):
     if not STRIPE_SECRET_KEY:
         raise HTTPException(status_code=500, detail="Stripe is not configured")
+    if not STRIPE_SECRET_KEY.startswith("sk_"):
+        raise HTTPException(
+            status_code=500,
+            detail="STRIPE_SECRET_KEY must be a Stripe secret key that starts with sk_",
+        )
     if req.email == "guest":
         raise HTTPException(status_code=401, detail="Please log in before payment")
     if req.plan not in ("pro", "premium"):
@@ -47,36 +52,43 @@ def create_checkout_session(req: StripeCheckoutRequest):
     plan_data = PLANS[req.plan]
     amount_cents = int(round(float(plan_data["price"]) * 100))
 
-    session = stripe.checkout.Session.create(
-        mode="payment",
-        customer_email=req.email,
-        client_reference_id=req.email,
-        line_items=[
-            {
-                "price_data": {
-                    "currency": "usd",
-                    "unit_amount": amount_cents,
-                    "product_data": {
-                        "name": f"Daryn AI {plan_data['name']} - 30 days",
+    try:
+        session = stripe.checkout.Session.create(
+            mode="payment",
+            customer_email=req.email,
+            client_reference_id=req.email,
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "unit_amount": amount_cents,
+                        "product_data": {
+                            "name": f"Daryn AI {plan_data['name']} - 30 days",
+                        },
                     },
-                },
-                "quantity": 1,
-            }
-        ],
-        metadata={"email": req.email, "plan": req.plan},
-        success_url=f"{FRONTEND_URL}/?payment=success&plan={req.plan}",
-        cancel_url=f"{FRONTEND_URL}/?payment=cancelled",
-    )
+                    "quantity": 1,
+                }
+            ],
+            metadata={"email": req.email, "plan": req.plan},
+            success_url=f"{FRONTEND_URL}/?payment=success&plan={req.plan}",
+            cancel_url=f"{FRONTEND_URL}/?payment=cancelled",
+        )
+    except stripe.error.StripeError as e:
+        message = getattr(e, "user_message", None) or str(e)
+        raise HTTPException(status_code=502, detail=f"Stripe error: {message}")
 
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """INSERT INTO payments (email, plan, amount, status, tx_id)
-           VALUES (%s, %s, %s, %s, %s)""",
-        (req.email, req.plan, plan_data["price"], "pending", session.id),
-    )
-    conn.commit()
-    conn.close()
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """INSERT INTO payments (email, plan, amount, status, tx_id)
+               VALUES (%s, %s, %s, %s, %s)""",
+            (req.email, req.plan, plan_data["price"], "pending", session.id),
+        )
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Payment database error: {e}")
 
     return {"status": "success", "checkout_url": session.url}
 
