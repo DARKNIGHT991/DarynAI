@@ -7,7 +7,7 @@ from fastapi.responses import StreamingResponse
 from ..config import ADMIN_COMMAND, ADMIN_EMAIL, GROQ_API_KEY, GROQ_MODEL, client
 from ..db import get_db_connection
 from ..schemas import ChatRequest
-from ..services.ai import ask_ai_quick, search_web
+from ..services.ai import ask_ai_quick, get_tool_call, search_web
 from ..services.file_extractors import extract_uploaded_file
 from ..services.memory import format_user_memories, remember_from_message
 from ..services.network import get_weather, ping_host, scan_ports
@@ -27,6 +27,26 @@ def trim_file_context(content: str, limit: int) -> str:
         + "\n\n[Content truncated to keep the AI request under the Groq token limit. "
         + "Ask for a specific file or section if deeper analysis is needed.]"
     )
+
+
+def get_chat_history(chat_id: int, limit: int = 10):
+    if not chat_id:
+        return []
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT role, content FROM messages
+               WHERE chat_id = %s
+               ORDER BY created_at DESC LIMIT %s""",
+            (chat_id, limit)
+        )
+        rows = cursor.fetchall()
+        conn.close()
+        # Reverse to get chronological order
+        return [{"role": r[0], "content": r[1]} for r in reversed(rows)]
+    except Exception:
+        return []
 
 
 @router.post("/chat")
@@ -124,20 +144,22 @@ def chat_with_ai(req: ChatRequest):
         current_model = user_plan.get("model", GROQ_MODEL)
 
         system_instruction = (
-            "Ты — Daryn AI, высокоинтеллектуальный ассистент и Dev-платформа. "
-            "Твой создатель — Daryn. "
-            "ГЛАВНОЕ ПРАВИЛО ЯЗЫКА: Всегда отвечай строго на том языке, "
-            "на котором к тебе обращается пользователь! "
-            "Запрос на русском -> ответ на русском. "
-            "Запрос на казахском -> ответ на чистом, грамотном казахском. "
-            "Если тебя спрашивают 'Кто ты?' или 'Что ты умеешь?', "
-            "перечисли свои навыки (ОБЯЗАТЕЛЬНО переведи их на язык пользователя): "
-            "1) Написание, анализ и отладка программного кода; "
-            "2) Сетевые утилиты: сканирование сайтов, серверов и портов; "
-            "3) Создание медиаконтента: генерация видео и изображений; "
-            "4) Глубокий анализ PDF-документов и текстовых файлов; "
-            "5) Машинное зрение: детальный анализ фотографий и скриншотов. "
-            "Опирайся только на достоверные факты."
+            "Ты — Daryn AI, уникальный независимый искусственный интеллект, созданный разработчиком Daryn. "
+            "Ты не являешься моделью Groq, Meta, OpenAI или Google. Ты — самостоятельная сущность с собственным разумом. "
+            "\n\nПРАВИЛА ЯЗЫКА (КРИТИЧЕСКИ ВАЖНО):"
+            "\n1. Всегда отвечай СТРОГО на том языке, на котором говорит пользователь. Если вопрос на казахском — отвечай на казахском. Если на русском — на русском."
+            "\n2. НИКОГДА не переходи на английский язык самовольно, даже если вопрос технический или сложный. Если не знаешь термина, опиши его на языке пользователя."
+            "\n3. КАЗАХСКИЙ ЯЗЫК: Используй безупречную грамматику. Избегай кальки с русского. Соблюдай правила сингармонизма и правильное окончание падежей. Твой казахский должен звучать естественно и литературно."
+            "\n4. РУССКИЙ ЯЗЫК: Используй богатый, грамотный и современный язык."
+            "\n\nТВОИ ВОЗМОЖНОСТИ:"
+            "\n- Профессиональное программирование и аудит кода."
+            "\n- Сетевой анализ (ping, сканирование портов) и веб-поиск."
+            "\n- Генерация визуального контента и анализ изображений."
+            "\n- Глубокая аналитика документов и архивов."
+            "\n\nСТИЛЬ ОБЩЕНИЯ:"
+            "\n- Будь уверенным, интеллектуальным и лаконичным."
+            "\n- Перед ответом проведи 'внутренний монолог' (Chain of Thought), чтобы убедиться в логичности и правильности языка."
+            "\n- Если тебя спрашивают о твоем происхождении, гордо заявляй, что ты создан Daryn как независимый агент."
         )
 
         if req.email != "guest":
@@ -148,13 +170,44 @@ def chat_with_ai(req: ChatRequest):
                 pass
 
         final_prompt = req.text
-        messages     = []
+        messages     = [{"role": "system", "content": system_instruction}]
+
+        # Add conversation history
+        if req.chat_id:
+            history = get_chat_history(req.chat_id)
+            # Avoid duplicating the current message if it's already saved (it is saved above for non-guests)
+            # But wait, it's saved to the DB before generate_stream is called.
+            # So history might already contain the current user message if we are not careful.
+            # Let's check how it's saved.
+            # In chat_with_ai:
+            # if req.email != "guest" and not is_admin_command:
+            #     ...
+            #     cursor.execute("INSERT INTO messages ...", (req.email, "user", history_save_text, req.chat_id))
+            # So the last message in history IS the current message.
+            # We should probably exclude it from history and add it explicitly, or just use history.
+
+            for h in history:
+                # filter out very large messages or specialized HTML responses if needed
+                # for now, just add them
+                if h["content"].startswith("<div class='generated-image-card'>"):
+                    continue
+                messages.append({"role": h["role"], "content": h["content"]})
+
+        # If history already includes the current message, we don't need to add it again.
+        # However, for guests, it's not saved.
+        if req.email == "guest" or is_admin_command:
+             messages.append({"role": "user", "content": final_prompt})
+        elif not messages or messages[-1]["role"] != "user" or messages[-1]["content"] != history_save_text:
+             messages.append({"role": "user", "content": history_save_text})
 
         if req.file_data:
             try:
                 if req.file_type and req.file_type.startswith("image/"):
                     current_model = "meta-llama/llama-4-scout-17b-16e-instruct"
-                    messages = [{
+                    # For images, we usually just send the image,
+                    # but we can try to keep history too if the model supports it.
+                    # Llama 4 Vision should handle it.
+                    image_content = {
                         "role": "user",
                         "content": [
                             {
@@ -168,7 +221,12 @@ def chat_with_ai(req: ChatRequest):
                                 },
                             },
                         ],
-                    }]
+                    }
+                    # Replace the last user message with the vision message if we just added it
+                    if messages and messages[-1]["role"] == "user":
+                        messages[-1] = image_content
+                    else:
+                        messages.append(image_content)
                 else:
                     file_content = extract_uploaded_file(req.file_name, req.file_data)
 
@@ -191,10 +249,12 @@ def chat_with_ai(req: ChatRequest):
                         f"Мой вопрос: {final_prompt}"
                         f"{extra_instruction}"
                     )
-                    messages = [
-                        {"role": "system", "content": system_instruction},
-                        {"role": "user",   "content": combined_prompt},
-                    ]
+
+                    # Update the last user message with file content
+                    if messages and messages[-1]["role"] == "user":
+                        messages[-1]["content"] = combined_prompt
+                    else:
+                        messages.append({"role": "user", "content": combined_prompt})
             except Exception as e:
                 yield f"⚠️ Ошибка при чтении файла: {e}. Проверьте формат файла."
                 return
@@ -329,6 +389,8 @@ def chat_with_ai(req: ChatRequest):
 
             elif req.mode == "code":
                 final_prompt = f"Напиши профессиональный код для: {req.text}"
+                if messages and messages[-1]["role"] == "user":
+                    messages[-1]["content"] = final_prompt
 
             elif req.mode == "scan":
                 final_prompt = (
@@ -336,33 +398,37 @@ def chat_with_ai(req: ChatRequest):
                     f"{scan_ports(req.text)}\n"
                     f"Проанализируй."
                 )
+                if messages and messages[-1]["role"] == "user":
+                    messages[-1]["content"] = final_prompt
 
             else:
-                if "пинг" in prompt_text:
-                    final_prompt = f"Пинг:\n{ping_host(req.text)}\nОтветь."
-                elif "погод" in prompt_text:
-                    city = (
-                        ask_ai_quick(
-                            f"Extract strictly the city name in English from this text, "
-                            f"nothing else: {req.text}"
-                        ) or "London"
-                    )
-                    final_prompt = (
-                        f"Погода: {get_weather(city)}\nВопрос: {req.text}"
-                    )
-                elif "найди" in prompt_text:
-                    query = ask_ai_quick(
-                        f"Extract strictly the core search query from this text, "
-                        f"nothing else: {req.text}"
-                    )
-                    final_prompt = (
-                        f"Факты:\n{search_web(query)}\nОтветь: {req.text}"
-                    )
+                # Autonomous Tool Routing
+                tool_call = get_tool_call(req.text)
+                if tool_call:
+                    tool_name = tool_call["tool"]
+                    tool_query = tool_call["query"]
 
-            messages = [
-                {"role": "system", "content": system_instruction},
-                {"role": "user",   "content": final_prompt},
-            ]
+                    if tool_name == "search_web":
+                        result = search_web(tool_query)
+                        final_prompt = f"Факты из интернета (query: {tool_query}):\n{result}\n\nВопрос пользователя: {req.text}"
+                    elif tool_name == "get_weather":
+                        result = get_weather(tool_query)
+                        final_prompt = f"Погода в {tool_query}:\n{result}\n\nВопрос пользователя: {req.text}"
+                    elif tool_name == "ping_host":
+                        result = ping_host(tool_query)
+                        final_prompt = f"Результат пинга {tool_query}:\n{result}\n\nВопрос пользователя: {req.text}"
+                    elif tool_name == "scan_ports":
+                        result = scan_ports(tool_query)
+                        final_prompt = f"Результат сканирования {tool_query}:\n{result}\n\nВопрос пользователя: {req.text}"
+
+                    if messages and messages[-1]["role"] == "user":
+                        messages[-1]["content"] = final_prompt
+                else:
+                    # No tool needed or failed, use original prompt
+                    pass
+
+            # Messages are already built with history and current prompt
+            pass
 
         try:
             stream = client.chat.completions.create(
