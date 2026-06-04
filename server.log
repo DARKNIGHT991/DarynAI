@@ -1,0 +1,27 @@
+INFO:     Started server process [90012]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+🚨 ВНИМАНИЕ: GROQ_API_KEY не найден!
+INFO:     127.0.0.1:41524 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41524 - "GET /static/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET /static/js/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET /auth/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET /sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41524 - "GET /manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET /icon-192.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:41538 - "GET /icon-512.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38926 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38926 - "GET /static/css/main.css HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38936 - "GET /static/js/app.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38936 - "GET /auth/config HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38936 - "GET /sw.js HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38936 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38926 - "GET /manifest.json HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38936 - "GET /icon-512.png HTTP/1.1" 200 OK
+INFO:     127.0.0.1:38926 - "GET /icon-192.png HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [90012]
