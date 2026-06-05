@@ -344,7 +344,8 @@ body {
 .error-msg { color:#ef4444; font-size:13px; margin-bottom:12px; display:none; }
 
 #form-login,
-#form-register { display:none; flex-direction:column; }
+#form-register,
+#form-verify { display:none; flex-direction:column; }
 
 #profile-modal {
   display:none; position:fixed; top:50%; left:50%;

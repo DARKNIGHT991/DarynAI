@@ -1,11 +1,15 @@
 import bcrypt
+import random
+import string
+from datetime import datetime, timedelta
 from fastapi import APIRouter
 import requests
 
 from ..config import GOOGLE_CLIENT_ID
 from ..db import get_db_connection
-from ..schemas import GoogleLogin, UserLogin, UserRegister
+from ..schemas import GoogleLogin, ResendCodeRequest, UserLogin, UserRegister, VerifyCodeRequest
 from ..services.auth_validation import normalize_email, validate_email, validate_login_password, validate_password, validate_username
+from ..services.email import send_verification_email
 
 router = APIRouter()
 
@@ -70,13 +74,19 @@ def register(user: UserRegister):
             conn.close()
             return {"status": "error", "message": "Email уже зарегистрирован"}
 
+        code = ''.join(random.choices(string.digits, k=6))
+        expires = datetime.utcnow() + timedelta(minutes=10)
+
         cursor.execute(
-            "INSERT INTO users (username, email, password_hash) VALUES (%s, %s, %s)",
-            (username, email, _hash_password(user.password))
+            "INSERT INTO users (username, email, password_hash, is_verified, verification_code, verification_expires) VALUES (%s, %s, %s, %s, %s, %s)",
+            (username, email, _hash_password(user.password), False, code, expires)
         )
         conn.commit()
         conn.close()
-        return {"status": "success", "username": username, "email": email}
+
+        send_verification_email(email, code)
+
+        return {"status": "success", "username": username, "email": email, "requires_verification": True}
     except Exception as e:
         return {"status": "error", "message": f"Ошибка БД: {e}"}
 
@@ -92,7 +102,7 @@ def login(user: UserLogin):
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT username, password_hash FROM users WHERE email = %s",
+            "SELECT username, password_hash, is_verified FROM users WHERE email = %s",
             (email,)
         )
         row = cursor.fetchone()
@@ -100,11 +110,80 @@ def login(user: UserLogin):
 
         if not row:
             return {"status": "error", "message": "Email не найден"}
+
+        if not row[2]:
+            return {"status": "error", "message": "Email не подтвержден", "requires_verification": True, "email": email}
+
         if bcrypt.checkpw(user.password.encode("utf-8"), row[1].encode("utf-8")):
             return {"status": "success", "username": row[0], "email": email}
         return {"status": "error", "message": "Неверный пароль"}
     except Exception as e:
         return {"status": "error", "message": f"Ошибка БД: {e}"}
+
+
+@router.post("/auth/verify")
+def verify_code(req: VerifyCodeRequest):
+    email = normalize_email(req.email)
+    code = req.code.strip()
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT verification_code, verification_expires, username FROM users WHERE email = %s",
+            (email,)
+        )
+        row = cursor.fetchone()
+
+        if not row:
+            conn.close()
+            return {"status": "error", "message": "Пользователь не найден"}
+
+        db_code, expires, username = row
+
+        if db_code != code:
+            conn.close()
+            return {"status": "error", "message": "Неверный код"}
+
+        if datetime.utcnow() > expires:
+            conn.close()
+            return {"status": "error", "message": "Код истек"}
+
+        cursor.execute(
+            "UPDATE users SET is_verified = TRUE, verification_code = NULL, verification_expires = NULL WHERE email = %s",
+            (email,)
+        )
+        conn.commit()
+        conn.close()
+        return {"status": "success", "username": username, "email": email}
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка верификации: {e}"}
+
+
+@router.post("/auth/resend-code")
+def resend_code(req: ResendCodeRequest):
+    email = normalize_email(req.email)
+    code = ''.join(random.choices(string.digits, k=6))
+    expires = datetime.utcnow() + timedelta(minutes=10)
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET verification_code = %s, verification_expires = %s WHERE email = %s AND is_verified = FALSE",
+            (code, expires, email)
+        )
+        if cursor.rowcount == 0:
+            conn.close()
+            return {"status": "error", "message": "Email не найден или уже подтвержден"}
+
+        conn.commit()
+        conn.close()
+
+        send_verification_email(email, code)
+        return {"status": "success", "message": "Код отправлен повторно"}
+    except Exception as e:
+        return {"status": "error", "message": f"Ошибка отправки: {e}"}
 
 
 @router.post("/auth/google")

@@ -246,6 +246,14 @@
       <div class="auth-divider"><span data-i18n="auth-or">или</span></div>
       <div id="google-register-btn" class="google-signin-slot"></div>
     </div>
+    <div id="form-verify">
+      <p id="verify-error" class="error-msg"></p>
+      <p id="verify-info" style="color:#888;font-size:13px;margin-bottom:12px;text-align:center;" data-i18n="verify-info">Мы отправили 6-значный код на вашу почту</p>
+      <input type="text" class="auth-input" id="verify-code" placeholder="6-значный код" maxlength="6" style="text-align:center;letter-spacing:4px;font-size:20px;font-weight:700;">
+      <button class="btn-primary" onclick="verifyUserCode()" data-i18n="btn-verify">Подтвердить</button>
+      <button class="btn-text" id="resend-btn" onclick="resendVerificationCode()" style="margin-top:10px;" data-i18n="btn-resend">Отправить код повторно</button>
+      <button class="btn-text" onclick="openAuth('login')" style="margin-top:5px;" data-i18n="btn-back-login">Вернуться ко входу</button>
+    </div>
   </div>
 </div>
 
