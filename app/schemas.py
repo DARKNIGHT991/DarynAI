@@ -12,6 +12,15 @@ class UserLogin(BaseModel):
     password: str
 
 
+class VerifyCodeRequest(BaseModel):
+    email: str
+    code: str
+
+
+class ResendCodeRequest(BaseModel):
+    email: str
+
+
 class GoogleLogin(BaseModel):
     credential: str
 

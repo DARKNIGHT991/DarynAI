@@ -515,7 +515,9 @@ const i18n = {
     "tool-code":"Код","tool-img":"Фото","tool-scan":"Скан","tool-export":"Экспорт",
     "ph-input":"Команда терминалу...","ph-input-code":"Команда для парсинга кода...",
     "ph-input-scan":"IP или домен цели...","ph-input-img":"Анализ изображения...",
-    "loading":"⏳ Обработка запроса ядром...","sys-err":"[SYS_ERROR] Ошибка ответа сервера."
+    "loading":"⏳ Обработка запроса ядром...","sys-err":"[SYS_ERROR] Ошибка ответа сервера.",
+    "auth-verify-title":"Подтверждение почты","verify-info":"Мы отправили 6-значный код на вашу почту",
+    "btn-verify":"Подтвердить","btn-resend":"Отправить код повторно","btn-back-login":"Вернуться ко входу"
   },
   kk:{
     "hero-reg":"Тіркелу","hero-login":"Кіру","hero-guest":"Қонақ","hero-continue":"Чатқа оралу",
@@ -567,7 +569,9 @@ const i18n = {
     "tool-code":"Код","tool-img":"Сурет","tool-scan":"Скан","tool-export":"Экспорт",
     "ph-input":"Терминал командасы...","ph-input-code":"Кодты талдау командасы...",
     "ph-input-scan":"IP немесе домен...","ph-input-img":"Суретті талдау...",
-    "loading":"⏳ Ядро өңдеуде...","sys-err":"[SYS_ERROR] Сервер қатесі."
+    "loading":"⏳ Ядро өңдеуде...","sys-err":"[SYS_ERROR] Сервер қатесі.",
+    "auth-verify-title":"Поштаны растау","verify-info":"Біз сіздің поштаңызға 6 таңбалы код жібердік",
+    "btn-verify":"Растау","btn-resend":"Кодты қайта жіберу","btn-back-login":"Кіруге оралу"
   },
   en:{
     "hero-reg":"Sign Up","hero-login":"Log In","hero-guest":"Guest","hero-continue":"Back to chat",
@@ -619,7 +623,9 @@ const i18n = {
     "tool-code":"Code","tool-img":"Image","tool-scan":"Scan","tool-export":"Export",
     "ph-input":"Terminal command...","ph-input-code":"Code parsing command...",
     "ph-input-scan":"Target IP or domain...","ph-input-img":"Image analysis...",
-    "loading":"⏳ Core processing...","sys-err":"[SYS_ERROR] Server error."
+    "loading":"⏳ Core processing...","sys-err":"[SYS_ERROR] Server error.",
+    "auth-verify-title":"Email Verification","verify-info":"We sent a 6-digit code to your email",
+    "btn-verify":"Verify","btn-resend":"Resend Code","btn-back-login":"Back to Login"
   }
 };
 
@@ -1028,7 +1034,16 @@ async function registerUser(){
   try{
     const res=await fetch(`${BACKEND_URL}/register`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({username:name,email,password:pass}) });
     const d=await res.json();
-    if(d.status==="success"){ currentUserEmail=d.email; document.getElementById("sidebar-username").innerText=d.username; enterApp(); }
+    if(d.status==="success"){
+      if(d.requires_verification){
+        verificationEmail = d.email;
+        openAuth("verify");
+      } else {
+        currentUserEmail=d.email;
+        document.getElementById("sidebar-username").innerText=d.username;
+        enterApp();
+      }
+    }
     else { setAuthError("reg-error",d.message); }
   } catch { setAuthError("reg-error",getAuthMessage("server")); }
 }
@@ -1042,9 +1057,82 @@ async function loginUser(){
   try{
     const res=await fetch(`${BACKEND_URL}/login`,{ method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({email,password:pass}) });
     const d=await res.json();
-    if(d.status==="success"){ currentUserEmail=d.email; document.getElementById("sidebar-username").innerText=d.username; enterApp(); }
-    else { setAuthError("login-error",d.message); }
+    if(d.status==="success"){
+      currentUserEmail=d.email;
+      document.getElementById("sidebar-username").innerText=d.username;
+      enterApp();
+    }
+    else {
+      if(d.requires_verification){
+        verificationEmail = d.email;
+        openAuth("verify");
+      } else {
+        setAuthError("login-error",d.message);
+      }
+    }
   } catch { setAuthError("login-error",getAuthMessage("server")); }
+}
+
+async function verifyUserCode(){
+  const code = document.getElementById("verify-code").value.trim();
+  clearAuthError("verify-error");
+  if(!code || code.length !== 6){
+    setAuthError("verify-error", "Введите 6-значный код");
+    return;
+  }
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/verify`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email: verificationEmail, code })
+    });
+    const d = await res.json();
+    if(d.status === "success"){
+      currentUserEmail = d.email;
+      document.getElementById("sidebar-username").innerText = d.username;
+      enterApp();
+    } else {
+      setAuthError("verify-error", d.message);
+    }
+  } catch {
+    setAuthError("verify-error", getAuthMessage("server"));
+  }
+}
+
+async function resendVerificationCode(){
+  const btn = document.getElementById("resend-btn");
+  btn.disabled = true;
+  const originalText = btn.innerText;
+  btn.innerText = "⏳...";
+  try {
+    const res = await fetch(`${BACKEND_URL}/auth/resend-code`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ email: verificationEmail })
+    });
+    const d = await res.json();
+    if(d.status === "success"){
+      showToast("✅ Код отправлен!");
+      let timer = 60;
+      const interval = setInterval(() => {
+        timer--;
+        btn.innerText = `${originalText} (${timer})`;
+        if(timer <= 0){
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.innerText = originalText;
+        }
+      }, 1000);
+    } else {
+      showToast("❌ " + d.message);
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }
+  } catch {
+    showToast("❌ Ошибка сервера");
+    btn.disabled = false;
+    btn.innerText = originalText;
+  }
 }
 
 function loginAsGuest(){

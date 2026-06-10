@@ -27,7 +27,10 @@ def init_db():
                 msg_count     INTEGER      DEFAULT 0,
                 last_reset    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
                 plan_expires  TIMESTAMP,
-                created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+                created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+                is_verified   BOOLEAN      DEFAULT FALSE,
+                verification_code VARCHAR(6),
+                verification_expires TIMESTAMP
             )
         ''')
 
@@ -88,6 +91,9 @@ def init_db():
             ("users",    "last_reset",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
             ("users",    "plan_expires", "TIMESTAMP"),
             ("users",    "created_at",   "TIMESTAMP DEFAULT CURRENT_TIMESTAMP"),
+            ("users",    "is_verified",  "BOOLEAN DEFAULT TRUE"),
+            ("users",    "verification_code", "VARCHAR(6)"),
+            ("users",    "verification_expires", "TIMESTAMP"),
             ("messages", "chat_id",      "INTEGER DEFAULT NULL"),
         ]
         for table, col, col_type in migrations:
@@ -98,6 +104,8 @@ def init_db():
             )
             if not cursor.fetchone():
                 cursor.execute(f"ALTER TABLE {table} ADD COLUMN {col} {col_type}")
+                if col == "is_verified":
+                    cursor.execute("ALTER TABLE users ALTER COLUMN is_verified SET DEFAULT FALSE")
 
         conn.commit()
         conn.close()

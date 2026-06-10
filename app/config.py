@@ -15,6 +15,7 @@ RESPONSE_SIGNING_SECRET = os.getenv("RESPONSE_SIGNING_SECRET", "daryn-dev-secret
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY", "").strip()
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "").strip()
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://darynai.onrender.com").strip()
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "").strip()
 
 client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 
