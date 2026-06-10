@@ -40,6 +40,7 @@
 <!-- Fonts & Libraries -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -159,56 +160,62 @@
     <div class="pricing-section">
       <h2 class="pricing-title reveal" data-i18n="pricing-title">ТАРИФЫ</h2>
       <p class="pricing-subtitle reveal" data-i18n="pricing-subtitle">Выберите план под ваши задачи</p>
+
+      <div class="pricing-toggle-wrap reveal">
+        <label class="pricing-toggle">
+          <input type="checkbox" id="pricing-billing-toggle" onchange="toggleBilling()">
+          <span class="pricing-toggle-slider"></span>
+        </label>
+        <span class="pricing-toggle-label">
+          <span data-i18n="billing-yearly">Годовая подписка</span>
+          <span class="save-badge" data-i18n="billing-save">(Экономия 20%)</span>
+        </span>
+      </div>
+
       <div class="pricing-grid">
         <!-- FREE -->
-        <div class="plan-card reveal delay-1">
+        <div class="plan-card plan-card-side plan-card-left reveal">
           <div class="plan-badge" style="background:rgba(107,114,128,0.2);color:#9ca3af;">FREE</div>
-          <div class="plan-price">$0<span>/мес</span></div>
+          <div class="plan-price">$<span class="price-val" data-monthly="0" data-yearly="0">0</span><span class="price-period">/мес</span></div>
           <h3 class="plan-name">Free</h3>
           <ul class="plan-features">
-            <li data-i18n="plan-free-1">✅ 20 сообщений / день</li>
-            <li data-i18n="plan-free-2">✅ 5 генераций фото / день</li>
-            <li data-i18n="plan-free-3">✅ Анализ PDF (до 5 MB)</li>
-            <li data-i18n="plan-free-4">✅ Голосовой ввод</li>
-            <li data-i18n="plan-free-5">✅ Код и сканирование</li>
-            <li data-i18n="plan-free-6">✅ RU / KK / EN</li>
-            <li data-i18n="plan-free-7">✅ PWA приложение</li>
-            <li data-i18n="plan-free-8">❌ Голосовой ответ AI</li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-free-1">20 сообщений / день</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-free-2">5 генераций фото / день</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-free-3">Анализ PDF (до 5 MB)</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-free-4">Голосовой ввод</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-free-5">Код и сканирование</span></li>
           </ul>
           <button class="plan-btn" onclick="openAuth('register')" data-i18n="plan-free-btn">Начать бесплатно</button>
         </div>
         <!-- PRO -->
-        <div class="plan-card plan-card--featured reveal delay-2">
-          <div class="plan-popular" data-i18n="plan-popular">★ ПОПУЛЯРНЫЙ</div>
+        <div class="plan-card plan-card--featured reveal">
+          <div class="plan-popular">
+             <svg class="star-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+             <span data-i18n="plan-popular">Popular</span>
+          </div>
           <div class="plan-badge" style="background:rgba(59,130,246,0.2);color:#3b82f6;">PRO</div>
-          <div class="plan-price">$9.99<span>/мес</span></div>
+          <div class="plan-price">$<span class="price-val" data-monthly="9.99" data-yearly="7.99">9.99</span><span class="price-period">/мес</span></div>
           <h3 class="plan-name">Pro</h3>
           <ul class="plan-features">
-            <li data-i18n="plan-pro-1">✅ 500 сообщений / день</li>
-            <li data-i18n="plan-pro-2">✅ 50 генераций фото / день</li>
-            <li data-i18n="plan-pro-3">✅ Анализ PDF (до 25 MB)</li>
-            <li data-i18n="plan-pro-4">✅ Голосовой ввод</li>
-            <li data-i18n="plan-pro-5">✅ Код и сканирование</li>
-            <li data-i18n="plan-pro-6">✅ RU / KK / EN</li>
-            <li data-i18n="plan-pro-7">✅ Голосовой ответ AI</li>
-            <li data-i18n="plan-pro-8">✅ Контекст 32K токенов</li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-pro-1">500 сообщений / день</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-pro-2">50 генераций фото / день</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-pro-3">Анализ PDF (до 25 MB)</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-pro-7">Голосовой ответ AI</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-pro-8">Контекст 32K токенов</span></li>
           </ul>
           <button class="plan-btn plan-btn--pro" onclick="showUpgradeModal('pro')" data-i18n="plan-pro-btn">Получить Pro</button>
         </div>
         <!-- PREMIUM -->
-        <div class="plan-card plan-card--premium reveal delay-3">
+        <div class="plan-card plan-card-side plan-card-right reveal">
           <div class="plan-badge" style="background:rgba(245,158,11,0.2);color:#f59e0b;">PREMIUM</div>
-          <div class="plan-price">$24.99<span>/мес</span></div>
+          <div class="plan-price">$<span class="price-val" data-monthly="24.99" data-yearly="19.99">24.99</span><span class="price-period">/мес</span></div>
           <h3 class="plan-name">Premium</h3>
           <ul class="plan-features">
-            <li data-i18n="plan-prem-1">✅ Безлимит сообщений</li>
-            <li data-i18n="plan-prem-2">✅ 200 генераций фото / день</li>
-            <li data-i18n="plan-prem-3">✅ Анализ PDF (до 100 MB)</li>
-            <li data-i18n="plan-prem-4">✅ Голосовой ввод + ответ AI</li>
-            <li data-i18n="plan-prem-5">✅ Код и сканирование</li>
-            <li data-i18n="plan-prem-6">✅ RU / KK / EN</li>
-            <li data-i18n="plan-prem-7">✅ Голосовой ответ AI</li>
-            <li data-i18n="plan-prem-8">✅ Контекст 131K токенов</li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-prem-1">Безлимит сообщений</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-prem-2">200 генераций фото / день</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-prem-3">Анализ PDF (до 100 MB)</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-prem-7">Голосовой ответ AI</span></li>
+            <li><svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg><span data-i18n="plan-prem-8">Контекст 131K токенов</span></li>
           </ul>
           <button class="plan-btn plan-btn--premium" onclick="showUpgradeModal('premium')" data-i18n="plan-prem-btn">Получить Premium</button>
         </div>
