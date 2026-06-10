@@ -225,33 +225,93 @@
 
 </div><!-- /landing-screen -->
 
-<!-- AUTH MODAL -->
+<!-- AUTH SCREEN (IMMERSIVE STYLE) -->
 <div id="auth-screen">
-  <div class="auth-card">
-    <button class="close-auth" onclick="closeAuth()">
-      <svg width="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
-      </svg>
-    </button>
-    <h2 id="auth-title" data-i18n="auth-login-title">Вход в систему</h2>
-    <p id="auth-subtitle" data-i18n="auth-login-sub">Укажите данные для доступа</p>
-    <div id="form-login">
-      <p id="login-error" class="error-msg"></p>
-      <input type="email"    class="auth-input" id="login-email" placeholder="Email" data-i18n="ph-email">
-      <input type="password" class="auth-input" id="login-pass"  placeholder="Пароль" data-i18n="ph-pass">
-      <button class="btn-primary" onclick="loginUser()" data-i18n="btn-login">Авторизация</button>
-      <div class="auth-divider"><span data-i18n="auth-or">или</span></div>
-      <div id="google-login-btn" class="google-signin-slot"></div>
+  <div class="auth-bg">
+    <canvas id="auth-canvas"></canvas>
+    <div class="auth-bg-overlay"></div>
+  </div>
+
+  <button class="close-auth-btn" onclick="closeAuth()">
+    <svg width="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+  </button>
+
+  <div class="auth-container">
+    <!-- Step 1: Email -->
+    <div id="auth-step-email" class="auth-step active">
+      <div class="auth-header">
+        <h1 data-i18n="auth-welcome">Welcome Developer</h1>
+        <p data-i18n="auth-subtitle">Your sign in component</p>
+      </div>
+
+      <div class="auth-form-wrap">
+        <div id="google-auth-btn" class="google-signin-slot"></div>
+
+        <div class="auth-divider"><span data-i18n="auth-or">or</span></div>
+
+        <form onsubmit="handleAuthEmailSubmit(event)" class="auth-email-form">
+          <input type="email" id="auth-email-input" placeholder="info@gmail.com" required>
+          <button type="submit" class="auth-submit-btn">
+            <span class="btn-arrow">→</span>
+          </button>
+        </form>
+        <p id="auth-error-msg" class="error-msg"></p>
+      </div>
+
+      <p class="auth-legal" data-i18n="auth-legal">
+        By signing up, you agree to the <a href="#">MSA</a>, <a href="#">Product Terms</a>, and <a href="#">Privacy Notice</a>.
+      </p>
     </div>
-    <div id="form-register">
-      <p id="reg-error" class="error-msg"></p>
-      <input type="text"     class="auth-input" id="reg-name"  placeholder="Имя" data-i18n="ph-name">
-      <input type="email"    class="auth-input" id="reg-email" placeholder="Email" data-i18n="ph-email">
-      <input type="password" class="auth-input" id="reg-pass"  placeholder="Пароль" data-i18n="ph-pass">
-      <p class="auth-hint" data-i18n="pass-hint">Минимум 8 символов, буква и цифра</p>
-      <button class="btn-primary" onclick="registerUser()" data-i18n="btn-reg">Создать</button>
-      <div class="auth-divider"><span data-i18n="auth-or">или</span></div>
-      <div id="google-register-btn" class="google-signin-slot"></div>
+
+    <!-- Step 2: Code -->
+    <div id="auth-step-code" class="auth-step">
+      <div class="auth-header">
+        <h1 data-i18n="auth-sent-code">We sent you a code</h1>
+        <p data-i18n="auth-enter-it">Please enter it</p>
+      </div>
+
+      <div class="auth-form-wrap">
+        <div class="otp-input-container">
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+          <span class="otp-sep">|</span>
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+          <span class="otp-sep">|</span>
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+          <span class="otp-sep">|</span>
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+          <span class="otp-sep">|</span>
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+          <span class="otp-sep">|</span>
+          <input type="text" maxlength="1" inputmode="numeric" class="otp-input">
+        </div>
+
+        <button class="resend-code-btn" onclick="resendAuthCode()" data-i18n="auth-resend">Resend code</button>
+
+        <div class="auth-buttons-row">
+          <button class="btn-back" onclick="switchAuthStep('email')">Back</button>
+          <button id="auth-code-continue" class="btn-continue" onclick="verifyAuthCode()" disabled>Continue</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Success -->
+    <div id="auth-step-success" class="auth-step">
+      <div class="auth-header">
+        <h1 data-i18n="auth-success-title">You're in!</h1>
+        <p data-i18n="auth-success-sub">Welcome to Daryn AI</p>
+      </div>
+
+      <div class="success-icon-wrap">
+        <div class="success-circle">
+          <svg viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+          </svg>
+        </div>
+      </div>
+
+      <button class="btn-finish" onclick="completeAuthFlow()">Continue to Dashboard</button>
     </div>
     <div id="form-verify">
       <p id="verify-error" class="error-msg"></p>

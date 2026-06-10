@@ -502,8 +502,9 @@ const i18n = {
     "upg-step3":"Нажмите «Я оплатил» и введите ID транзакции",
     "upg-step4":"Ожидайте подтверждения до 24 часов",
     "upg-btn":"✅ Я оплатил — отправить заявку",
-    "auth-login-title":"Вход в систему","auth-login-sub":"Укажите данные для доступа",
-    "auth-reg-title":"Регистрация","auth-reg-sub":"Создайте новый профиль доступа",
+    "auth-welcome":"С возвращением","auth-subtitle":"Твой компонент авторизации",
+    "auth-sent-code":"Мы отправили код","auth-enter-it":"Пожалуйста, введите его",
+    "auth-success-title":"Вы вошли!","auth-success-sub":"Добро пожаловать в Daryn AI",
     "ph-email":"Email","ph-pass":"Пароль","ph-name":"Имя пользователя","ph-pref":"Предпочтения: стиль, темы, формат ответа","ph-lang-pref":"Предпочитаемый язык: ru/kk/en",
     "pass-hint":"Минимум 8 символов, буква и цифра","auth-or":"или",
     "btn-login":"Авторизация","btn-reg":"Создать",
@@ -555,8 +556,9 @@ const i18n = {
     "upg-step3":"«Төледім» басып, транзакция ID-ін енгізіңіз",
     "upg-step4":"24 сағатқа дейін растауды күтіңіз",
     "upg-btn":"✅ Төледім — өтінім жіберу",
-    "auth-login-title":"Жүйеге кіру","auth-login-sub":"Мәліметтерді енгізіңіз",
-    "auth-reg-title":"Тіркелу","auth-reg-sub":"Жаңа профиль жасаңыз",
+    "auth-welcome":"Қош келдіңіз","auth-subtitle":"Авторизация компоненти",
+    "auth-sent-code":"Біз код жібердік","auth-enter-it":"Оны енгізіңіз",
+    "auth-success-title":"Сіз кірдіңіз!","auth-success-sub":"Daryn AI-ға қош келдіңіз",
     "ph-email":"Электрондық пошта","ph-pass":"Құпия сөз","ph-name":"Пайдаланушы аты","ph-pref":"Қалаулар: стиль, тақырыптар, жауап форматы","ph-lang-pref":"Таңдаулы тіл: ru/kk/en",
     "pass-hint":"Кемінде 8 таңба, әріп және сан","auth-or":"немесе",
     "btn-login":"Авторизация","btn-reg":"Жасау",
@@ -608,8 +610,9 @@ const i18n = {
     "upg-step3":"Click 'I paid' and enter the transaction ID",
     "upg-step4":"Wait for confirmation within 24 hours",
     "upg-btn":"✅ I paid — send request",
-    "auth-login-title":"System Login","auth-login-sub":"Enter your credentials",
-    "auth-reg-title":"Registration","auth-reg-sub":"Create a new profile",
+    "auth-welcome":"Welcome Developer","auth-subtitle":"Your sign in component",
+    "auth-sent-code":"We sent you a code","auth-enter-it":"Please enter it",
+    "auth-success-title":"You're in!","auth-success-sub":"Welcome to Daryn AI",
     "ph-email":"Email","ph-pass":"Password","ph-name":"Username","ph-pref":"Preferences: style, topics, response format","ph-lang-pref":"Preferred language: ru/kk/en",
     "pass-hint":"At least 8 characters, a letter and a number","auth-or":"or",
     "btn-login":"Authorize","btn-reg":"Create",
@@ -695,41 +698,142 @@ async function handleStripeReturn(){
 // ================================================================
 // AUTH
 // ================================================================
-let verificationEmail = "";
+/* ── IMMERSIVE AUTH BACKGROUND (Dot Matrix Reveal) ──────────── */
+let authCanvas, authCtx, authParticles = [], authAnimId;
+function initAuthCanvas() {
+  authCanvas = document.getElementById("auth-canvas");
+  if (!authCanvas) return;
+  authCtx = authCanvas.getContext("2d");
 
-function openAuth(type){
-  document.getElementById("login-error").style.display="none";
-  document.getElementById("reg-error").style.display="none";
-  document.getElementById("verify-error").style.display="none";
-
-  if(type==="login"){
-    document.getElementById("auth-title").innerText=i18n[currentLang]["auth-login-title"];
-    document.getElementById("auth-subtitle").innerText=i18n[currentLang]["auth-login-sub"];
-    document.getElementById("form-login").style.display="flex";
-    document.getElementById("form-register").style.display="none";
-    document.getElementById("form-verify").style.display="none";
-  } else if(type==="register"){
-    document.getElementById("auth-title").innerText=i18n[currentLang]["auth-reg-title"];
-    document.getElementById("auth-subtitle").innerText=i18n[currentLang]["auth-reg-sub"];
-    document.getElementById("form-login").style.display="none";
-    document.getElementById("form-register").style.display="flex";
-    document.getElementById("form-verify").style.display="none";
-  } else if(type==="verify"){
-    document.getElementById("auth-title").innerText=i18n[currentLang]["auth-verify-title"];
-    document.getElementById("auth-subtitle").innerText=verificationEmail;
-    document.getElementById("form-login").style.display="none";
-    document.getElementById("form-register").style.display="none";
-    document.getElementById("form-verify").style.display="flex";
+  function resize() {
+    authCanvas.width = window.innerWidth;
+    authCanvas.height = window.innerHeight;
   }
-  const s=document.getElementById("auth-screen");
-  s.style.display="flex";
-  setTimeout(()=>s.style.opacity="1",10);
+  window.addEventListener("resize", resize);
+  resize();
+
+  const dotSpacing = 30;
+  const dotSize = 2;
+
+  function draw() {
+    authCtx.clearRect(0, 0, authCanvas.width, authCanvas.height);
+    const time = Date.now() * 0.001;
+
+    for (let x = 0; x < authCanvas.width; x += dotSpacing) {
+      for (let y = 0; y < authCanvas.height; y += dotSpacing) {
+        const noise = Math.sin(x * 0.01 + time) * Math.cos(y * 0.01 + time);
+        const opacity = 0.05 + Math.max(0, noise) * 0.2;
+
+        authCtx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+        authCtx.beginPath();
+        authCtx.arc(x, y, dotSize, 0, Math.PI * 2);
+        authCtx.fill();
+      }
+    }
+    authAnimId = requestAnimationFrame(draw);
+  }
+  draw();
 }
 
-function closeAuth(){
-  const s=document.getElementById("auth-screen");
-  s.style.opacity="0";
-  setTimeout(()=>s.style.display="none",300);
+function stopAuthCanvas() {
+  if (authAnimId) cancelAnimationFrame(authAnimId);
+}
+
+/* ── AUTH FLOW LOGIC ────────────────────────────────────────── */
+function openAuth(type) {
+  // We ignore 'type' for now and show a unified modern flow
+  switchAuthStep('email');
+  const s = document.getElementById("auth-screen");
+  s.style.display = "flex";
+  setTimeout(() => {
+    s.style.opacity = "1";
+    initAuthCanvas();
+    renderGoogleAuthButton();
+  }, 10);
+}
+
+function closeAuth() {
+  const s = document.getElementById("auth-screen");
+  s.style.opacity = "0";
+  setTimeout(() => {
+    s.style.display = "none";
+    stopAuthCanvas();
+  }, 400);
+}
+
+function switchAuthStep(stepId) {
+  document.querySelectorAll('.auth-step').forEach(el => el.classList.remove('active'));
+  const next = document.getElementById(`auth-step-${stepId}`);
+  if (next) next.classList.add('active');
+
+  if (stepId === 'code') {
+    setTimeout(() => {
+      document.querySelectorAll('.otp-input')[0]?.focus();
+    }, 400);
+  }
+}
+
+function handleAuthEmailSubmit(e) {
+  e.preventDefault();
+  const email = document.getElementById("auth-email-input").value;
+  if (email) {
+    // In a real app, we would call an API here to send the code
+    switchAuthStep('code');
+  }
+}
+
+// OTP Inputs logic
+document.addEventListener('DOMContentLoaded', () => {
+  const otpInputs = document.querySelectorAll('.otp-input');
+  otpInputs.forEach((input, index) => {
+    input.addEventListener('input', (e) => {
+      if (e.target.value && index < otpInputs.length - 1) {
+        otpInputs[index + 1].focus();
+      }
+      checkOtpComplete();
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !e.target.value && index > 0) {
+        otpInputs[index - 1].focus();
+      }
+    });
+  });
+});
+
+function checkOtpComplete() {
+  const otpInputs = document.querySelectorAll('.otp-input');
+  const code = Array.from(otpInputs).map(i => i.value).join('');
+  const btn = document.getElementById('auth-code-continue');
+  if (code.length === 6) {
+    btn.disabled = false;
+    btn.classList.add('ready');
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('ready');
+  }
+}
+
+function verifyAuthCode() {
+  // Simulate verification
+  switchAuthStep('success');
+}
+
+function resendAuthCode() {
+  showToast("Code resent!");
+}
+
+function completeAuthFlow() {
+  const email = document.getElementById("auth-email-input").value;
+  currentUserEmail = email;
+  document.getElementById("sidebar-username").innerText = email.split('@')[0];
+  closeAuth();
+  enterApp();
+}
+
+function renderGoogleAuthButton() {
+  const slot = document.getElementById("google-auth-btn");
+  if (!slot || !googleClientId || !window.google) return;
+  google.accounts.id.renderButton(slot, { theme: "outline", size: "large", width: 340, text: "continue_with" });
 }
 
 
