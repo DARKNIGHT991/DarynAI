@@ -814,6 +814,39 @@ function clearAuthError(id){
 let googleClientId="";
 let googleButtonsRendered=false;
 
+function toggleBilling() {
+  const isYearly = document.getElementById("pricing-billing-toggle").checked;
+  const priceElements = document.querySelectorAll(".price-val");
+
+  priceElements.forEach((el) => {
+    const monthly = el.getAttribute("data-monthly");
+    const yearly = el.getAttribute("data-yearly");
+    const targetValue = isYearly ? yearly : monthly;
+
+    // Animate number change if possible, or just swap
+    el.innerText = targetValue;
+  });
+
+  if (isYearly && typeof confetti === "function") {
+    const toggle = document.querySelector(".pricing-toggle");
+    const rect = toggle.getBoundingClientRect();
+    confetti({
+      particleCount: 50,
+      spread: 60,
+      origin: {
+        x: (rect.left + rect.width / 2) / window.innerWidth,
+        y: (rect.top + rect.height / 2) / window.innerHeight,
+      },
+      colors: ["#3b82f6", "#10b981", "#6366f1"],
+      ticks: 200,
+      gravity: 1.2,
+      decay: 0.94,
+      startVelocity: 30,
+      shapes: ["circle"],
+    });
+  }
+}
+
 async function loadGoogleAuthConfig(){
   try{
     const res=await fetch(`${BACKEND_URL}/auth/config`);

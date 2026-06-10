@@ -238,57 +238,120 @@ body {
 ================================================================ */
 .pricing-section {
   position:relative; z-index:2001;
-  padding:80px 20px;
+  padding:100px 20px;
   max-width:1200px; margin:0 auto;
 }
-.pricing-title { font-size:42px; font-weight:800; text-align:center; margin-bottom:16px; }
-.pricing-subtitle { color:#888; text-align:center; margin-bottom:60px; font-size:16px; }
+.pricing-title { font-size:48px; font-weight:800; text-align:center; margin-bottom:16px; color:#fff; }
+.pricing-subtitle { color:#888; text-align:center; margin-bottom:40px; font-size:18px; line-height:1.5; }
+
+/* Toggle */
+.pricing-toggle-wrap {
+  display:flex; align-items:center; justify-content:center;
+  gap:16px; margin-bottom:60px;
+}
+.pricing-toggle {
+  position:relative; display:inline-block;
+  width:52px; height:28px;
+}
+.pricing-toggle input { opacity:0; width:0; height:0; }
+.pricing-toggle-slider {
+  position:absolute; cursor:pointer; inset:0;
+  background-color:rgba(255,255,255,0.1);
+  transition:0.4s; border-radius:34px;
+  border:1px solid var(--border);
+}
+.pricing-toggle-slider:before {
+  position:absolute; content:""; height:20px; width:20px;
+  left:3px; bottom:3px; background-color:#fff;
+  transition:0.4s; border-radius:50%;
+}
+.pricing-toggle input:checked + .pricing-toggle-slider { background-color:var(--accent-blue); }
+.pricing-toggle input:checked + .pricing-toggle-slider:before { transform:translateX(24px); }
+
+.pricing-toggle-label { font-size:16px; font-weight:600; color:#fff; }
+.save-badge {
+  color:var(--accent-blue); font-size:14px; margin-left:4px;
+}
+
+/* Grid & Cards */
 .pricing-grid {
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:24px;
+  grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
+  gap:20px; perspective:1000px;
 }
 
 .plan-card {
-  background:rgba(10,10,10,0.8); backdrop-filter:blur(10px);
-  border:1px solid var(--border); border-radius:16px;
-  padding:32px 28px; display:flex; flex-direction:column;
-  gap:8px; position:relative;
-  transition:transform 0.3s, border-color 0.3s;
+  background:rgba(10,10,10,0.8); backdrop-filter:blur(15px);
+  border:1px solid var(--border); border-radius:24px;
+  padding:40px 32px; display:flex; flex-direction:column;
+  gap:12px; position:relative;
+  transition:all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-style:preserve-3d;
 }
-.plan-card:hover { transform:translateY(-6px); border-color:rgba(255,255,255,0.15); }
-.plan-card--featured { border-color:rgba(59,130,246,0.4); background:rgba(59,130,246,0.05); }
-.plan-card--premium  { border-color:rgba(245,158,11,0.3);  background:rgba(245,158,11,0.03); }
+
+.plan-card--featured {
+  border:2px solid var(--accent-blue);
+  background:rgba(59,130,246,0.04);
+  z-index:10;
+}
 
 .plan-popular {
-  position:absolute; top:-14px; left:50%; transform:translateX(-50%);
+  position:absolute; top:0; right:0;
   background:var(--accent-blue); color:#fff;
-  font-size:11px; font-weight:700; padding:4px 16px;
-  border-radius:20px; white-space:nowrap; letter-spacing:1px;
+  font-size:12px; font-weight:700; padding:6px 16px;
+  border-radius:0 22px 0 16px; display:flex; align-items:center; gap:6px;
 }
+.star-icon { width:14px; height:14px; fill:currentColor; }
+
 .plan-badge {
-  display:inline-block; font-size:11px; font-weight:700;
-  padding:4px 10px; border-radius:6px; letter-spacing:1px; width:fit-content;
+  display:inline-block; font-size:12px; font-weight:700;
+  padding:6px 12px; border-radius:8px; letter-spacing:1px; width:fit-content;
+  text-transform:uppercase;
 }
-.plan-price { font-size:40px; font-weight:900; color:#fff; line-height:1; margin:8px 0; }
-.plan-price span { font-size:16px; font-weight:400; color:#888; }
-.plan-name { font-size:20px; font-weight:700; color:#fff; margin-bottom:8px; }
-.plan-features { list-style:none; padding:0; margin:12px 0; flex:1; }
+.plan-price { font-size:48px; font-weight:900; color:#fff; line-height:1; margin:16px 0 4px; }
+.price-period { font-size:16px; font-weight:400; color:#888; margin-left:4px; }
+.plan-price-sub { font-size:12px; color:#555; margin-bottom:20px; }
+
+.plan-name { font-size:22px; font-weight:700; color:#fff; margin-bottom:8px; }
+.plan-features { list-style:none; padding:0; margin:20px 0; flex:1; display:flex; flex-direction:column; gap:12px; }
 .plan-features li {
-  font-size:13px; color:#a1a1aa; padding:6px 0;
-  border-bottom:1px solid rgba(255,255,255,0.04); line-height:1.4;
+  font-size:14px; color:#a1a1aa; display:flex; align-items:flex-start; gap:10px; line-height:1.4;
 }
+.check-icon { width:16px; height:16px; stroke:var(--accent-blue); fill:none; stroke-width:3; flex-shrink:0; margin-top:2px; }
+
 .plan-btn {
-  background:rgba(255,255,255,0.06); border:1px solid var(--border);
-  color:#fff; padding:14px; border-radius:12px; font-size:14px;
-  font-weight:600; cursor:pointer; transition:all 0.2s;
-  margin-top:16px; width:100%;
+  background:rgba(255,255,255,0.05); border:1px solid var(--border);
+  color:#fff; padding:16px; border-radius:14px; font-size:15px;
+  font-weight:700; cursor:pointer; transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-top:20px; width:100%; letter-spacing:0.5px;
 }
-.plan-btn:hover { background:rgba(255,255,255,0.1); }
+.plan-btn:hover {
+  background:rgba(255,255,255,0.1);
+  transform:translateY(-2px);
+  box-shadow:0 10px 20px rgba(0,0,0,0.2);
+}
 .plan-btn--pro { background:var(--accent-blue); border-color:var(--accent-blue); }
-.plan-btn--pro:hover { background:#2563eb; box-shadow:0 8px 20px rgba(59,130,246,0.4); }
-.plan-btn--premium { background:linear-gradient(135deg,#f59e0b,#d97706); border-color:#f59e0b; }
-.plan-btn--premium:hover { box-shadow:0 8px 20px rgba(245,158,11,0.4); }
+.plan-btn--pro:hover {
+  background:#2563eb;
+  box-shadow:0 10px 25px rgba(59,130,246,0.4);
+}
+.plan-btn--premium {
+  background:var(--bg-main); border-color:var(--border);
+}
+.plan-btn--premium:hover {
+  background:rgba(255,255,255,0.05);
+  border-color:var(--accent-blue);
+}
+
+/* Desktop 3D Effects */
+@media(min-width:1024px) {
+  .plan-card-side { transform:scale(0.92); opacity:0.8; }
+  .plan-card-left { transform:scale(0.92) rotateY(10deg) translateX(30px); transform-origin:right center; }
+  .plan-card-right { transform:scale(0.92) rotateY(-10deg) translateX(-30px); transform-origin:left center; }
+
+  .pricing-grid:hover .plan-card-side { transform:scale(0.92) rotateY(0) translateX(0); opacity:0.6; }
+  .pricing-grid .plan-card:hover { transform:scale(1.05) translateZ(50px) !important; opacity:1 !important; z-index:20; }
+}
 
 /* ================================================================
    OVERLAY WINDOWS
